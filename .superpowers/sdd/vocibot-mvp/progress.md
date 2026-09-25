@@ -5,3 +5,5 @@ Ruling: Use FastAPI/Python for the backend per the user's latest approved techni
 Pre-flight: Tasks 2 consumes Task 1 domain types; Task 3 consumes Tasks 1–2 schemas/providers; Task 4 consumes Task 3 API contracts; Task 5 consumes Tasks 3–4 approval/state contracts; Task 6 consumes the complete application. No unresolved interface conflicts found.
 
 Task 1: complete — tests: `npm test -- tests/setup.test.ts` → 1 passed; `.venv/bin/pytest backend/tests/test_setup.py -q` → 1 passed.
+
+Task 2: complete — tests: `.venv/bin/pytest backend/tests/test_extraction.py backend/tests/test_record_diff.py -q` → 5 passed; `npm test -- tests/extraction.test.ts tests/record-diff.test.ts` → 2 passed.
