@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: vocibot-backend
+Version: 0.1.0
+Requires-Python: >=3.11
+Requires-Dist: fastapi<1,>=0.115
+Requires-Dist: uvicorn[standard]<1,>=0.30
+Requires-Dist: pydantic<3,>=2.9
+Requires-Dist: pydantic-settings<3,>=2.6
+Requires-Dist: sqlalchemy<3,>=2.0
+Requires-Dist: httpx<1,>=0.27
+Provides-Extra: test
+Requires-Dist: pytest<9,>=8.3; extra == "test"
+Provides-Extra: local
+Requires-Dist: faster-whisper<2,>=1.1; extra == "local"
+Requires-Dist: silero-vad<6,>=5.1; extra == "local"
+Requires-Dist: whisperx<4,>=3.3; extra == "local"
+Requires-Dist: pyannote.audio<4,>=3.3; extra == "local"
