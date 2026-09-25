@@ -12,6 +12,13 @@ class OllamaClinicalExtractionProvider:
         self.base_url = (base_url or settings.ollama_base_url).rstrip("/")
         self.model = model or settings.ollama_model
 
+    def check_available(self) -> None:
+        try:
+            response = httpx.get(f"{self.base_url}/api/tags", timeout=3)
+            response.raise_for_status()
+        except Exception as error:
+            raise RuntimeError(f"Ollama unavailable at {self.base_url}: {error}") from error
+
     def extract(self, transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> ExtractionResult:
         prompt = self._prompt(transcript, current_record)
         response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False}, timeout=30)

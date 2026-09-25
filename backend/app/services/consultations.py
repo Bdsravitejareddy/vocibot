@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from ..domain.types import ClinicalRecord, ConsultationStatus, RecordUpdateType, TranscriptSegmentInput
 from ..models import ClinicalRecord as ClinicalRecordModel
 from ..models import Consultation, Patient, RecordUpdate, TranscriptSegment
-from ..providers.demo_extraction import DemoClinicalExtractionProvider
+from ..config import settings
+from ..providers.factory import build_extraction_provider
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
 from .evidence import EvidenceValidator
 from .record_diff import diff_clinical_record
@@ -53,7 +54,7 @@ def append_segment(session: Session, consultation_id: str, payload: SegmentCreat
         id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp.isoformat(), sequence_number=item.sequence_number
     ) for item in transcript]
     current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
-    result = DemoClinicalExtractionProvider().extract(transcript_inputs, current)  # type: ignore[arg-type]
+    result = build_extraction_provider(settings).extract(transcript_inputs, current)  # type: ignore[arg-type]
     validator = EvidenceValidator()
     evidence: dict[str, list[str]] = {}
     validated_record = current.model_copy(deep=True)
