@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import type { RuntimeStatus } from "@/lib/runtime-status";
+import { runtimePresentation } from "@/lib/runtime-status";
 
-export function ConsultationSetup({ onStart }: { onStart: (input: { patient_id: string; patient_name?: string; age: number; sex: string }) => Promise<void> }) {
+export function ConsultationSetup({ onStart, runtime }: { onStart: (input: { patient_id: string; patient_name?: string; age: number; sex: string }) => Promise<void>; runtime: RuntimeStatus | null }) {
   const [patientId, setPatientId] = useState("");
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -17,6 +19,9 @@ export function ConsultationSetup({ onStart }: { onStart: (input: { patient_id: 
     try { await onStart({ patient_id: patientId, patient_name: name || undefined, age: Number(age), sex }); } catch (err) { setError(err instanceof Error ? err.message : "Unable to start consultation."); } finally { setBusy(false); }
   }
 
+  const presentation = runtimePresentation(runtime ?? { mode: "unknown", providers: {} });
+  const providerStatus = (name: string) => runtime?.providers[name]?.status === "ready" ? "Ready" : runtime?.providers[name]?.status === "disabled" ? "Disabled" : runtime?.providers[name]?.error ?? "Unavailable";
+
   return <section className="setup-card">
     <div className="eyebrow">New consultation</div><h1>Start with the patient in front of you.</h1><p className="lead">Capture the conversation naturally. VociBot will keep the note grounded in what was actually said.</p>
     <form onSubmit={submit} className="setup-form">
@@ -26,6 +31,6 @@ export function ConsultationSetup({ onStart }: { onStart: (input: { patient_id: 
       {error && <div className="form-error">{error}</div>}
       <button className="primary-button wide" disabled={busy}>{busy ? "Starting…" : "Start consultation"}</button>
     </form>
-    <div className="demo-callout"><span className="demo-dot" /><div><strong>Demo mode is ready</strong><p>Stream a scripted fever consultation without microphone or patient data.</p></div></div>
+    <div className="demo-callout"><span className="demo-dot" /><div><strong>{presentation.modeLabel}</strong><p><b>{presentation.providerLabel}</b> · {presentation.modeLabel === "Local AI" ? "Microphone audio stays local and is processed by the configured backend pipeline." : presentation.modeLabel === "Demo mode" ? "Stream a scripted fever consultation without microphone or patient data." : "Waiting for the backend runtime status."}</p>{runtime?.mode === "local" && <div className="provider-status-grid"><span>Backend <b>{runtime.backend?.status === "connected" ? "Connected" : "Unavailable"}</b></span><span>Ollama <b>{providerStatus("ollama")}</b></span><span>Silero VAD <b>{providerStatus("silero_vad")}</b></span><span>faster-whisper <b>{providerStatus("faster_whisper")}</b></span><span>WhisperX <b>{providerStatus("whisperx")}</b></span><span>pyannote <b>{providerStatus("pyannote")}</b></span></div>}</div></div>
   </section>;
 }
