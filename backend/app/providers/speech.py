@@ -44,4 +44,9 @@ class FasterWhisperProvider:
         return self._model
 
     def transcribe_chunk(self, chunk: AudioChunk) -> list[TranscriptDraft]:
-        raise RuntimeError("FasterWhisperProvider requires a local audio decoder and faster-whisper extras")
+        model = self._load()
+        import numpy as np  # type: ignore[import-not-found]
+
+        audio = np.frombuffer(chunk.audio, dtype=np.float32)
+        segments, _ = model.transcribe(audio, beam_size=5, vad_filter=False)
+        return [TranscriptDraft(text=segment.text.strip(), timestamp=str(chunk.timestamp_ms), start_ms=int(segment.start * 1000), end_ms=int(segment.end * 1000)) for segment in segments if segment.text.strip()]

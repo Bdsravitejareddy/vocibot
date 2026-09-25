@@ -15,3 +15,5 @@ Task 4: complete — tests: `npm run typecheck` → passed; `npm run test:e2e --
 Task 5: complete — tests: `npm run typecheck` → passed; `npm run test:e2e -- tests/browser/vocibot.spec.ts` → 1 passed, including stop, doctor edit, approval, history, detail, and evidence assertions.
 
 Task 6: complete — tests: `npm run lint` → 0 errors; `npm run typecheck` → passed; `npm test` → 4 passed; `.venv/bin/pytest -q` → 11 passed; `npm run build` → passed; `npm run test:e2e` → 1 passed; `git diff --check` → clean.
+
+Final review: self-review (no subagent tool) — reviewed the full branch against the approved spec and plan; upgraded local STT/VAD adapters to lazy-loaded implementations; reran lint, typecheck, unit tests, pytest, production build, and browser acceptance flow.
