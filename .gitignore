@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.venv/
+backend/vocibot.db
+backend/*.egg-info/
+__pycache__/
+*.py[cod]
+test-results/
+playwright-report/
+.env
