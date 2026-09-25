@@ -5,6 +5,7 @@ backend/vocibot.db
 backend/*.egg-info/
 __pycache__/
 *.py[cod]
+*.tsbuildinfo
 test-results/
 playwright-report/
 .env
