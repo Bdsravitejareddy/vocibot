@@ -11,3 +11,5 @@ Task 2: complete — tests: `.venv/bin/pytest backend/tests/test_extraction.py b
 Task 3: complete — tests: `.venv/bin/pytest backend/tests/test_consultation_flow.py -q` → 4 passed; `npm test -- tests/consultation-flow.test.ts` → 1 passed.
 
 Task 4: complete — tests: `npm run typecheck` → passed; `npm run test:e2e -- tests/browser/vocibot.spec.ts` → 1 passed.
+
+Task 5: complete — tests: `npm run typecheck` → passed; `npm run test:e2e -- tests/browser/vocibot.spec.ts` → 1 passed, including stop, doctor edit, approval, history, detail, and evidence assertions.
