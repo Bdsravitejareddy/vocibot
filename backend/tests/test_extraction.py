@@ -47,4 +47,3 @@ def test_unsupported_information_is_rejected_by_evidence_validator() -> None:
     rejected = validator.validate("assessment", "Pneumonia", ["missing"], segments(("s1", Speaker.PATIENT, "I have cough.")))
     assert accepted.status == EvidenceStatus.SUPPORTED
     assert rejected.status == EvidenceStatus.REJECTED
-

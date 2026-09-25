@@ -15,4 +15,3 @@ def test_doctor_edited_field_is_not_overwritten_by_ai() -> None:
     proposed = current.model_copy(update={"chief_complaint": "Fever"})
     changes = diff_clinical_record(current, proposed, {"chief_complaint": ["s2"]}, doctor_edited_fields={"chief_complaint"})
     assert changes == []
-
