@@ -9,7 +9,7 @@ def test_local_settings_use_practical_development_models() -> None:
     settings = Settings(ai_mode="local")
     assert settings.ai_mode == "local"
     assert settings.whisper_model == "small"
-    assert settings.ollama_model == "qwen2.5:7b-instruct"
+    assert settings.ollama_model == "llama3.1:8b"
 
 
 def test_local_mode_does_not_fall_back_when_ollama_dependency_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -17,7 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8.3,<9"]
-local = ["faster-whisper>=1.1,<2", "silero-vad>=5.1,<6", "whisperx>=3.3,<4", "pyannote.audio>=3.3,<4"]
+local = ["numpy>=2.0,<3", "faster-whisper>=1.1,<2", "silero-vad>=5.1,<6", "whisperx>=3.3,<4", "pyannote.audio>=3.3,<4"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

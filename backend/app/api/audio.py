@@ -14,8 +14,8 @@ def build_local_pipeline() -> LocalAudioPipeline:
     return LocalAudioPipeline(
         SileroVoiceActivityDetector(threshold=settings.silero_threshold),
         FasterWhisperProvider(model_size=settings.whisper_model, device=settings.whisper_device, compute_type=settings.whisper_compute_type),
-        WhisperXAligner(model_name=settings.whisperx_model),
-        PyannoteDiarizationProvider(model_name=settings.pyannote_model),
+        WhisperXAligner(model_name=settings.whisperx_model) if settings.whisperx_enabled else None,
+        PyannoteDiarizationProvider(model_name=settings.pyannote_model) if settings.diarization_enabled else None,
     )
 
 

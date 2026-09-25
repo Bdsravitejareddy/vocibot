@@ -44,8 +44,9 @@ class FasterWhisperProvider:
         return self._model
 
     def transcribe(self, chunk: AudioChunk) -> list[TranscriptDraft]:
+        injected_model = self._model is not None
         model = self._load()
-        if self._model is not None:
+        if injected_model:
             audio = chunk.audio
         else:
             import numpy as np  # type: ignore[import-not-found]

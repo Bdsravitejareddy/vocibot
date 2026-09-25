@@ -1,7 +1,9 @@
 node_modules/
 .next/
+/.venv-local/
 .venv/
 backend/vocibot.db
+vocibot.db
 backend/*.egg-info/
 __pycache__/
 *.py[cod]

@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "tsx --test",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "local:smoke": "AI_MODE=local .venv/bin/python scripts/local_smoke.py --audio /tmp/vocibot-local.wav --mode local"
   },
   "dependencies": {
     "next": "^15.5.0",

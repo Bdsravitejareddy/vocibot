@@ -1,0 +1,95 @@
+{
+  "hardware": {
+    "architecture": "Apple Silicon",
+    "machine": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "model_name": "MacBook Pro",
+    "chip": "Apple M4 Pro",
+    "memory": "48 GB"
+  },
+  "models": {
+    "whisper_model": "small",
+    "ollama_model": "llama3.1:8b"
+  },
+  "components": {
+    "silero_vad": "executed",
+    "whisper": "executed",
+    "whisperx": "disabled by configuration",
+    "pyannote": "disabled by configuration",
+    "ollama": "reachable (llama3.1:8b)"
+  },
+  "latency_ms": {
+    "vad_ms": 424.3,
+    "transcription_ms": 2228.98,
+    "extraction_ms": 2112.71
+  },
+  "unsupported_facts": [],
+  "omissions": [
+    "The available audio fixture was not a full spoken consultation; transcription was too short to validate English clinical coverage"
+  ],
+  "errors": [],
+  "input_audio": "/Users/raviteja/.langflow/.langflow-venv/lib/python3.13/site-packages/litellm/litellm_core_utils/audio_utils/audio_health_check.wav",
+  "warnings": [
+    {
+      "category": "ALIGNMENT_DISABLED",
+      "message": "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint"
+    },
+    {
+      "category": "DIARIZATION_DISABLED",
+      "message": "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model"
+    }
+  ],
+  "transcript_count": 1,
+  "mock_flow": {
+    "mock_emr": {
+      "updated": true,
+      "reference": "mock-emr-c8c0e049ea"
+    },
+    "doctor_edit": {
+      "chief_complaint": "Doctor-reviewed smoke note",
+      "duration": null,
+      "presenting_symptoms": [],
+      "history_present_illness": null,
+      "relevant_negatives": [],
+      "past_medical_history": null,
+      "medications": [],
+      "allergies": [],
+      "vitals": {},
+      "examination_findings": [],
+      "assessment": null,
+      "plan": null,
+      "follow_up": null
+    },
+    "reopened": {
+      "status": "APPROVED",
+      "record": {
+        "chief_complaint": "Doctor-reviewed smoke note",
+        "duration": null,
+        "presenting_symptoms": [],
+        "history_present_illness": null,
+        "relevant_negatives": [],
+        "past_medical_history": null,
+        "medications": [],
+        "allergies": [],
+        "vitals": {},
+        "examination_findings": [],
+        "assessment": null,
+        "plan": null,
+        "follow_up": null
+      }
+    }
+  },
+  "persistence_flow": {
+    "approved_status": "APPROVED",
+    "reopened_status": "APPROVED",
+    "consultation_id": "3c641586-cf96-4c09-9e75-d214ca7b6fe5"
+  },
+  "transcripts": [
+    {
+      "text": "For",
+      "timestamp": "0",
+      "speaker": "UNKNOWN",
+      "start_ms": 0,
+      "end_ms": 2000
+    }
+  ]
+}

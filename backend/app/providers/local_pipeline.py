@@ -21,7 +21,7 @@ class PipelineResult:
 
 
 class LocalAudioPipeline:
-    def __init__(self, vad: VoiceActivityDetector, stt: SpeechToTextProvider, aligner: WhisperXAligner, diarizer: DiarizationProvider) -> None:
+    def __init__(self, vad: VoiceActivityDetector, stt: SpeechToTextProvider, aligner: WhisperXAligner | None, diarizer: DiarizationProvider | None) -> None:
         self.vad = vad
         self.stt = stt
         self.aligner = aligner
@@ -38,12 +38,20 @@ class LocalAudioPipeline:
         stt_started = perf_counter()
         drafts = self.stt.transcribe(chunk)
         result.timings["transcription_ms"] = (perf_counter() - stt_started) * 1000
-        align_started = perf_counter()
-        aligned = self.aligner.align(drafts, chunk.audio, chunk.sample_rate)
-        result.timings["alignment_ms"] = (perf_counter() - align_started) * 1000
-        diar_started = perf_counter()
-        turns = self.diarizer.diarize(chunk.audio, chunk.sample_rate)
-        result.timings["diarization_ms"] = (perf_counter() - diar_started) * 1000
+        if self.aligner is not None:
+            align_started = perf_counter()
+            aligned = self.aligner.align(drafts, chunk.audio, chunk.sample_rate)
+            result.timings["alignment_ms"] = (perf_counter() - align_started) * 1000
+        else:
+            aligned = drafts
+            result.warnings.append(PipelineWarning("ALIGNMENT_DISABLED", "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint"))
+        if self.diarizer is not None:
+            diar_started = perf_counter()
+            turns = self.diarizer.diarize(chunk.audio, chunk.sample_rate)
+            result.timings["diarization_ms"] = (perf_counter() - diar_started) * 1000
+        else:
+            turns = []
+            result.warnings.append(PipelineWarning("DIARIZATION_DISABLED", "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model"))
         result.transcripts = [self._with_speaker(draft, turns, chunk.timestamp_ms) for draft in aligned]
         return result
 

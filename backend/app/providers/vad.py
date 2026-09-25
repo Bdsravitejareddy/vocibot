@@ -46,11 +46,18 @@ class SileroVoiceActivityDetector:
 
     def detect(self, chunk: AudioChunk) -> ActivityResult:
         started = perf_counter()
+        injected_model = self._model is not None
         model = self._load()
-        if self._model is not None and not callable(model):
-            import numpy as np  # type: ignore[import-not-found]
-            audio = np.frombuffer(chunk.audio, dtype=np.float32)
-        else:
+        if injected_model:
             audio = chunk.audio
-        confidence = float(model(audio, chunk.sample_rate).item())
+        else:
+            import numpy as np  # type: ignore[import-not-found]
+            import torch  # type: ignore[import-not-found]
+            audio = torch.from_numpy(np.frombuffer(chunk.audio, dtype=np.float32).copy())
+        if injected_model:
+            confidence = float(model(audio, chunk.sample_rate).item())
+        else:
+            frame_size = 512 if chunk.sample_rate == 16_000 else 256
+            probabilities = [float(model(audio[start:start + frame_size], chunk.sample_rate).item()) for start in range(0, len(audio) - frame_size + 1, frame_size)]
+            confidence = max(probabilities, default=0.0)
         return ActivityResult(probability=confidence, has_speech=confidence >= self.threshold, latency_ms=(perf_counter() - started) * 1000)
