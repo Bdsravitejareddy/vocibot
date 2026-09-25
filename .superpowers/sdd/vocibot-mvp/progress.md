@@ -9,3 +9,5 @@ Task 1: complete — tests: `npm test -- tests/setup.test.ts` → 1 passed; `.ve
 Task 2: complete — tests: `.venv/bin/pytest backend/tests/test_extraction.py backend/tests/test_record_diff.py -q` → 5 passed; `npm test -- tests/extraction.test.ts tests/record-diff.test.ts` → 2 passed.
 
 Task 3: complete — tests: `.venv/bin/pytest backend/tests/test_consultation_flow.py -q` → 4 passed; `npm test -- tests/consultation-flow.test.ts` → 1 passed.
+
+Task 4: complete — tests: `npm run typecheck` → passed; `npm run test:e2e -- tests/browser/vocibot.spec.ts` → 1 passed.
