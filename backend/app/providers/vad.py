@@ -1,24 +1,39 @@
+from dataclasses import dataclass
+from time import perf_counter
 from typing import Protocol
 
 from .speech import AudioChunk
 
 
 class VoiceActivityDetector(Protocol):
+    def detect(self, chunk: AudioChunk) -> "ActivityResult":
+        ...
+
     def has_speech(self, chunk: AudioChunk) -> bool:
         ...
 
 
+@dataclass(frozen=True)
+class ActivityResult:
+    probability: float
+    has_speech: bool
+    latency_ms: float
+
+
 class DemoVoiceActivityDetector:
+    def detect(self, chunk: AudioChunk) -> ActivityResult:
+        return ActivityResult(probability=1.0 if chunk.audio else 0.0, has_speech=bool(chunk.audio), latency_ms=0.0)
+
     def has_speech(self, chunk: AudioChunk) -> bool:
-        return bool(chunk.audio)
+        return self.detect(chunk).has_speech
 
 
 class SileroVoiceActivityDetector:
     """Lazy-loaded Silero VAD seam; audio preprocessing remains local to the backend."""
 
-    def __init__(self, threshold: float = 0.5) -> None:
+    def __init__(self, threshold: float = 0.5, model=None) -> None:
         self.threshold = threshold
-        self._model = None
+        self._model = model
 
     def _load(self):
         if self._model is None:
@@ -27,9 +42,15 @@ class SileroVoiceActivityDetector:
         return self._model
 
     def has_speech(self, chunk: AudioChunk) -> bool:
-        import numpy as np  # type: ignore[import-not-found]
+        return self.detect(chunk).has_speech
 
+    def detect(self, chunk: AudioChunk) -> ActivityResult:
+        started = perf_counter()
         model = self._load()
-        audio = np.frombuffer(chunk.audio, dtype=np.float32)
+        if self._model is not None and not callable(model):
+            import numpy as np  # type: ignore[import-not-found]
+            audio = np.frombuffer(chunk.audio, dtype=np.float32)
+        else:
+            audio = chunk.audio
         confidence = float(model(audio, chunk.sample_rate).item())
-        return confidence >= self.threshold
+        return ActivityResult(probability=confidence, has_speech=confidence >= self.threshold, latency_ms=(perf_counter() - started) * 1000)
