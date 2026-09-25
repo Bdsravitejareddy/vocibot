@@ -13,3 +13,5 @@ Task 3: complete — tests: `.venv/bin/pytest backend/tests/test_consultation_fl
 Task 4: complete — tests: `npm run typecheck` → passed; `npm run test:e2e -- tests/browser/vocibot.spec.ts` → 1 passed.
 
 Task 5: complete — tests: `npm run typecheck` → passed; `npm run test:e2e -- tests/browser/vocibot.spec.ts` → 1 passed, including stop, doctor edit, approval, history, detail, and evidence assertions.
+
+Task 6: complete — tests: `npm run lint` → 0 errors; `npm run typecheck` → passed; `npm test` → 4 passed; `.venv/bin/pytest -q` → 11 passed; `npm run build` → passed; `npm run test:e2e` → 1 passed; `git diff --check` → clean.
