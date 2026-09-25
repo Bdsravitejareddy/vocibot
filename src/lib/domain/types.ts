@@ -30,6 +30,8 @@ export type TranscriptSegmentInput = {
 export type TranscriptDraft = Omit<TranscriptSegmentInput, "id" | "sequence_number"> & {
   id?: string;
   sequence_number?: number;
+  start_ms?: number;
+  end_ms?: number;
 };
 
 export type CandidateClinicalUpdate = {
