@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -81,7 +81,7 @@ def stop_consultation(session: Session, consultation_id: str) -> Consultation:
     if consultation.status != ConsultationStatus.IN_PROGRESS.value:
         return consultation
     consultation.status = ConsultationStatus.READY_FOR_REVIEW.value
-    consultation.ended_at = datetime.utcnow()
+    consultation.ended_at = datetime.now(timezone.utc)
     session.commit()
     session.refresh(consultation)
     return consultation
