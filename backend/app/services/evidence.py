@@ -103,7 +103,7 @@ def _single_value_supported(value: str, texts: list[str]) -> bool:
         required = len(content_tokens) if len(content_tokens) < NARRATIVE_MIN_TOKENS else math.ceil(NARRATIVE_COVERAGE * len(content_tokens))
         if matched < required:
             continue
-        negated = _contains_negation(text_tokens, content_tokens)
+        negated = any(_contains_negation(_tokens(clause), content_tokens) for clause in _clauses(text))
         # "No fever" needs a denial in the source; "fever" must not be denied
         # there unless the value itself carries the negation ("if not settling").
         if value_is_negative and not negated:
@@ -133,6 +133,15 @@ def _same_word(left: str, right: str) -> bool:
             break
         prefix += 1
     return prefix >= max(4, shorter - 3)
+
+
+# A negation only reaches the end of its clause: in "no chest pain, but I
+# feel very tired" the tiredness is reported, not denied.
+CLAUSE_BREAK = re.compile(r"[.,;:!?]|\b(?:but|however|although|though|yet|except|whereas)\b", re.IGNORECASE)
+
+
+def _clauses(text: str) -> list[str]:
+    return [clause for clause in CLAUSE_BREAK.split(text) if clause.strip()]
 
 
 def _contains_negation(tokens: list[str], content_tokens: list[str]) -> bool:

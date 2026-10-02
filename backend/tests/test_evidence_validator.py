@@ -113,3 +113,14 @@ def test_chief_complaint_cannot_be_the_doctors_diagnosis() -> None:
     result = EvidenceValidator().validate("chief_complaint", "viral upper respiratory infection", ["u0"], segments, claimed_speaker=Speaker.DOCTOR)
 
     assert result.status == EvidenceStatus.REJECTED
+
+
+def test_a_negation_stops_at_the_end_of_its_clause() -> None:
+    segments = _unknown("No chest pain, but I feel very tired.", "No, I haven't been sick. I just feel nauseous.")
+    validator = EvidenceValidator()
+
+    assert validator.validate("presenting_symptoms", ["very tired"], ["u0"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("relevant_negatives", ["no chest pain"], ["u0"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("presenting_symptoms", ["nauseous"], ["u1"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("presenting_symptoms", ["sick"], ["u1"], segments).status == EvidenceStatus.REJECTED
+    assert validator.validate("relevant_negatives", ["no tingling or numbness"], ["u0"], _unknown("No tingling or numbness in my feet.")).status == EvidenceStatus.SUPPORTED

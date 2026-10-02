@@ -9,6 +9,18 @@ class LocalProviderError(RuntimeError):
     """A local model/dependency is unavailable; callers must surface the detail."""
 
 
+def build_final_speech_provider(config: Settings | None = None) -> SpeechToTextProvider | None:
+    """A separate, more accurate model for the final transcript (CPU servers).
+
+    None means the live model is used for the final transcript too.
+    """
+
+    selected = config or Settings()
+    if selected.ai_mode != "local" or selected.resolved_stt_provider != "whisper" or not selected.final_whisper_model or selected.final_whisper_model == selected.whisper_model:
+        return None
+    return build_speech_provider(selected.model_copy(update={"whisper_model": selected.final_whisper_model}))
+
+
 def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvider:
     selected = config or Settings()
     if selected.ai_mode == "demo":

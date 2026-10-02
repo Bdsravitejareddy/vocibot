@@ -12,7 +12,24 @@ LIST_FIELDS = {"presenting_symptoms", "relevant_negatives", "medications", "alle
 # Small local models can loop ("feeling dizzy, feeling sick, ...") until the
 # token limit; penalise repeats and bound the output.  The transcript prompt of
 # a long consultation needs more than Ollama's small default context.
-OLLAMA_OPTIONS = {"temperature": 0, "repeat_penalty": 1.15, "num_predict": 2048, "num_ctx": 16384}
+OLLAMA_OPTIONS = {"temperature": 0, "repeat_penalty": 1.15, "num_predict": 1536}
+# Rough characters per token for English clinical speech in Llama/Qwen tokenizers.
+CHARS_PER_TOKEN = 3.2
+SPEAKER_LABELS = {"DOCTOR": "Doctor", "PATIENT": "Patient", "UNKNOWN": "Speaker", "Speaker.DOCTOR": "Doctor", "Speaker.PATIENT": "Patient", "Speaker.UNKNOWN": "Speaker"}
+
+
+def context_size(prompt: str) -> int:
+    """Context just large enough for this prompt and the answer.
+
+    The KV cache grows with the context (~0.13 MB per token for an 8B model),
+    so sizing it per consultation keeps the note model's memory small.
+    """
+
+    needed = int(len(prompt) / CHARS_PER_TOKEN) + OLLAMA_OPTIONS["num_predict"] + 256
+    rounded = -(-needed // 1024) * 1024
+    return max(2048, min(settings.ollama_max_context, rounded))
+
+
 PLACEHOLDERS = {"none", "n/a", "na", "nil", "null", "unknown", "not mentioned", "not discussed", "not stated", "not provided", "not applicable", "no information", "-", ""}
 
 
@@ -33,9 +50,15 @@ class OllamaClinicalExtractionProvider:
 
     def extract(self, transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> ExtractionResult:
         prompt = self._prompt(transcript, current_record)
-        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "options": OLLAMA_OPTIONS}, timeout=settings.ollama_timeout_seconds)
+        options = {**OLLAMA_OPTIONS, "num_ctx": context_size(prompt)}
+        if settings.ollama_num_gpu >= 0:
+            options["num_gpu"] = settings.ollama_num_gpu
+        if settings.ollama_num_thread > 0:
+            options["num_thread"] = settings.ollama_num_thread
+        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "keep_alive": settings.ollama_keep_alive, "options": options}, timeout=settings.ollama_timeout_seconds)
         response.raise_for_status()
         payload: Any = response.json()
+        self.last_stats = {key: payload.get(key) for key in ("total_duration", "load_duration", "prompt_eval_count", "prompt_eval_duration", "eval_count", "eval_duration")} | {"num_ctx": options["num_ctx"]}
         raw = payload.get("response", payload)
         if isinstance(raw, str):
             raw = json.loads(raw)
@@ -50,6 +73,7 @@ class OllamaClinicalExtractionProvider:
             raw = {"proposed_record": record.model_dump(), "candidates": []}
         if isinstance(raw, dict):
             raw["proposed_record"] = self._sanitize_record(raw.get("proposed_record"))
+        short_ids = {f"s{index}": segment.id for index, segment in enumerate(transcript)} | {str(index): segment.id for index, segment in enumerate(transcript)}
         if isinstance(raw, dict) and isinstance(raw.get("candidates"), list):
             status_aliases = {"EXPLICITLY_SUPPORTED": "SUPPORTED", "SUPPORTED": "SUPPORTED", "UNCERTAIN": "NEEDS_REVIEW", "NEEDS_REVIEW": "NEEDS_REVIEW", "REJECTED": "REJECTED"}
             sanitized_candidates = []
@@ -62,7 +86,8 @@ class OllamaClinicalExtractionProvider:
                     candidate["value"] = OllamaClinicalExtractionProvider._coerce(candidate["field_name"], candidate.get("value"))
                 if candidate["value"] in (None, [], {}):
                     continue
-                candidate["source_segment_ids"] = [item for item in candidate.get("source_segment_ids", []) if isinstance(item, str)]
+                # The prompt cites segments by short ids (s0, s1, ...); map them back.
+                candidate["source_segment_ids"] = [short_ids.get(str(item).strip().lower(), str(item)) for item in candidate.get("source_segment_ids", []) if isinstance(item, (str, int))]
                 candidate["speaker"] = candidate.get("speaker") if candidate.get("speaker") in {"DOCTOR", "PATIENT", "UNKNOWN"} else "UNKNOWN"
                 candidate["status"] = status_aliases.get(str(candidate.get("status", "REJECTED")).upper(), "REJECTED")
                 sanitized_candidates.append(candidate)
@@ -126,11 +151,12 @@ class OllamaClinicalExtractionProvider:
             "examination_findings are only what the doctor observed while examining (e.g. eye movements, temperature reading); a doctor's 'it sounds like X' or 'this looks like X' is the assessment. "
             "Earlier diagnoses, investigations and specialist opinions from before this visit belong in past_medical_history. "
             "history_present_illness summarises only facts stated in the transcript: never add a symptom the patient did not report. "
-            "Extract only explicitly supported facts. Every candidate must include one or more exact transcript source_segment_ids. "
+            "Extract only explicitly supported facts. Every candidate must include one or more source_segment_ids: the s-numbers of the transcript lines that state it (e.g. [\"s3\", \"s4\"]). "
             "Never diagnose from symptoms. Assessment and plan require DOCTOR statements. "
             "Preserve uncertainty. Missing values must stay null or empty. "
             "Do not treat a doctor's question as a patient fact. Combine adjacent transcript segments when one thought is split across them, and cite every segment needed to support the value. "
             "Do not use medical examples or prior knowledge to fill missing fields. Do not normalize uncertain words or numbers into a medication; preserve the raw wording and mark NEEDS_REVIEW when terminology is ambiguous.\n"
-            f"CURRENT_RECORD={current_record.model_dump_json()}\n"
-            f"TRANSCRIPT={json.dumps([segment.model_dump() for segment in transcript])}"
+            + (f"CURRENT_RECORD={current_record.model_dump_json(exclude_defaults=True)}\n" if current_record.model_dump(exclude_defaults=True) else "")
+            + "TRANSCRIPT (one line per segment: id, speaker, words):\n"
+            + "\n".join(f"s{index} [{SPEAKER_LABELS.get(str(segment.speaker), 'Speaker')}] {segment.text}" for index, segment in enumerate(transcript))
         )

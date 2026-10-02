@@ -8,7 +8,20 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.1:8b"
     # A cold 8B model plus a long consultation can take well over 30 s locally.
     ollama_timeout_seconds: float = 120.0
+    # Upper bound for the per-consultation context (a 30-minute consultation
+    # needs ~10k tokens). Lower it on 8 GB machines.
+    ollama_max_context: int = 12288
+    # How long the note model stays loaded after a note: a busy clinic keeps it
+    # warm; small machines can free the memory sooner.
+    ollama_keep_alive: str = "30m"
+    # GPU layers for the note model: -1 lets Ollama decide, 0 forces CPU.
+    ollama_num_gpu: int = -1
+    # CPU threads for the note model (0 = Ollama default: physical cores).
+    ollama_num_thread: int = 0
     whisper_model: str = "small"
+    # CPU servers: a larger model for the final transcript after Stop (e.g.
+    # large-v3-turbo); empty uses whisper_model for both.
+    final_whisper_model: str = ""
     whisper_device: str = "auto"
     whisper_compute_type: str = "int8"
     asr_cpu_threads: int = 6

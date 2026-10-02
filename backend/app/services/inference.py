@@ -41,6 +41,7 @@ class InferenceEngine:
         self._queue: queue.PriorityQueue[_Job] = queue.PriorityQueue()
         self._sequence = itertools.count()
         self._pipeline = None
+        self._final_stt = None
         self._pipeline_lock = threading.Lock()
         self._worker: threading.Thread | None = None
         self._start_lock = threading.Lock()
@@ -57,11 +58,22 @@ class InferenceEngine:
                 self._pipeline = factory()
             return self._pipeline
 
+    def final_stt(self, live_stt):
+        """The final-transcript model: a dedicated one if configured, else the live one."""
+
+        with self._pipeline_lock:
+            if self._final_stt is None:
+                from ..providers.factory import build_final_speech_provider
+
+                self._final_stt = build_final_speech_provider(settings) or live_stt
+            return self._final_stt
+
     def reset(self) -> None:
-        """Forget the shared pipeline (tests, or after changing models)."""
+        """Forget the shared models (tests, or after changing models)."""
 
         with self._pipeline_lock:
             self._pipeline = None
+            self._final_stt = None
 
     # --- scheduling --------------------------------------------------------
 

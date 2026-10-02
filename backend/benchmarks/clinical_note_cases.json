@@ -1,0 +1,559 @@
+[
+ {
+  "id": "fever_uri",
+  "lines": [
+   "Good morning, what brings you in today?",
+   "I've had a fever for three days and a dry cough.",
+   "Any chest pain or breathlessness?",
+   "No chest pain, but I feel very tired.",
+   "Are you taking anything for it?",
+   "I took paracetamol 500 milligrams twice a day.",
+   "Any allergies?",
+   "I'm allergic to penicillin.",
+   "Your temperature is 38.6 and your pulse is 96. Your chest is clear on listening.",
+   "This looks like a viral upper respiratory infection.",
+   "Continue paracetamol, drink plenty of fluids, and come back if you become breathless."
+  ],
+  "expected": {
+   "chief_complaint": [
+    [
+     "fever",
+     "cough"
+    ]
+   ],
+   "duration": [
+    [
+     "three days",
+     "3 days"
+    ]
+   ],
+   "presenting_symptoms": [
+    [
+     "fever"
+    ],
+    [
+     "cough"
+    ],
+    [
+     "tired",
+     "fatigue"
+    ]
+   ],
+   "relevant_negatives": [
+    [
+     "chest pain"
+    ]
+   ],
+   "medications": [
+    [
+     "paracetamol"
+    ]
+   ],
+   "allergies": [
+    [
+     "penicillin"
+    ]
+   ],
+   "vitals": [
+    [
+     "38.6"
+    ],
+    [
+     "96"
+    ]
+   ],
+   "examination_findings": [
+    [
+     "chest",
+     "clear"
+    ]
+   ],
+   "assessment": [
+    [
+     "viral",
+     "respiratory"
+    ]
+   ],
+   "plan": [
+    [
+     "paracetamol",
+     "fluids"
+    ]
+   ]
+  },
+  "must_not": {
+   "chief_complaint": [
+    "infection",
+    "viral"
+   ],
+   "presenting_symptoms": [
+    "chest pain"
+   ]
+  }
+ },
+ {
+  "id": "diabetes_review",
+  "lines": [
+   "Hello, how have your sugars been?",
+   "Not good, doctor. My fasting sugar has been around 220 most mornings.",
+   "Are you taking your metformin?",
+   "Yes, metformin 500 milligrams twice a day, every day.",
+   "Any tingling or numbness in your feet?",
+   "No tingling at all.",
+   "Any problems with your eyesight?",
+   "No, my eyes are fine.",
+   "Your blood pressure today is 142 over 88 and your weight is 84 kilos.",
+   "Your diabetes is not well controlled on the current dose.",
+   "I am increasing metformin to 1000 milligrams twice a day and ordering an HbA1c test.",
+   "Let's review you again in three months."
+  ],
+  "expected": {
+   "chief_complaint": [
+    [
+     "sugar",
+     "glucose",
+     "diabetes"
+    ]
+   ],
+   "presenting_symptoms": [
+    [
+     "220",
+     "high",
+     "sugar"
+    ]
+   ],
+   "relevant_negatives": [
+    [
+     "tingling",
+     "numbness"
+    ],
+    [
+     "eye",
+     "vision",
+     "eyesight"
+    ]
+   ],
+   "medications": [
+    [
+     "metformin"
+    ]
+   ],
+   "vitals": [
+    [
+     "142"
+    ],
+    [
+     "84"
+    ]
+   ],
+   "assessment": [
+    [
+     "diabetes",
+     "not well controlled",
+     "poorly controlled",
+     "uncontrolled"
+    ]
+   ],
+   "plan": [
+    [
+     "1000",
+     "increas"
+    ],
+    [
+     "hba1c"
+    ]
+   ],
+   "follow_up": [
+    [
+     "three months",
+     "3 months"
+    ]
+   ]
+  },
+  "must_not": {
+   "presenting_symptoms": [
+    "tingling",
+    "numbness"
+   ],
+   "chief_complaint": [
+    "not well controlled"
+   ]
+  }
+ },
+ {
+  "id": "child_diarrhoea",
+  "lines": [
+   "What seems to be the problem today?",
+   "My son has had loose stools for two days, about six times a day.",
+   "Is there any blood in the stool?",
+   "No blood. He vomited once this morning.",
+   "Is he drinking and passing urine?",
+   "He is drinking water and he passed urine two hours ago.",
+   "Any fever?",
+   "He felt a bit warm last night.",
+   "His temperature is 37.9 and he looks mildly dehydrated; his tummy is soft and not tender.",
+   "This looks like acute gastroenteritis with mild dehydration.",
+   "Give him oral rehydration solution after every loose stool and zinc tablets for ten days.",
+   "Come back straight away if he has no urine for eight hours or becomes very drowsy."
+  ],
+  "expected": {
+   "chief_complaint": [
+    [
+     "loose stool",
+     "diarrh"
+    ]
+   ],
+   "duration": [
+    [
+     "two days",
+     "2 days"
+    ]
+   ],
+   "presenting_symptoms": [
+    [
+     "loose stool",
+     "diarrh"
+    ],
+    [
+     "vomit"
+    ]
+   ],
+   "relevant_negatives": [
+    [
+     "blood"
+    ]
+   ],
+   "vitals": [
+    [
+     "37.9"
+    ]
+   ],
+   "examination_findings": [
+    [
+     "dehydrat"
+    ],
+    [
+     "soft",
+     "not tender"
+    ]
+   ],
+   "assessment": [
+    [
+     "gastroenteritis"
+    ]
+   ],
+   "plan": [
+    [
+     "oral rehydration",
+     "ors"
+    ],
+    [
+     "zinc"
+    ]
+   ],
+   "follow_up": [
+    [
+     "no urine",
+     "drowsy",
+     "eight hours",
+     "8 hours"
+    ]
+   ]
+  },
+  "must_not": {
+   "presenting_symptoms": [
+    "blood"
+   ],
+   "chief_complaint": [
+    "gastroenteritis"
+   ]
+  }
+ },
+ {
+  "id": "back_pain",
+  "lines": [
+   "Tell me about the back pain.",
+   "It started last week after I lifted a heavy box at work.",
+   "Does the pain go anywhere?",
+   "Yes, it shoots down my left leg.",
+   "Any numbness, weakness or problems passing urine?",
+   "No numbness and no bladder problems.",
+   "What have you taken for it?",
+   "Ibuprofen 400 milligrams helps a little.",
+   "On examination there is tenderness over the lower lumbar spine and straight leg raise is positive on the left at 40 degrees.",
+   "This is most likely sciatica from a disc problem.",
+   "I'll refer you for physiotherapy and change the ibuprofen to naproxen 500 milligrams twice a day with food.",
+   "Review in two weeks, sooner if you get numbness or bladder problems."
+  ],
+  "expected": {
+   "chief_complaint": [
+    [
+     "back pain"
+    ]
+   ],
+   "duration": [
+    [
+     "last week",
+     "one week",
+     "1 week",
+     "a week"
+    ]
+   ],
+   "presenting_symptoms": [
+    [
+     "back pain"
+    ],
+    [
+     "leg"
+    ]
+   ],
+   "relevant_negatives": [
+    [
+     "numb"
+    ],
+    [
+     "bladder",
+     "urine"
+    ]
+   ],
+   "medications": [
+    [
+     "ibuprofen"
+    ]
+   ],
+   "examination_findings": [
+    [
+     "tender"
+    ],
+    [
+     "straight leg raise",
+     "slr"
+    ]
+   ],
+   "assessment": [
+    [
+     "sciatica"
+    ]
+   ],
+   "plan": [
+    [
+     "physio"
+    ],
+    [
+     "naproxen"
+    ]
+   ],
+   "follow_up": [
+    [
+     "two weeks",
+     "2 weeks"
+    ]
+   ]
+  },
+  "must_not": {
+   "presenting_symptoms": [
+    "numbness",
+    "bladder"
+   ],
+   "medications": [
+    "naproxen"
+   ]
+  }
+ },
+ {
+  "id": "asthma",
+  "lines": [
+   "How is your breathing?",
+   "I've been wheezing most nights for the past month.",
+   "How often are you using your salbutamol inhaler?",
+   "About four times a day now.",
+   "Do you smoke?",
+   "Yes, about ten cigarettes a day.",
+   "Any allergies to medicines?",
+   "Aspirin makes my breathing worse.",
+   "I can hear wheeze on both sides of your chest and your oxygen saturation is 95 percent.",
+   "Your asthma is poorly controlled.",
+   "I'm starting a budesonide formoterol inhaler twice a day, and I strongly advise you to stop smoking; we can refer you to the stop smoking service.",
+   "I'd like to see you again in four weeks."
+  ],
+  "expected": {
+   "chief_complaint": [
+    [
+     "wheez",
+     "breath"
+    ]
+   ],
+   "duration": [
+    [
+     "month"
+    ]
+   ],
+   "presenting_symptoms": [
+    [
+     "wheez"
+    ]
+   ],
+   "medications": [
+    [
+     "salbutamol"
+    ]
+   ],
+   "allergies": [
+    [
+     "aspirin"
+    ]
+   ],
+   "past_medical_history": [
+    [
+     "smok",
+     "asthma"
+    ]
+   ],
+   "vitals": [
+    [
+     "95"
+    ]
+   ],
+   "examination_findings": [
+    [
+     "wheez"
+    ]
+   ],
+   "assessment": [
+    [
+     "asthma"
+    ]
+   ],
+   "plan": [
+    [
+     "budesonide",
+     "formoterol"
+    ],
+    [
+     "smok"
+    ]
+   ],
+   "follow_up": [
+    [
+     "four weeks",
+     "4 weeks"
+    ]
+   ]
+  },
+  "must_not": {
+   "medications": [
+    "budesonide"
+   ],
+   "chief_complaint": [
+    "poorly controlled"
+   ]
+  }
+ },
+ {
+  "id": "test13_dizziness_real_asr",
+  "lines": [
+   "And we ended up at the Cromwell.",
+   "She sort of did this dramatic collapse in the waiting room",
+   "and ended up putting her in an MRI.",
+   "But we ended up at an ENT specialist",
+   "and he thought it was just really bad labyrinthitis.",
+   "She couldn't move.",
+   "And ever since then, we've had continuing episodes.",
+   "Normally it's just sort of a day here and there,",
+   "but this last week has been really awful.",
+   "She feels so dreadful.",
+   "She's just miserable.",
+   "Yeah.",
+   "Do you want to just explain to me what it feels like when you...",
+   "It feels really dizzy and sometimes I feel sick and nauseous.",
+   "Have you been sick with this?",
+   "No, I haven't been sick. I just feel nauseous and really yuck.",
+   "Have you had any fever or sort of cold-y type symptoms?",
+   "I mean, I get the often cough but I don't think it's like a fever.",
+   "And does movement generally make it worse?",
+   "Yeah, so why that's why lying down helps you so she just wants to lie and then we can't",
+   "get her up.",
+   "Yeah, but then when I lie down I can't really get up because I feel so dizzy.",
+   "I can't move.",
+   "I'm just going to take your temperature.",
+   "And any headaches at all?",
+   "Yeah, I've had a couple of headaches, like really bad ones.",
+   "Do you want to describe the headache to me?",
+   "Sometimes it feels like somebody is ringing the church bells, it feels like I'm right",
+   "against one and sometimes it feels like there's somebody hissing me and it really hurts.",
+   "And when you faint do you actually sort of lose consciousness or do you just go to the",
+   "floor?",
+   "Well when I fainted I knew what was going on because one of my friends said you're",
+   "going yellow so I got to the floor and then I fainted.",
+   "I'm just going to ask you to follow my finger with your eyes but keep your head still for",
+   "me okay?",
+   "And just tell me if you see double, okay?",
+   "From what you're describing it sounds absolutely like sort of inner ear, sort of disturbance.",
+   "What we could try would be some regular stomatils.",
+   "Does the stematil help the dizziness or just the nausea?",
+   "Both.",
+   "Okay, I'll go over that.",
+   "if things aren't settling or worsening then I think it would be reasonable to to to seek the",
+   "EMT's opinion can I get a referral letter that's fine yeah yeah that's fine and I'll do that and",
+   "I'll leave that at the reception day all right okay thanks thank you have a good day and you",
+   "Thank you."
+  ],
+  "expected": {
+   "chief_complaint": [
+    [
+     "dizz"
+    ]
+   ],
+   "presenting_symptoms": [
+    [
+     "dizz"
+    ],
+    [
+     "nause",
+     "sick"
+    ],
+    [
+     "headache"
+    ]
+   ],
+   "relevant_negatives": [
+    [
+     "fever"
+    ]
+   ],
+   "past_medical_history": [
+    [
+     "labyrinthitis",
+     "ent"
+    ]
+   ],
+   "assessment": [
+    [
+     "inner ear"
+    ]
+   ],
+   "plan": [
+    [
+     "stematil",
+     "stemetil",
+     "stomatil",
+     "stomatils"
+    ],
+    [
+     "ent",
+     "emt",
+     "referral"
+    ]
+   ]
+  },
+  "must_not": {
+   "presenting_symptoms": [
+    "vomit"
+   ],
+   "chief_complaint": [
+    "inner ear",
+    "labyrinthitis"
+   ]
+  }
+ }
+]

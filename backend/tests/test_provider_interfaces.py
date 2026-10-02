@@ -41,3 +41,15 @@ def test_mlx_whisper_filters_low_confidence_segments_and_offsets_timestamps() ->
 
     assert drafts == [TranscriptDraft(text="I have fever", timestamp="00:00:05", start_ms=5_000, end_ms=6_200, language_code="en")]
     assert calls[0]["temperature"] == 0.0 and calls[0]["language"] == "en" and calls[0]["path_or_hf_repo"] == "local-model"
+
+
+def test_cpu_servers_can_use_a_larger_model_for_the_final_transcript(monkeypatch) -> None:
+    from app.providers.factory import build_final_speech_provider
+
+    monkeypatch.setattr("app.config.mlx_whisper_available", lambda: False)
+    same = Settings(_env_file=None, ai_mode="local", whisper_model="small")
+    split = Settings(_env_file=None, ai_mode="local", whisper_model="small", final_whisper_model="large-v3-turbo")
+
+    assert build_final_speech_provider(same) is None
+    final = build_final_speech_provider(split)
+    assert isinstance(final, FasterWhisperProvider) and final.model_size == "large-v3-turbo"

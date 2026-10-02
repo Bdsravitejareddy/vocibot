@@ -153,9 +153,10 @@ def _final_transcriber(warnings: list[str]):
     from .inference import ENGINE, FINAL
 
     pipeline = ENGINE.pipeline(audio_api.build_local_pipeline)
+    stt = ENGINE.final_stt(pipeline.stt)
 
     def transcribe(waveform, sample_rate: int, language: str | None):
-        drafts, chunk_warnings = ENGINE.transcribe_recording(pipeline.stt, waveform, sample_rate, language, priority=FINAL)
+        drafts, chunk_warnings = ENGINE.transcribe_recording(stt, waveform, sample_rate, language, priority=FINAL)
         warnings.extend(chunk_warnings)
         return drafts
 
