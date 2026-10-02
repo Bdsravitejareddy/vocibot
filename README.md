@@ -16,6 +16,7 @@ Install the front-end and Python dependencies while online, then explicitly prov
 
 ```bash
 .venv/bin/python scripts/provision_local_models.py --engine mlx_whisper --model mlx-community/whisper-large-v3-turbo
+.venv/bin/python scripts/provision_local_models.py --engine mlx_whisper --model mlx-community/whisper-large-v3-mlx   # language detection + English translation
 .venv/bin/python scripts/provision_local_models.py --engine whisper --model small
 ollama pull llama3.1:8b
 ```

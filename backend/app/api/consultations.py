@@ -90,7 +90,7 @@ def retranscribe(consultation_id: str, session: Session = Depends(get_session)) 
     def transcribe(waveform, sample_rate: int, language: str | None):
         result = FinalReconciler().run(waveform, stt, sample_rate=sample_rate, language=language)
         warnings.extend(result.warnings)
-        return result.transcripts
+        return result
 
     warnings: list[str] = []
     try:

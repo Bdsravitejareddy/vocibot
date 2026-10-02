@@ -113,3 +113,40 @@ def test_chief_complaint_cannot_be_the_doctors_diagnosis() -> None:
     result = EvidenceValidator().validate("chief_complaint", "viral upper respiratory infection", ["u0"], segments, claimed_speaker=Speaker.DOCTOR)
 
     assert result.status == EvidenceStatus.REJECTED
+
+
+def test_a_negation_stops_at_the_end_of_its_clause() -> None:
+    segments = _unknown("No chest pain, but I feel very tired.", "No, I haven't been sick. I just feel nauseous.")
+    validator = EvidenceValidator()
+
+    assert validator.validate("presenting_symptoms", ["very tired"], ["u0"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("relevant_negatives", ["no chest pain"], ["u0"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("presenting_symptoms", ["nauseous"], ["u1"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("presenting_symptoms", ["sick"], ["u1"], segments).status == EvidenceStatus.REJECTED
+    assert validator.validate("relevant_negatives", ["no tingling or numbness"], ["u0"], _unknown("No tingling or numbness in my feet.")).status == EvidenceStatus.SUPPORTED
+
+
+def test_non_latin_script_is_checked_like_english() -> None:
+    segments = _unknown("గత నాలుగు రోజులుగా నాకు తలనొప్పి, ఒళ్ళు నొప్పులు ఉన్నాయి.", "मुझे तीन दिन से बुखार है।")
+    validator = EvidenceValidator()
+
+    assert validator.validate("presenting_symptoms", ["తలనొప్పి"], ["u0"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("presenting_symptoms", ["बुखार"], ["u1"], segments).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("presenting_symptoms", ["జ్వరం"], ["u0"], segments).status == EvidenceStatus.REJECTED
+
+
+def test_a_wrongly_cited_fact_is_re_cited_to_the_lines_that_say_it() -> None:
+    segments = _unknown("Good morning.", "What brings you in?", "I have had a fever and body aches for four days.")
+
+    result = EvidenceValidator().validate("chief_complaint", "fever, body aches", ["u0", "u1"], segments)
+    assert result.status == EvidenceStatus.SUPPORTED and result.source_segment_ids == ["u2"]
+    assert EvidenceValidator().validate("chief_complaint", "chest pain", ["u0"], segments).status == EvidenceStatus.REJECTED
+
+
+def test_translated_doctor_fields_with_doubtful_attribution_are_flagged_not_dropped() -> None:
+    translated = [TranscriptSegmentInput(id=f"c-en-{index}", speaker=Speaker.UNKNOWN, text=text, timestamp="00:00:00", sequence_number=index) for index, text in enumerate(["Doctor, the changes in the season seem to be like a viral infection."])]
+    original = [TranscriptSegmentInput(id="c-final-0", speaker=Speaker.UNKNOWN, text=translated[0].text, timestamp="00:00:00", sequence_number=0)]
+    validator = EvidenceValidator()
+
+    assert validator.validate("assessment", "viral infection", ["c-en-0"], translated, claimed_speaker=Speaker.PATIENT).status == EvidenceStatus.NEEDS_REVIEW
+    assert validator.validate("assessment", "viral infection", ["c-final-0"], original, claimed_speaker=Speaker.PATIENT).status == EvidenceStatus.REJECTED

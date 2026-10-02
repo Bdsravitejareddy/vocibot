@@ -48,6 +48,7 @@ class Consultation(Base):
     clinical_record: Mapped["ClinicalRecord"] = relationship(back_populates="consultation", uselist=False, cascade="all, delete-orphan")
     updates: Mapped[list["RecordUpdate"]] = relationship(back_populates="consultation", cascade="all, delete-orphan")
     recordings: Mapped[list["Recording"]] = relationship(back_populates="consultation", cascade="all, delete-orphan", order_by="Recording.started_at")
+    translation_segments: Mapped[list["TranslationSegment"]] = relationship(cascade="all, delete-orphan", order_by="TranslationSegment.sequence_number")
 
 
 class Recording(Base):
@@ -114,3 +115,18 @@ class AppSetting(Base):
     __tablename__ = "app_settings"
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[dict | list | str | None] = mapped_column(JSON, nullable=True)
+
+
+class TranslationSegment(Base):
+    """English translation of a non-English consultation, made from the audio.
+
+    The clinical note is written from (and evidence-checked against) these
+    segments; the original-language transcript stays the record.
+    """
+
+    __tablename__ = "translation_segments"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    consultation_id: Mapped[str] = mapped_column(ForeignKey("consultations.id", ondelete="CASCADE"), index=True)
+    text: Mapped[str] = mapped_column(Text)
+    timestamp: Mapped[str] = mapped_column(String(40))
+    sequence_number: Mapped[int] = mapped_column(Integer)

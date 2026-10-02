@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..domain.types import ClinicalRecord, ConsultationStatus, EvidenceStatus, RecordUpdateType, Speaker, TranscriptSegmentInput
 from ..models import ClinicalRecord as ClinicalRecordModel
-from ..models import Consultation, Patient, Recording, RecordUpdate, TranscriptSegment
+from ..models import Consultation, Patient, Recording, RecordUpdate, TranscriptSegment, TranslationSegment
 from ..config import settings
 from ..providers.factory import build_extraction_provider
 from ..providers.speech import TranscriptDraft
@@ -175,8 +175,9 @@ def replace_with_reconciled_transcript(
     *,
     warnings: list[str] | None = None,
     extract: bool = True,
+    translations: list[TranscriptDraft] | None = None,
 ) -> dict:
-    """Commit the authoritative ASR transcript before optional note extraction."""
+    """Commit the authoritative ASR transcript (and English translation) before optional note extraction."""
 
     consultation = _find_consultation(session, consultation_id)
     if consultation.status != ConsultationStatus.IN_PROGRESS.value:
@@ -200,10 +201,31 @@ def replace_with_reconciled_transcript(
             timestamp=draft.timestamp,
             sequence_number=index,
         ))
+    _store_translation(session, consultation, translations or [])
     session.commit()
     if not extract:
         return get_consultation(session, consultation_id)
     return extract_reconciled_clinical_record(session, consultation_id, warnings=warnings)
+
+
+def _store_translation(session: Session, consultation: Consultation, translations: list[TranscriptDraft]) -> None:
+    for item in list(consultation.translation_segments):
+        session.delete(item)
+    session.flush()
+    for index, draft in enumerate(translations):
+        session.add(TranslationSegment(id=f"{consultation.id}-en-{index}", consultation_id=consultation.id, text=draft.text, timestamp=draft.timestamp, sequence_number=index))
+    session.expire(consultation, ["translation_segments"])
+
+
+def _note_source(session: Session, consultation: Consultation) -> list[TranscriptSegmentInput]:
+    """What the note is written from: the English translation when the
+    consultation was not in English, otherwise the transcript itself."""
+
+    translated = session.scalars(select(TranslationSegment).where(TranslationSegment.consultation_id == consultation.id).order_by(TranslationSegment.sequence_number)).all()
+    if translated:
+        return [TranscriptSegmentInput(id=item.id, speaker=Speaker.UNKNOWN, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code="en") for item in translated]
+    rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
+    return [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in rows]
 
 
 def extract_reconciled_clinical_record(
@@ -216,13 +238,12 @@ def extract_reconciled_clinical_record(
     """Extract a note from the already-committed authoritative transcript."""
 
     consultation = _find_consultation(session, consultation_id)
-    transcript_rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
-    authoritative_prefix = f"{consultation.id}-final-"
-    if require_authoritative and (not transcript_rows or any(not item.id.startswith(authoritative_prefix) for item in transcript_rows)):
+    transcript_inputs = _note_source(session, consultation)
+    authoritative = (f"{consultation.id}-final-", f"{consultation.id}-en-")
+    if require_authoritative and (not transcript_inputs or any(not item.id.startswith(authoritative) for item in transcript_inputs)):
         if warnings is not None:
             warnings.append("Clinical note inference was skipped because no authoritative final transcript was available.")
         return get_consultation(session, consultation_id)
-    transcript_inputs = [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in transcript_rows]
     current = ClinicalRecord()
     result = _extract_or_leave_reviewable(transcript_inputs, current, warnings)
     validated_record, evidence, needs_review = _apply_validated_candidates(result, current, transcript_inputs)
@@ -247,10 +268,9 @@ def reanalyse_consultation(session: Session, consultation_id: str, *, warnings: 
     consultation = _find_consultation(session, consultation_id)
     if consultation.status == ConsultationStatus.IN_PROGRESS.value:
         raise ConsultationStateError("stop the consultation before re-analysing its note")
-    transcript_rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
-    if not transcript_rows:
+    transcript_inputs = _note_source(session, consultation)
+    if not transcript_inputs:
         raise ConsultationStateError("this consultation has no transcript to analyse")
-    transcript_inputs = [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in transcript_rows]
     result = _extract_or_leave_reviewable(transcript_inputs, ClinicalRecord(), warnings)
     if result is None:
         # Extraction failed: leave the existing note exactly as it was.
@@ -280,7 +300,8 @@ def reanalyse_consultation(session: Session, consultation_id: str, *, warnings: 
 def retranscribe_consultation(session: Session, consultation_id: str, transcribe, *, warnings: list[str]) -> dict:
     """Re-transcribe a finished consultation from its stored audio, then refill the note.
 
-    ``transcribe(waveform, sample_rate, language)`` returns transcript drafts.
+    ``transcribe(waveform, sample_rate, language)`` returns transcript drafts,
+    or a reconciliation result that also carries an English translation.
     Each recording's SHA-256 is verified first: altered audio is never used.
     """
 
@@ -292,6 +313,7 @@ def retranscribe_consultation(session: Session, consultation_id: str, transcribe
     if not consultation.recordings:
         raise ConsultationStateError("this consultation has no stored audio")
     drafts: list[TranscriptDraft] = []
+    translations: list[TranscriptDraft] = []
     offset_ms = 0
     for recording in consultation.recordings:
         path = Path(recording.file_path)
@@ -300,10 +322,13 @@ def retranscribe_consultation(session: Session, consultation_id: str, transcribe
         if recording.sha256 and file_sha256(path) != recording.sha256:
             raise ConsultationStateError(f"recording {path.name} does not match its stored fingerprint; it may have been altered")
         waveform, sample_rate = read_audio(path)
-        for draft in transcribe(waveform, sample_rate, recording.language_code):
-            start = (draft.start_ms or 0) + offset_ms
-            end = (draft.end_ms or draft.start_ms or 0) + offset_ms
-            drafts.append(TranscriptDraft(text=draft.text, timestamp=_format_offset(start), speaker=draft.speaker, start_ms=start, end_ms=end, language_code=draft.language_code))
+        result = transcribe(waveform, sample_rate, recording.language_code)
+        pieces = (getattr(result, "transcripts", result), getattr(result, "translations", []))
+        for target, source in zip((drafts, translations), pieces):
+            for draft in source:
+                start = (draft.start_ms or 0) + offset_ms
+                end = (draft.end_ms or draft.start_ms or 0) + offset_ms
+                target.append(TranscriptDraft(text=draft.text, timestamp=_format_offset(start), speaker=draft.speaker, start_ms=start, end_ms=end, language_code=draft.language_code))
         offset_ms += int(len(waveform) / sample_rate * 1000)
     if not drafts:
         raise ConsultationStateError("no speech was recognised in the stored audio")
@@ -312,6 +337,7 @@ def retranscribe_consultation(session: Session, consultation_id: str, transcribe
     session.flush()
     for index, draft in enumerate(drafts):
         session.add(TranscriptSegment(id=f"{consultation.id}-final-{index}", consultation_id=consultation.id, speaker=draft.speaker if draft.speaker in {Speaker.DOCTOR.value, Speaker.PATIENT.value} else Speaker.UNKNOWN.value, text=draft.text, language_code=draft.language_code, timestamp=draft.timestamp, sequence_number=index))
+    _store_translation(session, consultation, translations)
     if consultation.status == ConsultationStatus.APPROVED.value:
         # The approved note was based on the old transcript.
         session.add(RecordUpdate(consultation_id=consultation.id, field_name="__approval__", previous_value=ConsultationStatus.APPROVED.value, new_value=ConsultationStatus.READY_FOR_REVIEW.value, source_transcript_segment_ids=[], update_type=RecordUpdateType.REOPENED_FOR_REVIEW.value))
@@ -385,6 +411,7 @@ def get_consultation(session: Session, consultation_id: str) -> dict:
         "started_at": consultation.started_at.isoformat(),
         "ended_at": consultation.ended_at.isoformat() if consultation.ended_at else None,
         "patient": {"id": consultation.patient.id, "patient_identifier": consultation.patient.patient_identifier, "name": consultation.patient.name, "age": consultation.patient.age, "sex": consultation.patient.sex},
+        "translation": [{"id": item.id, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number} for item in consultation.translation_segments],
         "recordings": [{"id": item.id, "started_at": item.started_at.isoformat(), "duration_ms": item.duration_ms, "sample_rate": item.sample_rate, "language_code": item.language_code, "sha256": item.sha256, "original_sha256": item.original_sha256, "format": item.format, "size_bytes": item.size_bytes, "file_name": Path(item.file_path).name, "available": Path(item.file_path).is_file()} for item in consultation.recordings],
         "transcript": [{"id": item.id, "speaker": item.speaker, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number, "language_code": item.language_code} for item in transcript_rows],
         "record": record,

@@ -52,11 +52,11 @@ def build_local_pipeline() -> LocalAudioPipeline:
     )
 
 
-def persist_reconciled_transcript(consultation_id: str, transcripts: list[TranscriptDraft]) -> None:
+def persist_reconciled_transcript(consultation_id: str, transcripts: list[TranscriptDraft], translations: list[TranscriptDraft] | None = None) -> None:
     """Create and use the database session on the executor thread."""
 
     with SessionLocal() as session:
-        replace_with_reconciled_transcript(session, consultation_id, transcripts, extract=False)
+        replace_with_reconciled_transcript(session, consultation_id, transcripts, extract=False, translations=translations)
 
 
 @router.websocket("/api/consultations/{consultation_id}/audio")
@@ -311,7 +311,10 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                 if message["text"] == '{"type":"stop"}' or message["text"] == '{"type": "stop"}':
                     reconciled = None
                     try:
-                        async with asyncio.timeout(settings.asr_finalization_timeout_seconds):
+                        # Non-English consultations are also translated (~1/3 of
+                        # the recording's length), so allow for long recordings.
+                        recorded_seconds = sum(len(waveform) for waveform in received_waveforms) / settings.audio_sample_rate
+                        async with asyncio.timeout(settings.asr_finalization_timeout_seconds * max(1.0, recorded_seconds / 180)):
                             await audio_queue.put(None)
                             await worker
                             if settings.ai_mode == "local" and received_waveforms:
@@ -351,7 +354,7 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                             try:
                                 # This transaction only replaces transcript rows;
                                 # slow local-LLM extraction runs later via /stop.
-                                persist_reconciled_transcript(consultation_id, reconciled.transcripts)
+                                persist_reconciled_transcript(consultation_id, reconciled.transcripts, reconciled.translations)
                             except Exception as error:
                                 logger.exception("Final transcript persistence failed for consultation %s", consultation_id)
                                 final_reconciliation["error"] = str(error)
