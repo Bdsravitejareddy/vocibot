@@ -16,6 +16,8 @@ class RecordUpdateType(StrEnum):
     AI_NEEDS_REVIEW = "AI_NEEDS_REVIEW"
     DOCTOR_EDITED = "DOCTOR_EDITED"
     DOCTOR_APPROVED = "DOCTOR_APPROVED"
+    # An approved note changed by re-analysis must be approved again.
+    REOPENED_FOR_REVIEW = "REOPENED_FOR_REVIEW"
 
 
 class EvidenceStatus(StrEnum):

@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import logging
+from pathlib import Path
 import re
 
 from sqlalchemy import select
@@ -7,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..domain.types import ClinicalRecord, ConsultationStatus, EvidenceStatus, RecordUpdateType, Speaker, TranscriptSegmentInput
 from ..models import ClinicalRecord as ClinicalRecordModel
-from ..models import Consultation, Patient, RecordUpdate, TranscriptSegment
+from ..models import Consultation, Patient, Recording, RecordUpdate, TranscriptSegment
 from ..config import settings
 from ..providers.factory import build_extraction_provider
 from ..providers.speech import TranscriptDraft
@@ -28,6 +29,10 @@ def _extract_or_leave_reviewable(transcript_inputs: list[TranscriptSegmentInput]
         if warnings is not None:
             warnings.append("Clinical note inference did not finish. The final transcript is available for manual review.")
         return None
+
+
+class ConsultationStateError(ValueError):
+    """The consultation exists but is not in a state that allows the action."""
 
 
 def _apply_validated_candidates(result, current: ClinicalRecord, transcript_inputs: list[TranscriptSegmentInput]) -> tuple[ClinicalRecord, dict[str, list[str]], set[str]]:
@@ -231,6 +236,96 @@ def extract_reconciled_clinical_record(
     return get_consultation(session, consultation_id)
 
 
+def reanalyse_consultation(session: Session, consultation_id: str, *, warnings: list[str]) -> dict:
+    """Regenerate the AI-filled note of a finished consultation from its transcript.
+
+    Fields the doctor edited are kept.  AI-filled fields are replaced by the
+    new analysis, including being cleared when no longer supported.  An
+    approved consultation returns to review because its note has changed.
+    """
+
+    consultation = _find_consultation(session, consultation_id)
+    if consultation.status == ConsultationStatus.IN_PROGRESS.value:
+        raise ConsultationStateError("stop the consultation before re-analysing its note")
+    transcript_rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
+    if not transcript_rows:
+        raise ConsultationStateError("this consultation has no transcript to analyse")
+    transcript_inputs = [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in transcript_rows]
+    result = _extract_or_leave_reviewable(transcript_inputs, ClinicalRecord(), warnings)
+    if result is None:
+        # Extraction failed: leave the existing note exactly as it was.
+        return get_consultation(session, consultation_id)
+    analysed, evidence, needs_review = _apply_validated_candidates(result, ClinicalRecord(), transcript_inputs)
+    current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
+    doctor_edited_fields = {update.field_name for update in consultation.updates if update.update_type == RecordUpdateType.DOCTOR_EDITED.value}
+    refreshed = analysed.model_dump()
+    for field_name in doctor_edited_fields & set(refreshed):
+        refreshed[field_name] = getattr(current, field_name)
+    previous = current.model_dump()
+    changed = [field_name for field_name in refreshed if refreshed[field_name] != previous[field_name]]
+    for field_name in changed:
+        session.add(RecordUpdate(consultation_id=consultation.id, field_name=field_name, previous_value=previous[field_name], new_value=refreshed[field_name], source_transcript_segment_ids=evidence.get(field_name, []), update_type=_ai_update_type(field_name, needs_review)))
+    if changed:
+        consultation.clinical_record.structured_data_json = refreshed
+        consultation.clinical_record.version += 1
+        if consultation.status == ConsultationStatus.APPROVED.value:
+            session.add(RecordUpdate(consultation_id=consultation.id, field_name="__approval__", previous_value=ConsultationStatus.APPROVED.value, new_value=ConsultationStatus.READY_FOR_REVIEW.value, source_transcript_segment_ids=[], update_type=RecordUpdateType.REOPENED_FOR_REVIEW.value))
+            consultation.status = ConsultationStatus.READY_FOR_REVIEW.value
+    else:
+        warnings.append("Re-analysis found no changes to the note.")
+    session.commit()
+    return get_consultation(session, consultation_id)
+
+
+def retranscribe_consultation(session: Session, consultation_id: str, transcribe, *, warnings: list[str]) -> dict:
+    """Re-transcribe a finished consultation from its stored audio, then refill the note.
+
+    ``transcribe(waveform, sample_rate, language)`` returns transcript drafts.
+    Each recording's SHA-256 is verified first: altered audio is never used.
+    """
+
+    from .recordings import file_sha256, read_recording
+
+    consultation = _find_consultation(session, consultation_id)
+    if consultation.status == ConsultationStatus.IN_PROGRESS.value:
+        raise ConsultationStateError("stop the consultation before re-transcribing it")
+    if not consultation.recordings:
+        raise ConsultationStateError("this consultation has no stored audio")
+    drafts: list[TranscriptDraft] = []
+    offset_ms = 0
+    for recording in consultation.recordings:
+        path = Path(recording.file_path)
+        if not path.is_file():
+            raise ConsultationStateError(f"recording {path.name} is missing")
+        if recording.sha256 and file_sha256(path) != recording.sha256:
+            raise ConsultationStateError(f"recording {path.name} does not match its stored fingerprint; it may have been altered")
+        waveform, sample_rate = read_recording(path)
+        for draft in transcribe(waveform, sample_rate, recording.language_code):
+            start = (draft.start_ms or 0) + offset_ms
+            end = (draft.end_ms or draft.start_ms or 0) + offset_ms
+            drafts.append(TranscriptDraft(text=draft.text, timestamp=_format_offset(start), speaker=draft.speaker, start_ms=start, end_ms=end, language_code=draft.language_code))
+        offset_ms += int(len(waveform) / sample_rate * 1000)
+    if not drafts:
+        raise ConsultationStateError("no speech was recognised in the stored audio")
+    for item in list(consultation.transcript_segments):
+        session.delete(item)
+    session.flush()
+    for index, draft in enumerate(drafts):
+        session.add(TranscriptSegment(id=f"{consultation.id}-final-{index}", consultation_id=consultation.id, speaker=draft.speaker if draft.speaker in {Speaker.DOCTOR.value, Speaker.PATIENT.value} else Speaker.UNKNOWN.value, text=draft.text, language_code=draft.language_code, timestamp=draft.timestamp, sequence_number=index))
+    if consultation.status == ConsultationStatus.APPROVED.value:
+        # The approved note was based on the old transcript.
+        session.add(RecordUpdate(consultation_id=consultation.id, field_name="__approval__", previous_value=ConsultationStatus.APPROVED.value, new_value=ConsultationStatus.READY_FOR_REVIEW.value, source_transcript_segment_ids=[], update_type=RecordUpdateType.REOPENED_FOR_REVIEW.value))
+        consultation.status = ConsultationStatus.READY_FOR_REVIEW.value
+    session.commit()
+    session.expire(consultation, ["transcript_segments"])
+    return reanalyse_consultation(session, consultation_id, warnings=warnings)
+
+
+def _format_offset(milliseconds: int) -> str:
+    seconds = max(0, milliseconds // 1000)
+    return f"{seconds // 3600:02d}:{seconds % 3600 // 60:02d}:{seconds % 60:02d}"
+
+
 def stop_consultation(session: Session, consultation_id: str) -> Consultation:
     consultation = _find_consultation(session, consultation_id)
     if consultation.status != ConsultationStatus.IN_PROGRESS.value:
@@ -250,12 +345,15 @@ def delete_consultation(session: Session, consultation_id: str) -> None:
 
     consultation = _find_consultation(session, consultation_id)
     patient = consultation.patient
+    recording_files = [Path(recording.file_path) for recording in consultation.recordings]
     session.delete(consultation)
     session.flush()
     remaining = session.scalars(select(Consultation.id).where(Consultation.patient_id == patient.id).limit(1)).first()
     if remaining is None:
         session.delete(patient)
     session.commit()
+    for path in recording_files:
+        path.unlink(missing_ok=True)
 
 
 def approve_consultation(session: Session, consultation_id: str, payload: ApproveRequest) -> Consultation:
@@ -282,10 +380,12 @@ def get_consultation(session: Session, consultation_id: str) -> dict:
     update_rows = session.scalars(select(RecordUpdate).where(RecordUpdate.consultation_id == consultation.id).order_by(RecordUpdate.updated_at)).all()
     return {
         "id": consultation.id,
+        "session_code": consultation.session_code,
         "status": consultation.status,
         "started_at": consultation.started_at.isoformat(),
         "ended_at": consultation.ended_at.isoformat() if consultation.ended_at else None,
         "patient": {"id": consultation.patient.id, "patient_identifier": consultation.patient.patient_identifier, "name": consultation.patient.name, "age": consultation.patient.age, "sex": consultation.patient.sex},
+        "recordings": [{"id": item.id, "started_at": item.started_at.isoformat(), "duration_ms": item.duration_ms, "sample_rate": item.sample_rate, "language_code": item.language_code, "sha256": item.sha256, "file_name": Path(item.file_path).name, "available": Path(item.file_path).is_file()} for item in consultation.recordings],
         "transcript": [{"id": item.id, "speaker": item.speaker, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number, "language_code": item.language_code} for item in transcript_rows],
         "record": record,
         "updates": [{"id": update.id, "field_name": update.field_name, "previous_value": update.previous_value, "new_value": update.new_value, "source_segment_ids": update.source_transcript_segment_ids, "updated_at": update.updated_at.isoformat(), "update_type": update.update_type} for update in update_rows],

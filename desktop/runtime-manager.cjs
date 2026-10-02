@@ -64,7 +64,7 @@ async function startRuntime({
 
   try {
     mkdirSync(appDataPath, { recursive: true });
-    launch(apiPath, [], { cwd: join(resourcesPath, "backend"), env: { ...process.env, AI_MODE: "local", HOST: "127.0.0.1", PORT: "8000", DATABASE_URL: `sqlite:///${join(appDataPath, "vocibot.sqlite")}`, OLLAMA_BASE_URL: "http://127.0.0.1:11434", NO_PROXY: "127.0.0.1,localhost", no_proxy: "127.0.0.1,localhost", HF_HUB_OFFLINE: "1", TRANSFORMERS_OFFLINE: "1", HF_HUB_DISABLE_TELEMETRY: "1" } });
+    launch(apiPath, [], { cwd: join(resourcesPath, "backend"), env: { ...process.env, AI_MODE: "local", HOST: "127.0.0.1", PORT: "8000", DATABASE_URL: `sqlite:///${join(appDataPath, "vocibot.sqlite")}`, RECORDINGS_DIR: join(appDataPath, "recordings"), OLLAMA_BASE_URL: "http://127.0.0.1:11434", NO_PROXY: "127.0.0.1,localhost", no_proxy: "127.0.0.1,localhost", HF_HUB_OFFLINE: "1", TRANSFORMERS_OFFLINE: "1", HF_HUB_DISABLE_TELEMETRY: "1" } });
     launch(process.execPath, [webPath], { cwd: join(resourcesPath, "web"), env: { ...process.env, ELECTRON_RUN_AS_NODE: "1", HOSTNAME: "127.0.0.1", PORT: "3000", NEXT_PUBLIC_API_URL: "http://127.0.0.1:8000" } });
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {

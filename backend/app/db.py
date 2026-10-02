@@ -20,12 +20,39 @@ def migrate_sqlite_schema(target_engine=engine) -> None:
 
     if target_engine.dialect.name != "sqlite":
         return
-    if "transcript_segments" not in inspect(target_engine).get_table_names():
-        return
+    tables = inspect(target_engine).get_table_names()
     with target_engine.begin() as connection:
-        columns = {row[1] for row in connection.execute(text("PRAGMA table_info(transcript_segments)"))}
-        if "language_code" not in columns:
-            connection.execute(text("ALTER TABLE transcript_segments ADD COLUMN language_code VARCHAR(20)"))
+        if "transcript_segments" in tables:
+            columns = {row[1] for row in connection.execute(text("PRAGMA table_info(transcript_segments)"))}
+            if "language_code" not in columns:
+                connection.execute(text("ALTER TABLE transcript_segments ADD COLUMN language_code VARCHAR(20)"))
+        if "consultations" in tables:
+            columns = {row[1] for row in connection.execute(text("PRAGMA table_info(consultations)"))}
+            if "session_code" not in columns:
+                connection.execute(text("ALTER TABLE consultations ADD COLUMN session_code VARCHAR(32)"))
+            # Give consultations recorded before session IDs existed their own.
+            from .models import new_session_code
+
+            used = {row[0] for row in connection.execute(text("SELECT session_code FROM consultations WHERE session_code IS NOT NULL"))}
+            for consultation_id, started_at in connection.execute(text("SELECT id, started_at FROM consultations WHERE session_code IS NULL")).all():
+                when = _parse_timestamp(started_at)
+                code = new_session_code(when)
+                while code in used:
+                    code = new_session_code(when)
+                used.add(code)
+                connection.execute(text("UPDATE consultations SET session_code = :code WHERE id = :id"), {"code": code, "id": consultation_id})
+            connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_consultations_session_code ON consultations (session_code)"))
+
+
+def _parse_timestamp(value: object):
+    from datetime import datetime
+
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
 
 
 def get_session() -> Generator[Session, None, None]:

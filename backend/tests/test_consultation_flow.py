@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from app.db import Base
 from app.domain.types import CandidateClinicalUpdate, ClinicalRecord, EvidenceStatus, ExtractionResult, Speaker
 from app.schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from app.services.consultations import approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
+from app.services.consultations import ConsultationStateError, approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, reanalyse_consultation, stop_consultation
 from app.providers.speech import TranscriptDraft
 from app.domain.types import CandidateClinicalUpdate, ExtractionResult
 from app.services.consultations import replace_with_reconciled_transcript
@@ -309,3 +309,64 @@ def test_hedged_grounded_value_fills_the_field_flagged_for_review(monkeypatch) -
     assert loaded["record"]["follow_up"] is None
     update_types = {update["field_name"]: update["update_type"] for update in loaded["updates"]}
     assert update_types == {"presenting_symptoms": "AI_EXTRACTED", "assessment": "AI_NEEDS_REVIEW"}
+
+
+def _finished_with_transcript(session, patient_id: str, lines: list[str]):
+    consultation = create_consultation(session, ConsultationCreate(patient_id=patient_id, age=30, sex="Female"))
+    replace_with_reconciled_transcript(session, consultation.id, [TranscriptDraft(text=text, timestamp=f"00:00:0{index}", start_ms=index * 1_000, end_ms=index * 1_000 + 900) for index, text in enumerate(lines)], extract=False)
+    stop_consultation(session, consultation.id)
+    return consultation, f"{consultation.id}-final-"
+
+
+def test_reanalysis_refills_ai_fields_and_keeps_doctor_edits(monkeypatch) -> None:
+    from app.domain.types import Speaker as S
+
+    session = make_session()
+    consultation, prefix = _finished_with_transcript(session, "REANALYSE-1", ["It feels really dizzy and I feel nauseous.", "I've had a couple of bad headaches."])
+    approve_consultation(session, consultation.id, ApproveRequest(record=ClinicalRecord(chief_complaint="Vertigo — doctor wording", history_present_illness="labyrinthitis")))
+
+    class Extractor:
+        def extract(self, transcript, current):
+            return ExtractionResult(proposed_record=ClinicalRecord(), candidates=[
+                CandidateClinicalUpdate(field_name="chief_complaint", value="dizziness", source_segment_ids=[prefix + "0"], speaker=S.PATIENT, status=EvidenceStatus.SUPPORTED),
+                CandidateClinicalUpdate(field_name="presenting_symptoms", value=["dizziness", "nausea", "headaches"], source_segment_ids=[prefix + "0", prefix + "1"], speaker=S.PATIENT, status=EvidenceStatus.SUPPORTED),
+            ])
+
+    monkeypatch.setattr("app.services.consultations.build_extraction_provider", lambda _settings: Extractor())
+    warnings: list[str] = []
+    loaded = reanalyse_consultation(session, consultation.id, warnings=warnings)
+
+    assert loaded["record"]["chief_complaint"] == "Vertigo — doctor wording"
+    assert loaded["record"]["presenting_symptoms"] == ["dizziness", "nausea", "headaches"]
+    assert loaded["record"]["history_present_illness"] == "labyrinthitis"  # doctor-edited at approval
+    assert loaded["status"] == "READY_FOR_REVIEW"
+    assert loaded["updates"][-1]["update_type"] == "REOPENED_FOR_REVIEW"
+    assert warnings == []
+
+
+def test_reanalysis_keeps_the_note_when_extraction_fails(monkeypatch) -> None:
+    session = make_session()
+    consultation, _prefix = _finished_with_transcript(session, "REANALYSE-2", ["I have had a fever for three days."])
+    approve_consultation(session, consultation.id, ApproveRequest(record=ClinicalRecord(chief_complaint="Fever")))
+
+    class Broken:
+        def extract(self, transcript, current):
+            raise RuntimeError("ollama down")
+
+    monkeypatch.setattr("app.services.consultations.build_extraction_provider", lambda _settings: Broken())
+    warnings: list[str] = []
+    loaded = reanalyse_consultation(session, consultation.id, warnings=warnings)
+
+    assert loaded["record"]["chief_complaint"] == "Fever"
+    assert loaded["status"] == "APPROVED"
+    assert warnings and "did not finish" in warnings[0]
+
+
+def test_reanalysis_is_refused_while_recording() -> None:
+    import pytest
+
+    session = make_session()
+    consultation = create_consultation(session, ConsultationCreate(patient_id="REANALYSE-3", age=30, sex="Female"))
+
+    with pytest.raises(ConsultationStateError):
+        reanalyse_consultation(session, consultation.id, warnings=[])

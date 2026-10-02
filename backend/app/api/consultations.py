@@ -1,11 +1,17 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_session
-from ..models import Consultation
+from ..config import settings
+from ..models import Consultation, Recording
+from ..providers.factory import build_speech_provider
+from ..providers.reconciliation import FinalReconciler
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from ..services.consultations import approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
+from ..services.consultations import ConsultationStateError, approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, reanalyse_consultation, retranscribe_consultation, stop_consultation
 from ..services.approved_note_export import build_approved_note_payload
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
@@ -58,6 +64,47 @@ def stop(consultation_id: str, infer_final_record: bool = False, session: Sessio
         return result
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@router.post("/{consultation_id}/reanalyse")
+def reanalyse(consultation_id: str, session: Session = Depends(get_session)) -> dict:
+    warnings: list[str] = []
+    try:
+        result = reanalyse_consultation(session, consultation_id, warnings=warnings)
+    except ConsultationStateError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    result["finalization_warnings"] = warnings
+    return result
+
+
+@router.post("/{consultation_id}/retranscribe")
+def retranscribe(consultation_id: str, session: Session = Depends(get_session)) -> dict:
+    stt = build_speech_provider(settings)
+
+    def transcribe(waveform, sample_rate: int, language: str | None):
+        result = FinalReconciler().run(waveform, stt, sample_rate=sample_rate, language=language)
+        warnings.extend(result.warnings)
+        return result.transcripts
+
+    warnings: list[str] = []
+    try:
+        result = retranscribe_consultation(session, consultation_id, transcribe, warnings=warnings)
+    except ConsultationStateError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    result["finalization_warnings"] = warnings
+    return result
+
+
+@router.get("/{consultation_id}/recordings/{recording_id}/audio")
+def recording_audio(consultation_id: str, recording_id: str, session: Session = Depends(get_session)) -> FileResponse:
+    recording = session.get(Recording, recording_id)
+    if recording is None or recording.consultation_id != consultation_id or not Path(recording.file_path).is_file():
+        raise HTTPException(status_code=404, detail="recording not found")
+    return FileResponse(recording.file_path, media_type="audio/wav", filename=Path(recording.file_path).name)
 
 
 @router.post("/{consultation_id}/approve")

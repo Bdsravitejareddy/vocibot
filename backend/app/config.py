@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     silero_threshold: float = 0.5
     audio_sample_rate: int = 16_000
     audio_debug_dir: str = ""
+    # Consultation audio kept for compliance, retrieval and re-transcription.
+    recordings_dir: str = "recordings"
     asr_min_speech_seconds: float = 0.5
     asr_vad_filter: bool = True
     asr_no_speech_threshold: float = 0.6

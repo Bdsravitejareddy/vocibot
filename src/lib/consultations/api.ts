@@ -1,7 +1,12 @@
 import type { ClinicalRecord, Speaker, TranscriptSegmentInput } from "../domain/types";
 
+export type Recording = { id: string; started_at: string; duration_ms: number; sample_rate: number; language_code: string | null; sha256: string | null; file_name: string; available: boolean };
+
 export type ConsultationState = {
   id: string;
+  /** Human-readable unique session ID, e.g. VB-20261002-K7Q3MD. */
+  session_code: string;
+  recordings: Recording[];
   status: "IN_PROGRESS" | "READY_FOR_REVIEW" | "APPROVED";
   started_at: string;
   ended_at: string | null;
@@ -41,6 +46,20 @@ export function approveConsultation(consultationId: string, record: ClinicalReco
 /** Permanently delete a consultation with its transcript, record and audit trail. */
 export function discardConsultation(consultationId: string) {
   return request<void>(`/api/consultations/${consultationId}`, { method: "DELETE" });
+}
+
+/** Regenerate the AI-filled note from the saved transcript; doctor edits are kept. */
+export function reanalyseConsultation(consultationId: string) {
+  return request<ConsultationState>(`/api/consultations/${consultationId}/reanalyse`, { method: "POST" });
+}
+
+/** Re-transcribe the stored audio with the current speech model, then refill the note. */
+export function retranscribeConsultation(consultationId: string) {
+  return request<ConsultationState>(`/api/consultations/${consultationId}/retranscribe`, { method: "POST" });
+}
+
+export function recordingAudioUrl(consultationId: string, recordingId: string) {
+  return `${API_URL}/api/consultations/${consultationId}/recordings/${recordingId}/audio`;
 }
 
 export function listConsultations() {
