@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     audio_debug_dir: str = ""
     # Consultation audio kept for compliance, retrieval and re-transcription.
     recordings_dir: str = "recordings"
+    # Recordings are captured as WAV, converted losslessly to FLAC after the
+    # session, and shrunk to Opus (~10% of WAV) once older than this many
+    # days.  0 keeps lossless FLAC forever.
+    recording_opus_after_days: int = 30
+    recording_maintenance_interval_hours: float = 6.0
     asr_min_speech_seconds: float = 0.5
     asr_vad_filter: bool = True
     asr_no_speech_threshold: float = 0.6

@@ -284,7 +284,7 @@ def retranscribe_consultation(session: Session, consultation_id: str, transcribe
     Each recording's SHA-256 is verified first: altered audio is never used.
     """
 
-    from .recordings import file_sha256, read_recording
+    from .recordings import file_sha256, read_audio
 
     consultation = _find_consultation(session, consultation_id)
     if consultation.status == ConsultationStatus.IN_PROGRESS.value:
@@ -299,7 +299,7 @@ def retranscribe_consultation(session: Session, consultation_id: str, transcribe
             raise ConsultationStateError(f"recording {path.name} is missing")
         if recording.sha256 and file_sha256(path) != recording.sha256:
             raise ConsultationStateError(f"recording {path.name} does not match its stored fingerprint; it may have been altered")
-        waveform, sample_rate = read_recording(path)
+        waveform, sample_rate = read_audio(path)
         for draft in transcribe(waveform, sample_rate, recording.language_code):
             start = (draft.start_ms or 0) + offset_ms
             end = (draft.end_ms or draft.start_ms or 0) + offset_ms
@@ -385,7 +385,7 @@ def get_consultation(session: Session, consultation_id: str) -> dict:
         "started_at": consultation.started_at.isoformat(),
         "ended_at": consultation.ended_at.isoformat() if consultation.ended_at else None,
         "patient": {"id": consultation.patient.id, "patient_identifier": consultation.patient.patient_identifier, "name": consultation.patient.name, "age": consultation.patient.age, "sex": consultation.patient.sex},
-        "recordings": [{"id": item.id, "started_at": item.started_at.isoformat(), "duration_ms": item.duration_ms, "sample_rate": item.sample_rate, "language_code": item.language_code, "sha256": item.sha256, "file_name": Path(item.file_path).name, "available": Path(item.file_path).is_file()} for item in consultation.recordings],
+        "recordings": [{"id": item.id, "started_at": item.started_at.isoformat(), "duration_ms": item.duration_ms, "sample_rate": item.sample_rate, "language_code": item.language_code, "sha256": item.sha256, "original_sha256": item.original_sha256, "format": item.format, "size_bytes": item.size_bytes, "file_name": Path(item.file_path).name, "available": Path(item.file_path).is_file()} for item in consultation.recordings],
         "transcript": [{"id": item.id, "speaker": item.speaker, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number, "language_code": item.language_code} for item in transcript_rows],
         "record": record,
         "updates": [{"id": update.id, "field_name": update.field_name, "previous_value": update.previous_value, "new_value": update.new_value, "source_segment_ids": update.source_transcript_segment_ids, "updated_at": update.updated_at.isoformat(), "update_type": update.update_type} for update in update_rows],

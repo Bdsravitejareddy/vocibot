@@ -26,6 +26,12 @@ def migrate_sqlite_schema(target_engine=engine) -> None:
             columns = {row[1] for row in connection.execute(text("PRAGMA table_info(transcript_segments)"))}
             if "language_code" not in columns:
                 connection.execute(text("ALTER TABLE transcript_segments ADD COLUMN language_code VARCHAR(20)"))
+        if "recordings" in tables:
+            columns = {row[1] for row in connection.execute(text("PRAGMA table_info(recordings)"))}
+            for name, ddl in (("original_sha256", "VARCHAR(64)"), ("format", "VARCHAR(10) NOT NULL DEFAULT 'wav'"), ("size_bytes", "INTEGER NOT NULL DEFAULT 0")):
+                if name not in columns:
+                    connection.execute(text(f"ALTER TABLE recordings ADD COLUMN {name} {ddl}"))
+            connection.execute(text("UPDATE recordings SET original_sha256 = sha256 WHERE original_sha256 IS NULL AND format = 'wav'"))
         if "consultations" in tables:
             columns = {row[1] for row in connection.execute(text("PRAGMA table_info(consultations)"))}
             if "session_code" not in columns:

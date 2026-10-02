@@ -10,6 +10,7 @@ from ..config import settings
 from ..models import Consultation, Recording
 from ..providers.factory import build_speech_provider
 from ..providers.reconciliation import FinalReconciler
+from ..services.recordings import AUDIO_MEDIA_TYPES
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
 from ..services.consultations import ConsultationStateError, approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, reanalyse_consultation, retranscribe_consultation, stop_consultation
 from ..services.approved_note_export import build_approved_note_payload
@@ -104,7 +105,7 @@ def recording_audio(consultation_id: str, recording_id: str, session: Session = 
     recording = session.get(Recording, recording_id)
     if recording is None or recording.consultation_id != consultation_id or not Path(recording.file_path).is_file():
         raise HTTPException(status_code=404, detail="recording not found")
-    return FileResponse(recording.file_path, media_type="audio/wav", filename=Path(recording.file_path).name)
+    return FileResponse(recording.file_path, media_type=AUDIO_MEDIA_TYPES.get(recording.format, "application/octet-stream"), filename=Path(recording.file_path).name)
 
 
 @router.post("/{consultation_id}/approve")

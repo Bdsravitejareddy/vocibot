@@ -32,3 +32,16 @@ def test_sqlite_migration_assigns_unique_session_codes_to_existing_consultations
     assert codes["c1"].startswith("VB-20261001-") and codes["c2"].startswith("VB-20261002-")
     assert len(set(codes.values())) == 2
     assert all(len(code) == len("VB-20261001-") + 6 for code in codes.values())
+
+
+def test_sqlite_migration_adds_recording_format_columns_and_keeps_the_original_fingerprint() -> None:
+    engine = create_engine("sqlite://")
+    with engine.begin() as connection:
+        connection.execute(text("CREATE TABLE recordings (id TEXT PRIMARY KEY, file_path TEXT, sha256 TEXT)"))
+        connection.execute(text("INSERT INTO recordings (id, file_path, sha256) VALUES ('r1', '/x/VB-1.wav', 'abc')"))
+
+    migrate_sqlite_schema(engine)
+
+    with engine.connect() as connection:
+        row = connection.execute(text("SELECT format, size_bytes, original_sha256 FROM recordings WHERE id='r1'")).one()
+    assert row == ("wav", 0, "abc")
