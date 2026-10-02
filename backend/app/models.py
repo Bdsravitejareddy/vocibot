@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import secrets
 from uuid import uuid4
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
@@ -9,6 +10,17 @@ from .db import Base
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+# Crockford-style alphabet: no I, L, O or U, so codes read aloud unambiguously.
+SESSION_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+
+
+def new_session_code(when: datetime | None = None) -> str:
+    """A human-readable unique session ID, e.g. VB-20261002-K7Q3MD."""
+
+    stamp = (when or utcnow()).strftime("%Y%m%d")
+    return f"VB-{stamp}-" + "".join(secrets.choice(SESSION_CODE_ALPHABET) for _ in range(6))
 
 
 class Patient(Base):
@@ -25,6 +37,7 @@ class Patient(Base):
 class Consultation(Base):
     __tablename__ = "consultations"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    session_code: Mapped[str] = mapped_column(String(32), unique=True, index=True, default=new_session_code)
     patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id"), index=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -34,6 +47,23 @@ class Consultation(Base):
     transcript_segments: Mapped[list["TranscriptSegment"]] = relationship(back_populates="consultation", cascade="all, delete-orphan")
     clinical_record: Mapped["ClinicalRecord"] = relationship(back_populates="consultation", uselist=False, cascade="all, delete-orphan")
     updates: Mapped[list["RecordUpdate"]] = relationship(back_populates="consultation", cascade="all, delete-orphan")
+    recordings: Mapped[list["Recording"]] = relationship(back_populates="consultation", cascade="all, delete-orphan", order_by="Recording.started_at")
+
+
+class Recording(Base):
+    """One captured audio stream of a consultation, kept for compliance and re-analysis."""
+
+    __tablename__ = "recordings"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    consultation_id: Mapped[str] = mapped_column(ForeignKey("consultations.id"), index=True)
+    file_path: Mapped[str] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    duration_ms: Mapped[int] = mapped_column(Integer, default=0)
+    sample_rate: Mapped[int] = mapped_column(Integer)
+    language_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # SHA-256 of the finished file: proves the stored audio was not altered.
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    consultation: Mapped[Consultation] = relationship(back_populates="recordings")
 
 
 class TranscriptSegment(Base):

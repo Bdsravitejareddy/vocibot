@@ -20,6 +20,8 @@ from ..providers.streaming import TranscriptCommitter, select_live_commits
 from ..db import SessionLocal
 from ..services.consultations import replace_with_reconciled_transcript
 from ..services.live_cpu import LocalPipelineExecutor
+from ..services.recordings import SessionRecorder, recording_path
+from ..models import Consultation, Recording
 from ..providers.vad import SileroVoiceActivityDetector
 
 router = APIRouter(tags=["audio"])
@@ -83,6 +85,30 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
     timestamp_ms = 0
     transcript_sequence = 0
     received_audio = bytearray()
+    recorder: SessionRecorder | None = None
+    recording_checked = False
+
+    def start_recording() -> SessionRecorder | None:
+        """Keep the consultation's audio; unknown consultations are not recorded."""
+
+        with SessionLocal() as session:
+            consultation = session.get(Consultation, consultation_id)
+            if consultation is None:
+                return None
+            return SessionRecorder(recording_path(consultation.session_code), settings.audio_sample_rate)
+
+    def finish_recording() -> None:
+        nonlocal recorder
+        if recorder is None:
+            return
+        active, recorder = recorder, None
+        try:
+            finished = active.close()
+            with SessionLocal() as session:
+                session.add(Recording(consultation_id=consultation_id, file_path=str(finished.path), duration_ms=finished.duration_ms, sample_rate=active.sample_rate, language_code=None if language == "auto" else language, sha256=finished.sha256))
+                session.commit()
+        except Exception:
+            logger.exception("Saving the recording failed for consultation %s", consultation_id)
     debug_windows: list[dict[str, object]] = []
     debug_transcripts: list[dict[str, object]] = []
     received_waveforms: list[np.ndarray] = []
@@ -317,6 +343,7 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                                 final_reconciliation["error"] = str(error)
                                 await send_json({"type": "warning", "category": "FINALIZATION", "message": "Final transcription could not replace the live preview. The captured preview remains available for review."})
                     persist_debug_audio()
+                    finish_recording()
                     await send_json({"type": "stopped"})
                     return
                 continue
@@ -325,9 +352,18 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                 continue
             if capture_started_at is None:
                 capture_started_at = perf_counter()
-            received_audio.extend(audio)
+            if settings.audio_debug_dir:
+                received_audio.extend(audio)
             decoded = decode_audio_payload(audio, encoding=encoding, sample_rate=sample_rate, channels=channels)
             received_waveforms.append(decoded.waveform)
+            if not recording_checked:
+                recording_checked = True
+                try:
+                    recorder = start_recording()
+                except Exception:
+                    logger.exception("Starting the recording failed for consultation %s", consultation_id)
+            if recorder is not None:
+                recorder.write(decoded.waveform)
             await audio_queue.put(decoded.waveform)
     except WebSocketDisconnect:
         return
@@ -336,3 +372,4 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             worker.cancel()
         pipeline_executor.close(wait=wait_for_executor_shutdown)
         persist_debug_audio()
+        finish_recording()
