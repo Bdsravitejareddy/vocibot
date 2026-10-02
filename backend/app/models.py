@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import secrets
 from uuid import uuid4
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -23,10 +23,59 @@ def new_session_code(when: datetime | None = None) -> str:
     return f"VB-{stamp}-" + "".join(secrets.choice(SESSION_CODE_ALPHABET) for _ in range(6))
 
 
+class User(Base):
+    """A clinic account. Admins manage accounts; every user sees only their own patients."""
+
+    __tablename__ = "users"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    # Stored lower-case: usernames are case-insensitive.
+    username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    display_name: Mapped[str] = mapped_column(String(120))
+    password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(20), default="clinician")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
+    failed_login_count: Mapped[int] = mapped_column(Integer, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AuthSession(Base):
+    """A signed-in browser. Only the SHA-256 of the cookie token is stored."""
+
+    __tablename__ = "auth_sessions"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user: Mapped[User] = relationship()
+
+
+class SecurityEvent(Base):
+    """Append-only log of sign-ins and account and record administration."""
+
+    __tablename__ = "security_events"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    event: Mapped[str] = mapped_column(String(60), index=True)
+    actor_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    subject_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    detail: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
 class Patient(Base):
     __tablename__ = "patients"
+    __table_args__ = (UniqueConstraint("owner_id", "patient_identifier", name="uq_patients_owner_identifier"),)
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    patient_identifier: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    owner_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
+    patient_identifier: Mapped[str] = mapped_column(String(120), index=True)
     name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     age: Mapped[int] = mapped_column(Integer)
     sex: Mapped[str] = mapped_column(String(40))
@@ -38,6 +87,7 @@ class Consultation(Base):
     __tablename__ = "consultations"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     session_code: Mapped[str] = mapped_column(String(32), unique=True, index=True, default=new_session_code)
+    owner_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
     patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id"), index=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -105,4 +155,6 @@ class RecordUpdate(Base):
     source_transcript_segment_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     update_type: Mapped[str] = mapped_column(String(40))
+    # Who made the change (None for AI updates); clinical audit trail.
+    actor_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     consultation: Mapped[Consultation] = relationship(back_populates="updates")

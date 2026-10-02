@@ -22,6 +22,7 @@ from ..services.consultations import replace_with_reconciled_transcript
 from ..services.live_cpu import LocalPipelineExecutor
 from ..services.recordings import SessionRecorder, compress_soon, recording_path
 from ..models import Consultation, Recording
+from ..services.auth import resolve_session
 from ..providers.vad import SileroVoiceActivityDetector
 
 router = APIRouter(tags=["audio"])
@@ -49,8 +50,30 @@ def persist_reconciled_transcript(consultation_id: str, transcripts: list[Transc
         replace_with_reconciled_transcript(session, consultation_id, transcripts, extract=False)
 
 
+def allowed_origins() -> list[str]:
+    return settings.allowed_origin_list
+
+
+def authorise_stream(websocket: WebSocket, consultation_id: str) -> bool:
+    """Signed-in owner of an in-progress consultation, from an allowed origin."""
+
+    origin = websocket.headers.get("origin")
+    if origin and origin not in allowed_origins():
+        return False
+    with SessionLocal() as session:
+        user = resolve_session(session, websocket.cookies.get(settings.session_cookie_name))
+        if user is None or user.must_change_password:
+            return False
+        consultation = session.get(Consultation, consultation_id)
+        return consultation is not None and consultation.owner_id == user.id and consultation.status == "IN_PROGRESS"
+
+
 @router.websocket("/api/consultations/{consultation_id}/audio")
 async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
+    if not authorise_stream(websocket, consultation_id):
+        # Closing before accept refuses the handshake (HTTP 403).
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     # One model and one in-flight pass per consultation: the rolling buffer
     # always transcribes the newest audio, so extra workers only add latency

@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from app.main import app
+from conftest import sign_in
 from app.providers.local_pipeline import PipelineResult
 from app.providers.speech import TranscriptDraft
 
@@ -24,6 +25,7 @@ def client(monkeypatch, tmp_path):
     # Conversions are exercised explicitly below, not on a background thread.
     monkeypatch.setattr("app.api.audio.compress_soon", lambda: None)
     with TestClient(app) as test_client:
+        sign_in(test_client)
         yield test_client
 
 

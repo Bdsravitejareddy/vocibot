@@ -2,9 +2,17 @@ from fastapi.testclient import TestClient
 import numpy as np
 import time
 
+import pytest
+
 from app.main import app
 from app.providers.local_pipeline import LocalAudioPipeline, PipelineResult
 from app.providers.speech import TranscriptDraft
+
+
+@pytest.fixture(autouse=True)
+def _authorised(monkeypatch):
+    # These tests cover audio handling; stream authorisation is tested in test_auth.py.
+    monkeypatch.setattr("app.api.audio.authorise_stream", lambda websocket, consultation_id: True)
 
 
 class FakePipeline:

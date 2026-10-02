@@ -102,17 +102,19 @@ def _relative_timestamp(value: str, consultation_started_at: datetime) -> str:
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
-def create_consultation(session: Session, payload: ConsultationCreate) -> Consultation:
-    patient = session.scalar(select(Patient).where(Patient.patient_identifier == payload.patient_id))
+def create_consultation(session: Session, payload: ConsultationCreate, *, owner_id: str | None = None) -> Consultation:
+    # Patients belong to one clinician: the same identifier under another
+    # clinician is a different, invisible patient record.
+    patient = session.scalar(select(Patient).where(Patient.patient_identifier == payload.patient_id, Patient.owner_id.is_(None) if owner_id is None else Patient.owner_id == owner_id))
     if patient is None:
-        patient = Patient(patient_identifier=payload.patient_id, name=payload.patient_name, age=payload.age, sex=payload.sex)
+        patient = Patient(owner_id=owner_id, patient_identifier=payload.patient_id, name=payload.patient_name, age=payload.age, sex=payload.sex)
         session.add(patient)
         session.flush()
     else:
         patient.name = payload.patient_name or patient.name
         patient.age = payload.age
         patient.sex = payload.sex
-    consultation = Consultation(patient_id=patient.id, status=ConsultationStatus.IN_PROGRESS.value)
+    consultation = Consultation(owner_id=owner_id, patient_id=patient.id, status=ConsultationStatus.IN_PROGRESS.value)
     session.add(consultation)
     session.flush()
     session.add(ClinicalRecordModel(consultation_id=consultation.id, structured_data_json=ClinicalRecord().model_dump(), version=1))
@@ -356,17 +358,17 @@ def delete_consultation(session: Session, consultation_id: str) -> None:
         path.unlink(missing_ok=True)
 
 
-def approve_consultation(session: Session, consultation_id: str, payload: ApproveRequest) -> Consultation:
+def approve_consultation(session: Session, consultation_id: str, payload: ApproveRequest, *, actor_id: str | None = None) -> Consultation:
     consultation = _find_consultation(session, consultation_id)
     if consultation.status != ConsultationStatus.READY_FOR_REVIEW.value:
         raise ValueError("consultation must be ready for review before approval")
     current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
     doctor_changes = diff_clinical_record(current, payload.record, {field: [] for field in payload.record.model_dump()}, set())
     for change in doctor_changes:
-        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=[], update_type=RecordUpdateType.DOCTOR_EDITED.value))
+        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=[], update_type=RecordUpdateType.DOCTOR_EDITED.value, actor_user_id=actor_id))
     consultation.clinical_record.structured_data_json = payload.record.model_dump()
     consultation.clinical_record.version += 1
-    session.add(RecordUpdate(consultation_id=consultation.id, field_name="__approval__", previous_value=ConsultationStatus.READY_FOR_REVIEW.value, new_value=ConsultationStatus.APPROVED.value, source_transcript_segment_ids=[], update_type=RecordUpdateType.DOCTOR_APPROVED.value))
+    session.add(RecordUpdate(consultation_id=consultation.id, field_name="__approval__", previous_value=ConsultationStatus.READY_FOR_REVIEW.value, new_value=ConsultationStatus.APPROVED.value, source_transcript_segment_ids=[], update_type=RecordUpdateType.DOCTOR_APPROVED.value, actor_user_id=actor_id))
     consultation.status = ConsultationStatus.APPROVED.value
     session.commit()
     session.refresh(consultation)
@@ -388,5 +390,5 @@ def get_consultation(session: Session, consultation_id: str) -> dict:
         "recordings": [{"id": item.id, "started_at": item.started_at.isoformat(), "duration_ms": item.duration_ms, "sample_rate": item.sample_rate, "language_code": item.language_code, "sha256": item.sha256, "original_sha256": item.original_sha256, "format": item.format, "size_bytes": item.size_bytes, "file_name": Path(item.file_path).name, "available": Path(item.file_path).is_file()} for item in consultation.recordings],
         "transcript": [{"id": item.id, "speaker": item.speaker, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number, "language_code": item.language_code} for item in transcript_rows],
         "record": record,
-        "updates": [{"id": update.id, "field_name": update.field_name, "previous_value": update.previous_value, "new_value": update.new_value, "source_segment_ids": update.source_transcript_segment_ids, "updated_at": update.updated_at.isoformat(), "update_type": update.update_type} for update in update_rows],
+        "updates": [{"id": update.id, "field_name": update.field_name, "previous_value": update.previous_value, "new_value": update.new_value, "source_segment_ids": update.source_transcript_segment_ids, "updated_at": update.updated_at.isoformat(), "update_type": update.update_type, "actor_user_id": update.actor_user_id} for update in update_rows],
     }

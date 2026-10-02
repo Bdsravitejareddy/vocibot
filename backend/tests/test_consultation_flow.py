@@ -274,7 +274,10 @@ def test_discard_endpoint_deletes_once_then_reports_not_found() -> None:
     from fastapi.testclient import TestClient
     from app.main import app
 
+    from conftest import sign_in
+
     with TestClient(app) as client:
+        sign_in(client)
         created = client.post("/api/consultations", json={"patient_id": "API-TEST", "age": 33, "sex": "Male"}).json()
         assert client.delete(f"/api/consultations/{created['id']}").status_code == 204
         assert client.get(f"/api/consultations/{created['id']}").status_code == 404

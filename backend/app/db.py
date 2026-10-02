@@ -32,6 +32,19 @@ def migrate_sqlite_schema(target_engine=engine) -> None:
                 if name not in columns:
                     connection.execute(text(f"ALTER TABLE recordings ADD COLUMN {name} {ddl}"))
             connection.execute(text("UPDATE recordings SET original_sha256 = sha256 WHERE original_sha256 IS NULL AND format = 'wav'"))
+        # Multi-user: ownership and the acting user on audit entries.
+        for table, column in (("patients", "owner_id"), ("consultations", "owner_id"), ("record_updates", "actor_user_id")):
+            if table in tables and column not in {row[1] for row in connection.execute(text(f"PRAGMA table_info({table})"))}:
+                connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} VARCHAR(36)"))
+                if column == "owner_id":
+                    connection.execute(text(f"CREATE INDEX IF NOT EXISTS ix_{table}_owner_id ON {table} ({column})"))
+        if "patients" in tables:
+            # Patient identifiers are unique per clinician, not clinic-wide.
+            indexes = {row[1]: row[2] for row in connection.execute(text("PRAGMA index_list(patients)"))}
+            if indexes.get("ix_patients_patient_identifier") == 1:
+                connection.execute(text("DROP INDEX ix_patients_patient_identifier"))
+                connection.execute(text("CREATE INDEX ix_patients_patient_identifier ON patients (patient_identifier)"))
+            connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_patients_owner_identifier ON patients (owner_id, patient_identifier)"))
         if "consultations" in tables:
             columns = {row[1] for row in connection.execute(text("PRAGMA table_info(consultations)"))}
             if "session_code" not in columns:

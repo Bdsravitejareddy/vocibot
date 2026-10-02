@@ -25,6 +25,21 @@ class Settings(BaseSettings):
     silero_threshold: float = 0.5
     audio_sample_rate: int = 16_000
     audio_debug_dir: str = ""
+    # Accounts and sign-in.
+    session_idle_minutes: int = 30
+    session_absolute_hours: int = 12
+    login_max_failures: int = 5
+    login_lockout_minutes: int = 15
+    password_min_length: int = 10
+    session_cookie_name: str = "vocibot_session"
+    # True when served over HTTPS (clinic server); keeps the cookie off plain HTTP.
+    session_cookie_secure: bool = False
+    # Comma-separated browser origins allowed to call the API.
+    allowed_origins: str = "http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:3001,http://localhost:3001"
+
+    @property
+    def allowed_origin_list(self) -> list[str]:
+        return [origin.strip().rstrip("/") for origin in self.allowed_origins.split(",") if origin.strip()]
     # Consultation audio kept for compliance, retrieval and re-transcription.
     recordings_dir: str = "recordings"
     # Recordings are captured as WAV, converted losslessly to FLAC after the
