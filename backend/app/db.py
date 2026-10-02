@@ -32,6 +32,11 @@ def migrate_sqlite_schema(target_engine=engine) -> None:
                 if name not in columns:
                     connection.execute(text(f"ALTER TABLE recordings ADD COLUMN {name} {ddl}"))
             connection.execute(text("UPDATE recordings SET original_sha256 = sha256 WHERE original_sha256 IS NULL AND format = 'wav'"))
+        if "consultations" in tables:
+            columns = {row[1] for row in connection.execute(text("PRAGMA table_info(consultations)"))}
+            for name, ddl in (("processing_status", "VARCHAR(20) NOT NULL DEFAULT 'idle'"), ("processing_plan", "VARCHAR(40) NOT NULL DEFAULT ''"), ("processing_error", "TEXT"), ("processing_warnings", "JSON NOT NULL DEFAULT '[]'"), ("processing_queued_at", "DATETIME")):
+                if name not in columns:
+                    connection.execute(text(f"ALTER TABLE consultations ADD COLUMN {name} {ddl}"))
         # Multi-user: ownership and the acting user on audit entries.
         for table, column in (("patients", "owner_id"), ("consultations", "owner_id"), ("record_updates", "actor_user_id")):
             if table in tables and column not in {row[1] for row in connection.execute(text(f"PRAGMA table_info({table})"))}:

@@ -12,9 +12,43 @@ from app.providers.local_pipeline import PipelineResult
 from app.providers.speech import TranscriptDraft
 
 
+class SilentSTT:
+    def transcribe_chunk(self, chunk, language=None):
+        return []
+
+
 class QuietPipeline:
+    stt = SilentSTT()
+
     def process(self, chunk, language=None):
         return PipelineResult()
+
+
+class HeardSTT:
+    """Records what the final transcription pass received."""
+
+    def __init__(self):
+        self.heard = []
+
+    def transcribe_chunk(self, chunk, language=None):
+        self.heard.append((len(chunk.waveform), language))
+        return [TranscriptDraft(text="It feels really dizzy.", timestamp="00:00:00", start_ms=0, end_ms=900)]
+
+
+def use_stt(monkeypatch, stt) -> None:
+    from app.services.inference import ENGINE
+
+    pipeline = QuietPipeline()
+    pipeline.stt = stt
+    ENGINE.reset()
+    monkeypatch.setattr("app.api.audio.build_local_pipeline", lambda: pipeline)
+
+
+def finished(client, consultation_id: str) -> dict:
+    from app.services.processing import wait_until_idle
+
+    assert wait_until_idle(10)
+    return client.get(f"/api/consultations/{consultation_id}").json()
 
 
 @pytest.fixture
@@ -41,7 +75,7 @@ def record_session(client, seconds: float = 1.0, language: str = "en", loud: boo
         while websocket.receive_json()["type"] != "stopped":
             pass
     client.post(f"/api/consultations/{created['id']}/stop")
-    return client.get(f"/api/consultations/{created['id']}").json()
+    return finished(client, created["id"])
 
 
 def test_each_session_gets_a_readable_unique_id(client) -> None:
@@ -75,27 +109,25 @@ def test_live_session_audio_is_stored_named_by_session_id_with_a_fingerprint(cli
 
 
 def test_retranscription_uses_stored_audio_and_refuses_altered_files(client, tmp_path, monkeypatch) -> None:
-    consultation = record_session(client)
+    consultation = finished(client, record_session(client)["id"])
     [recording] = consultation["recordings"]
-    heard = []
-
-    class FakeSTT:
-        def transcribe_chunk(self, chunk, language=None):
-            heard.append((len(chunk.waveform), language))
-            return [TranscriptDraft(text="It feels really dizzy.", timestamp="00:00:00", start_ms=0, end_ms=900)]
-
-    monkeypatch.setattr("app.api.consultations.build_speech_provider", lambda _settings: FakeSTT())
+    stt = HeardSTT()
+    use_stt(monkeypatch, stt)
     monkeypatch.setattr("app.services.consultations.build_extraction_provider", lambda _settings: (_ for _ in ()).throw(RuntimeError("no llm in tests")))
 
-    response = client.post(f"/api/consultations/{consultation['id']}/retranscribe")
-    assert response.status_code == 200
-    assert [segment["text"] for segment in response.json()["transcript"]] == ["It feels really dizzy."]
-    assert heard == [(16_000, "en")]
+    queued = client.post(f"/api/consultations/{consultation['id']}/retranscribe")
+    assert queued.status_code == 200 and queued.json()["processing"]["status"] in {"queued", "transcribing", "writing_note", "done"}
+    done = finished(client, consultation["id"])
+    assert done["processing"]["status"] == "done"
+    assert [segment["text"] for segment in done["transcript"]] == ["It feels really dizzy."]
+    assert stt.heard == [(16_000, "en")]
 
     path = tmp_path / recording["file_name"]
     path.write_bytes(path.read_bytes()[:-2] + b"\x00\x01")
-    tampered = client.post(f"/api/consultations/{consultation['id']}/retranscribe")
-    assert tampered.status_code == 409 and "altered" in tampered.json()["detail"]
+    client.post(f"/api/consultations/{consultation['id']}/retranscribe")
+    tampered = finished(client, consultation["id"])
+    assert any("altered" in warning for warning in tampered["processing"]["warnings"])
+    assert [segment["text"] for segment in tampered["transcript"]] == ["It feels really dizzy."]
     client.delete(f"/api/consultations/{consultation['id']}")
 
 
@@ -139,13 +171,10 @@ def test_recordings_are_compressed_losslessly_then_shrunk_to_opus_after_the_rete
     assert opus["sha256"] == hashlib.sha256((tmp_path / opus["file_name"]).read_bytes()).hexdigest()
     assert not (tmp_path / flac["file_name"]).exists()
 
-    class FakeSTT:
-        def transcribe_chunk(self, chunk, language=None):
-            return [TranscriptDraft(text="Still transcribable.", timestamp="00:00:00", start_ms=0, end_ms=900)]
-
-    monkeypatch.setattr("app.api.consultations.build_speech_provider", lambda _settings: FakeSTT())
+    use_stt(monkeypatch, HeardSTT())
     monkeypatch.setattr("app.services.consultations.build_extraction_provider", lambda _settings: (_ for _ in ()).throw(RuntimeError("no llm in tests")))
     assert client.post(f"/api/consultations/{consultation['id']}/retranscribe").status_code == 200
+    assert finished(client, consultation["id"])["transcript"][0]["text"] == "It feels really dizzy."
     client.delete(f"/api/consultations/{consultation['id']}")
     assert not (tmp_path / opus["file_name"]).exists()
 

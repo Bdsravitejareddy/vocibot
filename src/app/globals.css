@@ -93,3 +93,7 @@ button, input, textarea, select { font: inherit; }
 .auth-brand span { color: var(--muted); }
 .admin-row .history-actions { flex-wrap: wrap; gap: 8px; }
 .admin-row .discard-button { white-space: nowrap; }
+.processing-banner { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 11px 13px; border-radius: 10px; border: 1px solid #cfdcc8; background: #f4f8ef; color: var(--forest); font-size: 12px; font-weight: 700; }
+.spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cfdcc8; border-top-color: var(--forest); animation: vocibot-spin .8s linear infinite; flex: 0 0 auto; }
+@keyframes vocibot-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }

@@ -6,15 +6,13 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_session
-from ..config import settings
 from ..models import Consultation, Patient, Recording, User
 from .auth import client_ip, current_user
 from ..services.auth import log_event
-from ..providers.factory import build_speech_provider
-from ..providers.reconciliation import FinalReconciler
+from ..services.processing import ACTIVE, ProcessingBusy, enqueue
 from ..services.recordings import AUDIO_MEDIA_TYPES
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from ..services.consultations import ConsultationStateError, approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, reanalyse_consultation, retranscribe_consultation, stop_consultation
+from ..services.consultations import approve_consultation, append_segment, create_consultation, delete_consultation, get_consultation, stop_consultation
 from ..services.approved_note_export import build_approved_note_payload
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
@@ -99,50 +97,49 @@ def add_segment(consultation_id: str, payload: SegmentCreate, _: Consultation = 
 
 
 @router.post("/{consultation_id}/stop")
-def stop(consultation_id: str, infer_final_record: bool = False, _: Consultation = Depends(owned), session: Session = Depends(get_session)) -> dict:
-    try:
-        warnings: list[str] = []
-        if infer_final_record:
-            extract_reconciled_clinical_record(session, consultation_id, warnings=warnings, require_authoritative=True)
-        stop_consultation(session, consultation_id)
-        result = get_consultation(session, consultation_id)
-        result["finalization_warnings"] = warnings
-        return result
-    except ValueError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
+def stop(consultation_id: str, consultation: Consultation = Depends(owned), session: Session = Depends(get_session)) -> dict:
+    """Finish recording; the final transcript and note are made in the background."""
+
+    was_in_progress = consultation.status == "IN_PROGRESS"
+    stop_consultation(session, consultation_id)
+    session.refresh(consultation)
+    if was_in_progress and consultation.recordings:
+        try:
+            enqueue(session, consultation, "transcribe,note")
+        except ProcessingBusy:
+            pass
+    return get_consultation(session, consultation_id)
 
 
 @router.post("/{consultation_id}/reanalyse")
-def reanalyse(consultation_id: str, _: Consultation = Depends(owned), session: Session = Depends(get_session)) -> dict:
-    warnings: list[str] = []
+def reanalyse(consultation_id: str, consultation: Consultation = Depends(owned), session: Session = Depends(get_session)) -> dict:
+    """Queue a refill of the AI note from the saved transcript."""
+
+    if consultation.status == "IN_PROGRESS":
+        raise HTTPException(status_code=409, detail="stop the consultation before re-analysing its note")
+    if not consultation.transcript_segments:
+        raise HTTPException(status_code=409, detail="this consultation has no transcript to analyse")
+    _queue(session, consultation, "note")
+    return get_consultation(session, consultation_id)
+
+
+def _queue(session: Session, consultation: Consultation, plan: str) -> None:
     try:
-        result = reanalyse_consultation(session, consultation_id, warnings=warnings)
-    except ConsultationStateError as error:
+        enqueue(session, consultation, plan)
+    except ProcessingBusy as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-    result["finalization_warnings"] = warnings
-    return result
 
 
 @router.post("/{consultation_id}/retranscribe")
-def retranscribe(consultation_id: str, _: Consultation = Depends(owned), session: Session = Depends(get_session)) -> dict:
-    stt = build_speech_provider(settings)
+def retranscribe(consultation_id: str, consultation: Consultation = Depends(owned), session: Session = Depends(get_session)) -> dict:
+    """Queue a fresh transcript from the stored audio, then a note refill."""
 
-    def transcribe(waveform, sample_rate: int, language: str | None):
-        result = FinalReconciler().run(waveform, stt, sample_rate=sample_rate, language=language)
-        warnings.extend(result.warnings)
-        return result.transcripts
-
-    warnings: list[str] = []
-    try:
-        result = retranscribe_consultation(session, consultation_id, transcribe, warnings=warnings)
-    except ConsultationStateError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-    result["finalization_warnings"] = warnings
-    return result
+    if consultation.status == "IN_PROGRESS":
+        raise HTTPException(status_code=409, detail="stop the consultation before re-transcribing it")
+    if not consultation.recordings:
+        raise HTTPException(status_code=409, detail="this consultation has no stored audio")
+    _queue(session, consultation, "transcribe,note")
+    return get_consultation(session, consultation_id)
 
 
 @router.get("/{consultation_id}/recordings/{recording_id}/audio")
@@ -154,7 +151,9 @@ def recording_audio(consultation_id: str, recording_id: str, _: Consultation = D
 
 
 @router.post("/{consultation_id}/approve")
-def approve(consultation_id: str, payload: ApproveRequest, _: Consultation = Depends(owned), user: User = Depends(clinician), session: Session = Depends(get_session)) -> dict:
+def approve(consultation_id: str, payload: ApproveRequest, consultation: Consultation = Depends(owned), user: User = Depends(clinician), session: Session = Depends(get_session)) -> dict:
+    if consultation.processing_status in ACTIVE:
+        raise HTTPException(status_code=409, detail="The transcript and note are still being prepared; approve when they are ready.")
     try:
         approve_consultation(session, consultation_id, payload, actor_id=user.id)
         return get_consultation(session, consultation_id)

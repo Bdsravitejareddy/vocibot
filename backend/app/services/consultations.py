@@ -273,17 +273,27 @@ def reanalyse_consultation(session: Session, consultation_id: str, *, warnings: 
         if consultation.status == ConsultationStatus.APPROVED.value:
             session.add(RecordUpdate(consultation_id=consultation.id, field_name="__approval__", previous_value=ConsultationStatus.APPROVED.value, new_value=ConsultationStatus.READY_FOR_REVIEW.value, source_transcript_segment_ids=[], update_type=RecordUpdateType.REOPENED_FOR_REVIEW.value))
             consultation.status = ConsultationStatus.READY_FOR_REVIEW.value
-    else:
+    elif any(value not in (None, "", [], {}) for value in previous.values()):
         warnings.append("Re-analysis found no changes to the note.")
+    else:
+        warnings.append("No clinical details were found in the transcript.")
     session.commit()
     return get_consultation(session, consultation_id)
 
 
 def retranscribe_consultation(session: Session, consultation_id: str, transcribe, *, warnings: list[str]) -> dict:
-    """Re-transcribe a finished consultation from its stored audio, then refill the note.
+    """Re-transcribe a finished consultation from its stored audio, then refill the note."""
+
+    replace_transcript_from_recordings(session, consultation_id, transcribe)
+    return reanalyse_consultation(session, consultation_id, warnings=warnings)
+
+
+def replace_transcript_from_recordings(session: Session, consultation_id: str, transcribe) -> int:
+    """Replace the transcript with a fresh pass over the stored audio.
 
     ``transcribe(waveform, sample_rate, language)`` returns transcript drafts.
     Each recording's SHA-256 is verified first: altered audio is never used.
+    Returns the number of transcript segments written.
     """
 
     from .recordings import file_sha256, read_audio
@@ -320,7 +330,13 @@ def retranscribe_consultation(session: Session, consultation_id: str, transcribe
         consultation.status = ConsultationStatus.READY_FOR_REVIEW.value
     session.commit()
     session.expire(consultation, ["transcript_segments"])
-    return reanalyse_consultation(session, consultation_id, warnings=warnings)
+    return len(drafts)
+
+
+def _processing(session: Session, consultation: Consultation) -> dict:
+    from .processing import describe
+
+    return describe(session, consultation)
 
 
 def _format_offset(milliseconds: int) -> str:
@@ -388,6 +404,7 @@ def get_consultation(session: Session, consultation_id: str) -> dict:
         "ended_at": consultation.ended_at.isoformat() if consultation.ended_at else None,
         "patient": {"id": consultation.patient.id, "patient_identifier": consultation.patient.patient_identifier, "name": consultation.patient.name, "age": consultation.patient.age, "sex": consultation.patient.sex},
         "recordings": [{"id": item.id, "started_at": item.started_at.isoformat(), "duration_ms": item.duration_ms, "sample_rate": item.sample_rate, "language_code": item.language_code, "sha256": item.sha256, "original_sha256": item.original_sha256, "format": item.format, "size_bytes": item.size_bytes, "file_name": Path(item.file_path).name, "available": Path(item.file_path).is_file()} for item in consultation.recordings],
+        "processing": _processing(session, consultation),
         "transcript": [{"id": item.id, "speaker": item.speaker, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number, "language_code": item.language_code} for item in transcript_rows],
         "record": record,
         "updates": [{"id": update.id, "field_name": update.field_name, "previous_value": update.previous_value, "new_value": update.new_value, "source_segment_ids": update.source_transcript_segment_ids, "updated_at": update.updated_at.isoformat(), "update_type": update.update_type, "actor_user_id": update.actor_user_id} for update in update_rows],

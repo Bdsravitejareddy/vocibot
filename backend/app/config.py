@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     # segment is settled once a later one follows it or `holdback` seconds of
     # audio have passed after it; the buffer is force-settled at `max_buffer`.
     asr_live_step_seconds: float = 0.35
+    # Live previews served at once by the shared engine; further sessions are
+    # still recorded and fully transcribed after Stop.
+    max_live_sessions: int = 4
+    # Final transcription is split at pauses into pieces of about this length
+    # so other clinicians' live previews are served in between.
+    asr_final_chunk_seconds: float = 30.0
+    # How long Stop waits for an in-flight live preview pass.
+    asr_live_stop_grace_seconds: float = 5.0
     asr_live_holdback_seconds: float = 1.2
     asr_live_max_buffer_seconds: float = 8.0
     asr_finalization_timeout_seconds: float = 60.0

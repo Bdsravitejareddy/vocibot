@@ -93,6 +93,13 @@ class Consultation(Base):
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(40), default="IN_PROGRESS", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # Background processing after Stop: idle, queued, transcribing, writing_note, done, failed.
+    processing_status: Mapped[str] = mapped_column(String(20), default="idle", index=True)
+    # Planned stages, comma separated: "transcribe,note" or "note".
+    processing_plan: Mapped[str] = mapped_column(String(40), default="")
+    processing_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processing_warnings: Mapped[list] = mapped_column(JSON, default=list)
+    processing_queued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     patient: Mapped[Patient] = relationship(back_populates="consultations")
     transcript_segments: Mapped[list["TranscriptSegment"]] = relationship(back_populates="consultation", cascade="all, delete-orphan")
     clinical_record: Mapped["ClinicalRecord"] = relationship(back_populates="consultation", uselist=False, cascade="all, delete-orphan")

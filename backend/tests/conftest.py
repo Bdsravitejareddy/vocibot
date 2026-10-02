@@ -25,3 +25,19 @@ def sign_in(client, *, role: str = "clinician", username: str | None = None) -> 
     response = client.post("/api/auth/login", json={"username": name, "password": TEST_PASSWORD})
     assert response.status_code == 200, response.text
     return response.json()["user"]
+
+
+import pytest  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _fresh_inference_engine():
+    """Each test builds its own (often fake) shared pipeline."""
+
+    from app.services.inference import ENGINE
+
+    ENGINE.reset()
+    ENGINE.live_sessions.clear()
+    yield
+    ENGINE.reset()
+    ENGINE.live_sessions.clear()

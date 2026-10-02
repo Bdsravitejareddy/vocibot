@@ -19,9 +19,11 @@ app.include_router(audio_router)
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
     migrate_sqlite_schema(engine)
+    from .services.processing import resume_unfinished
     from .services.recordings import start_recording_maintenance
 
     start_recording_maintenance()
+    resume_unfinished()
 
 
 @app.get("/health")

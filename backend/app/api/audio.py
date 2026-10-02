@@ -14,12 +14,10 @@ from ..providers.audio import audio_metrics, decode_audio_payload, save_debug_wa
 from ..providers.diarization import PyannoteDiarizationProvider
 from ..providers.factory import build_speech_provider
 from ..providers.local_pipeline import LocalAudioPipeline
-from ..providers.reconciliation import FinalReconciler
-from ..providers.speech import AudioChunk, TranscriptDraft
+from ..providers.speech import AudioChunk
 from ..providers.streaming import TranscriptCommitter, select_live_commits
 from ..db import SessionLocal
-from ..services.consultations import replace_with_reconciled_transcript
-from ..services.live_cpu import LocalPipelineExecutor
+from ..services.inference import ENGINE, LIVE
 from ..services.recordings import SessionRecorder, compress_soon, recording_path
 from ..models import Consultation, Recording
 from ..services.auth import resolve_session
@@ -41,13 +39,6 @@ def build_local_pipeline() -> LocalAudioPipeline:
         timestamp_tolerance_ms=1_000,
         max_trailing_overshoot_ms=3_000,
     )
-
-
-def persist_reconciled_transcript(consultation_id: str, transcripts: list[TranscriptDraft]) -> None:
-    """Create and use the database session on the executor thread."""
-
-    with SessionLocal() as session:
-        replace_with_reconciled_transcript(session, consultation_id, transcripts, extract=False)
 
 
 def allowed_origins() -> list[str]:
@@ -75,10 +66,9 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
         await websocket.close(code=1008)
         return
     await websocket.accept()
-    # One model and one in-flight pass per consultation: the rolling buffer
-    # always transcribes the newest audio, so extra workers only add latency
-    # contention and memory.
-    pipeline_executor = LocalPipelineExecutor(workers=1)
+    # Every clinician shares one engine (one copy of each model, one queue):
+    # memory stays fixed however many consultations run at once.
+    live_enabled = ENGINE.admit_live(consultation_id)
     try:
         metadata = await websocket.receive_json()
         sample_rate = int(metadata.get("sample_rate", settings.audio_sample_rate))
@@ -94,17 +84,20 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             await websocket.send_json({"type": "error", "category": "INITIALIZATION", "message": "Select a language before using IndicConformer; automatic language detection is unavailable for this engine."})
             await websocket.close(code=1008)
             return
-        pipeline = build_local_pipeline()
+        pipeline = ENGINE.pipeline(build_local_pipeline)
         warmup = getattr(pipeline, "warmup", None)
-        if callable(warmup):
-            await pipeline_executor.run(warmup)
+        if callable(warmup) and not getattr(pipeline, "_vocibot_warm", False):
+            await ENGINE.run(LIVE, warmup)
+            setattr(pipeline, "_vocibot_warm", True)
     except Exception as error:
         logger.exception("Local audio initialization failed for consultation %s", consultation_id)
-        pipeline_executor.close()
+        ENGINE.release_live(consultation_id)
         await websocket.send_json({"type": "error", "category": "INITIALIZATION", "message": "Local audio pipeline is unavailable. See backend logs for details."})
         await websocket.close(code=1011)
         return
-    await websocket.send_json({"type": "ready", "consultation_id": consultation_id, "sample_rate": sample_rate, "channels": channels, "encoding": encoding, "mime_type": mime_type, "language": language})
+    await websocket.send_json({"type": "ready", "consultation_id": consultation_id, "sample_rate": sample_rate, "channels": channels, "encoding": encoding, "mime_type": mime_type, "language": language, "live_preview": live_enabled})
+    if not live_enabled:
+        await websocket.send_json({"type": "warning", "category": "CAPACITY", "message": "Live preview is paused because the server is busy with other consultations. Your audio is being recorded and the full transcript will appear after Stop."})
     timestamp_ms = 0
     transcript_sequence = 0
     received_audio = bytearray()
@@ -136,8 +129,6 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             logger.exception("Saving the recording failed for consultation %s", consultation_id)
     debug_windows: list[dict[str, object]] = []
     debug_transcripts: list[dict[str, object]] = []
-    received_waveforms: list[np.ndarray] = []
-    final_reconciliation: dict[str, object] = {}
     capture_started_at: float | None = None
     first_text_latency_ms: float | None = None
     latest_capture_end_ms = 0
@@ -161,7 +152,6 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             "debug_wav": str(debug_path),
             "windows": debug_windows,
             "transcript": debug_transcripts,
-            "final_reconciliation": final_reconciliation,
             "first_text_latency_ms": first_text_latency_ms,
             "out_of_order_live_segments": committer.out_of_order_count,
             **audio_metrics(debug_audio.waveform, sample_rate=debug_audio.sample_rate),
@@ -185,7 +175,7 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
         duration_ms = int(len(waveform) / sample_rate_hz * 1000)
         try:
             chunk = AudioChunk(audio=b"", sample_rate=sample_rate_hz, timestamp_ms=payload_timestamp_ms, encoding="pcm_f32le", channels=1, waveform=waveform, live=True)
-            result = await pipeline_executor.run(pipeline.process, chunk, language=None if language == "auto" else language)
+            result = await ENGINE.run(LIVE, pipeline.process, chunk, language=None if language == "auto" else language)
             logger.info(
                 "ASR live buffer consultation=%s start_ms=%s end_ms=%s timings=%s diagnostics=%s",
                 consultation_id,
@@ -311,8 +301,7 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             if not next_audio.done():
                 next_audio.cancel()
 
-    worker = asyncio.create_task(process_audio_queue())
-    wait_for_executor_shutdown = True
+    worker = asyncio.create_task(process_audio_queue()) if live_enabled else None
     try:
         while True:
             message = await websocket.receive()
@@ -320,53 +309,16 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                 return
             if message.get("text"):
                 if message["text"] == '{"type":"stop"}' or message["text"] == '{"type": "stop"}':
-                    reconciled = None
-                    try:
-                        async with asyncio.timeout(settings.asr_finalization_timeout_seconds):
-                            await audio_queue.put(None)
-                            await worker
-                            if settings.ai_mode == "local" and received_waveforms:
-                                complete_waveform = np.concatenate(received_waveforms)
-                                reconciled = await pipeline_executor.run(
-                                    FinalReconciler().run,
-                                    complete_waveform,
-                                    pipeline.stt,
-                                    sample_rate=settings.audio_sample_rate,
-                                    language=None if language == "auto" else language,
-                                )
-                                final_reconciliation.update({
-                                    "latency_ms": reconciled.latency_ms,
-                                    "warnings": reconciled.warnings,
-                                    "transcript": [{"text": draft.text, "speaker": draft.speaker, "timestamp": draft.timestamp, "start_ms": draft.start_ms, "end_ms": draft.end_ms, "language_code": draft.language_code} for draft in reconciled.transcripts],
-                                    "live_transcript_count": len(debug_transcripts),
-                                    "final_transcript_count": len(reconciled.transcripts),
-                                })
-                    except TimeoutError:
-                        # A native inference call cannot be killed safely from
-                        # Python. Acknowledge Stop and do not wait for that
-                        # worker during cleanup; the process stays responsive.
-                        wait_for_executor_shutdown = False
-                        final_reconciliation["error"] = "finalization_timeout"
-                        logger.error("Final audio reconciliation timed out for consultation %s", consultation_id)
-                        await send_json({"type": "warning", "category": "FINALIZATION", "message": "Final transcription took too long. The captured live preview remains available for review."})
-                    except Exception as error:
-                        logger.exception("Final audio reconciliation failed for consultation %s", consultation_id)
-                        final_reconciliation["error"] = str(error)
-                        await send_json({"type": "warning", "category": "FINALIZATION", "message": "Final transcription could not replace the live preview. The captured preview remains available for review."})
-                    if reconciled is not None:
-                        for warning in reconciled.warnings:
-                            await send_json({"type": "warning", "category": "FINALIZATION", "message": warning})
-                        if not reconciled.transcripts:
-                            await send_json({"type": "warning", "category": "FINALIZATION", "message": "No reliable final transcript was produced. The captured live preview remains available for review."})
-                        else:
-                            try:
-                                # This transaction only replaces transcript rows;
-                                # slow local-LLM extraction runs later via /stop.
-                                persist_reconciled_transcript(consultation_id, reconciled.transcripts)
-                            except Exception as error:
-                                logger.exception("Final transcript persistence failed for consultation %s", consultation_id)
-                                final_reconciliation["error"] = str(error)
-                                await send_json({"type": "warning", "category": "FINALIZATION", "message": "Final transcription could not replace the live preview. The captured preview remains available for review."})
+                    # Let a running live pass finish; the authoritative final
+                    # transcript is made from the saved recording in the
+                    # background once the client calls /stop.
+                    if worker is not None:
+                        await audio_queue.put(None)
+                        try:
+                            async with asyncio.timeout(settings.asr_live_stop_grace_seconds):
+                                await worker
+                        except TimeoutError:
+                            worker.cancel()
                     persist_debug_audio()
                     finish_recording()
                     await send_json({"type": "stopped"})
@@ -380,7 +332,6 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             if settings.audio_debug_dir:
                 received_audio.extend(audio)
             decoded = decode_audio_payload(audio, encoding=encoding, sample_rate=sample_rate, channels=channels)
-            received_waveforms.append(decoded.waveform)
             if not recording_checked:
                 recording_checked = True
                 try:
@@ -389,12 +340,13 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                     logger.exception("Starting the recording failed for consultation %s", consultation_id)
             if recorder is not None:
                 recorder.write(decoded.waveform)
-            await audio_queue.put(decoded.waveform)
+            if worker is not None:
+                await audio_queue.put(decoded.waveform)
     except WebSocketDisconnect:
         return
     finally:
-        if not worker.done():
+        if worker is not None and not worker.done():
             worker.cancel()
-        pipeline_executor.close(wait=wait_for_executor_shutdown)
+        ENGINE.release_live(consultation_id)
         persist_debug_audio()
         finish_recording()

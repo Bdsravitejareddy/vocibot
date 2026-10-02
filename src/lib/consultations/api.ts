@@ -16,6 +16,8 @@ export type ConsultationState = {
   record: ClinicalRecord;
   updates: Array<{ id: string; field_name: string; previous_value: unknown; new_value: unknown; source_segment_ids: string[]; updated_at: string; update_type: string }>;
   finalization_warnings?: string[];
+  /** Background preparation of the final transcript and note after Stop. */
+  processing: { status: "idle" | "queued" | "transcribing" | "writing_note" | "done" | "failed"; plan: string; error: string | null; warnings: string[]; jobs_ahead: number | null };
 };
 
 
@@ -27,9 +29,9 @@ export function addSegment(consultationId: string, input: TranscriptSegmentInput
   return request<{ duplicate: boolean; consultation: ConsultationState }>(`/api/consultations/${consultationId}/segments`, { method: "POST", body: JSON.stringify(input) });
 }
 
-export function stopConsultation(consultationId: string, inferFinalRecord = false) {
-  const query = inferFinalRecord ? "?infer_final_record=true" : "";
-  return request<ConsultationState>(`/api/consultations/${consultationId}/stop${query}`, { method: "POST" });
+/** Finish recording; the final transcript and note are prepared in the background. */
+export function stopConsultation(consultationId: string) {
+  return request<ConsultationState>(`/api/consultations/${consultationId}/stop`, { method: "POST" });
 }
 
 export function approveConsultation(consultationId: string, record: ClinicalRecord) {
