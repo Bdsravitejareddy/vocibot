@@ -1,0 +1,121 @@
+{
+  "audio": "/private/tmp/vocibot-audio-debug/2e0b909e-9578-461b-8bfe-3dd6c5dc3382.wav",
+  "model": "small",
+  "sample_rate": 16000,
+  "results": [
+    {
+      "window_seconds": 1.5,
+      "overlap_seconds": 0.3,
+      "audio_duration_seconds": 208.5546875,
+      "speech_windows": 28,
+      "first_text_audio_ms": 25200,
+      "processing_latency_seconds": 48.868797000002814,
+      "first_text_processing_latency_seconds": 2.7923717919984483,
+      "finalization_latency_seconds": 48.868797000002814,
+      "real_time_factor": 0.23432125926204758,
+      "transcript": "Hmm Can you? Can you hear me? Hey, can you hear me? I am Ravi By the way... Listen, I have seen and cold. And I've had it for... Two weeks I'm also s- feeling nauseous. and headache I used to have to have medicines. I do it. do you think my doctor? doctor also recommended. 50 for fever last time. last time.",
+      "diagnostics": {
+        "language": "en",
+        "language_probability": 0.9803240299224854,
+        "vad_filter": true,
+        "no_speech_threshold": 0.6,
+        "log_prob_threshold": -1.0,
+        "compression_ratio_threshold": 2.4,
+        "condition_on_previous_text": false,
+        "initial_prompt": null,
+        "beam_size": 1,
+        "vad_speech_proportion": null,
+        "audio_rms": 0.042254990240046295,
+        "audio_peak": 0.4290653169155121,
+        "segments_rejected": [],
+        "segments": [
+          {
+            "text": "last time.",
+            "avg_logprob": -0.5671791732311249,
+            "no_speech_prob": 0.21865543723106384,
+            "compression_ratio": 0.5555555555555556,
+            "start_ms": 145200,
+            "end_ms": 145800,
+            "accepted": true
+          }
+        ]
+      }
+    },
+    {
+      "window_seconds": 2.0,
+      "overlap_seconds": 0.5,
+      "audio_duration_seconds": 208.5546875,
+      "speech_windows": 28,
+      "first_text_audio_ms": 25140,
+      "processing_latency_seconds": 44.45995333299652,
+      "first_text_processing_latency_seconds": 1.895432040997548,
+      "finalization_latency_seconds": 44.45995333299652,
+      "real_time_factor": 0.2131812708980541,
+      "transcript": "Hmm Can you Can you hear me? Hey, can you hear me? Can you hear me? I am I am Ravi by the way Let's a cuff and a cold. and I've had it. had it for... Two weeks I'm also feeling nauseous and headache. I used to have to have medicines for Asked them all before I do think my dog... my doctor also recommended. $650 50 for fever last time. time.",
+      "diagnostics": {
+        "language": "en",
+        "language_probability": 0.9283028841018677,
+        "vad_filter": true,
+        "no_speech_threshold": 0.6,
+        "log_prob_threshold": -1.0,
+        "compression_ratio_threshold": 2.4,
+        "condition_on_previous_text": false,
+        "initial_prompt": null,
+        "beam_size": 1,
+        "vad_speech_proportion": null,
+        "audio_rms": 0.026764536397250984,
+        "audio_peak": 0.4290653169155121,
+        "segments_rejected": [],
+        "segments": [
+          {
+            "text": "time.",
+            "avg_logprob": -0.9227120399475097,
+            "no_speech_prob": 0.4882337152957916,
+            "compression_ratio": 0.38461538461538464,
+            "start_ms": 145500,
+            "end_ms": 145800,
+            "accepted": true
+          }
+        ]
+      }
+    },
+    {
+      "window_seconds": 3.0,
+      "overlap_seconds": 0.75,
+      "audio_duration_seconds": 208.5546875,
+      "speech_windows": 21,
+      "first_text_audio_ms": 25120,
+      "processing_latency_seconds": 33.29269875000318,
+      "first_text_processing_latency_seconds": 1.8999168750015087,
+      "finalization_latency_seconds": 33.29269875000318,
+      "real_time_factor": 0.15963534144972494,
+      "transcript": "Hmm Can you hear me? Can you hear me? Hey Hey, can you hear me? I am Rav- Listen, I have CVL cuff a cuff and a cold. enough And I've had it for... Two weeks? I'm on this I'm also feeling nauseous and headache. and headache. I used to have medicines medicines for asthma. Asked them all before I do think my doctor also recommends also recommended dolo 650 50 for fever last time.",
+      "diagnostics": {
+        "language": "en",
+        "language_probability": 0.9935895204544067,
+        "vad_filter": true,
+        "no_speech_threshold": 0.6,
+        "log_prob_threshold": -1.0,
+        "compression_ratio_threshold": 2.4,
+        "condition_on_previous_text": false,
+        "initial_prompt": null,
+        "beam_size": 1,
+        "vad_speech_proportion": null,
+        "audio_rms": 0.04356539400695301,
+        "audio_peak": 0.4290653169155121,
+        "segments_rejected": [],
+        "segments": [
+          {
+            "text": "50 for fever last time.",
+            "avg_logprob": -0.3097532060411241,
+            "no_speech_prob": 0.0333283506333828,
+            "compression_ratio": 0.7419354838709677,
+            "start_ms": 144000,
+            "end_ms": 145780,
+            "accepted": true
+          }
+        ]
+      }
+    }
+  ]
+}

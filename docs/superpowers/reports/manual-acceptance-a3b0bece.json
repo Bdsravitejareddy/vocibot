@@ -1,0 +1,531 @@
+{
+  "consultation_id": "a3b0bece-58e9-4e9a-84e9-9956fe70fe56",
+  "consultation": {
+    "id": "a3b0bece-58e9-4e9a-84e9-9956fe70fe56",
+    "status": "IN_PROGRESS",
+    "started_at": "2026-09-26T08:53:14.664118",
+    "ended_at": null,
+    "patient": {
+      "id": "1f4be7d7-d77b-43db-aecb-0f4fb4ce9d0e",
+      "patient_identifier": "DIAGNOSTIC-MIC-001",
+      "name": null,
+      "age": 42,
+      "sex": "Female"
+    },
+    "transcript": [
+      {
+        "id": "a3b0bece-58e9-4e9a-84e9-9956fe70fe56-local-0-0",
+        "speaker": "UNKNOWN",
+        "text": "This is a transcription test, the patient has had a",
+        "timestamp": "00:00:00",
+        "sequence_number": 0
+      },
+      {
+        "id": "a3b0bece-58e9-4e9a-84e9-9956fe70fe56-local-2250-0",
+        "speaker": "UNKNOWN",
+        "text": "headache for three days there is no fever",
+        "timestamp": "00:00:02",
+        "sequence_number": 1
+      }
+    ],
+    "record": {
+      "chief_complaint": null,
+      "duration": null,
+      "presenting_symptoms": [],
+      "history_present_illness": "Headache for three days",
+      "relevant_negatives": [],
+      "past_medical_history": null,
+      "medications": [],
+      "allergies": [],
+      "vitals": {},
+      "examination_findings": [],
+      "assessment": null,
+      "plan": null,
+      "follow_up": null
+    },
+    "updates": [
+      {
+        "id": "d5f0db0c-f2dd-490a-ab22-8e70ba5672ad",
+        "field_name": "history_present_illness",
+        "previous_value": null,
+        "new_value": "Headache for three days",
+        "source_segment_ids": [
+          "a3b0bece-58e9-4e9a-84e9-9956fe70fe56-local-2250-0"
+        ],
+        "updated_at": "2026-09-26T08:53:48.585569",
+        "update_type": "AI_EXTRACTED"
+      }
+    ]
+  },
+  "audio": {
+    "consultation_id": "a3b0bece-58e9-4e9a-84e9-9956fe70fe56",
+    "input_encoding": "pcm_f32le",
+    "mime_type": "audio/raw;encoding=pcm_f32le",
+    "source_sample_rate": 48000,
+    "decoded_sample_rate": 48000,
+    "channel_count": 1,
+    "whisper_sample_rate": 16000,
+    "received_duration_ms": 14848.0,
+    "debug_wav": "/tmp/vocibot-audio-debug/a3b0bece-58e9-4e9a-84e9-9956fe70fe56.wav",
+    "duration_ms": 14848.0,
+    "rms": 0.1688682553292179,
+    "peak": 1.0,
+    "clipping_percent": 0.004910874640804598,
+    "silence_percent": 24.60418350395115
+  },
+  "asr_windows": [
+    {
+      "start_ms": 0,
+      "end_ms": 3000,
+      "audio": {
+        "duration_ms": 3000.0,
+        "rms": 0.22995742569779964,
+        "peak": 1.0058454275131226,
+        "clipping_percent": 0.025,
+        "silence_percent": 21.947916666666668
+      },
+      "timings": {
+        "vad_ms": 79.73683300224366,
+        "transcription_ms": 2301.7151660023956
+      },
+      "diagnostics": {
+        "window_start_ms": 0,
+        "window_end_ms": 3000,
+        "vad_probability": 0.9999885559082031,
+        "vad_frame_count": 94,
+        "speech_frame_count": 84,
+        "speech_duration_ms": 2688.0,
+        "accepted": true,
+        "asr": {
+          "language": "en",
+          "language_probability": 0.9907279014587402,
+          "vad_filter": true,
+          "no_speech_threshold": 0.6,
+          "log_prob_threshold": -1.0,
+          "compression_ratio_threshold": 2.4,
+          "condition_on_previous_text": false,
+          "vad_speech_proportion": 0.8936170212765957,
+          "audio_rms": 0.22995742569779964,
+          "audio_peak": 1.0058454275131226,
+          "segments_rejected": [],
+          "segments": [
+            {
+              "text": "This is a transcription test, the patient has had a",
+              "avg_logprob": -0.34166090403284344,
+              "no_speech_prob": 0.050198912620544434,
+              "compression_ratio": 0.9444444444444444,
+              "start_ms": 0,
+              "end_ms": 3000,
+              "accepted": true
+            }
+          ]
+        },
+        "accepted_transcript_count": 1,
+        "rejected_transcript_count": 0
+      },
+      "warnings": [
+        "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint",
+        "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model"
+      ]
+    },
+    {
+      "start_ms": 2250,
+      "end_ms": 5250,
+      "audio": {
+        "duration_ms": 3000.0,
+        "rms": 0.15125834398641205,
+        "peak": 0.6091223955154419,
+        "clipping_percent": 0.0,
+        "silence_percent": 22.175
+      },
+      "timings": {
+        "vad_ms": 9.249666996765882,
+        "transcription_ms": 1724.5908340046299
+      },
+      "diagnostics": {
+        "window_start_ms": 2250,
+        "window_end_ms": 5250,
+        "vad_probability": 0.9999903440475464,
+        "vad_frame_count": 94,
+        "speech_frame_count": 87,
+        "speech_duration_ms": 2784.0,
+        "accepted": true,
+        "asr": {
+          "language": "en",
+          "language_probability": 0.9917959570884705,
+          "vad_filter": true,
+          "no_speech_threshold": 0.6,
+          "log_prob_threshold": -1.0,
+          "compression_ratio_threshold": 2.4,
+          "condition_on_previous_text": false,
+          "vad_speech_proportion": 0.925531914893617,
+          "audio_rms": 0.15125834398641205,
+          "audio_peak": 0.6091223955154419,
+          "segments_rejected": [],
+          "segments": [
+            {
+              "text": "patient has had a headache for three days. There is no fever.",
+              "avg_logprob": -0.2617868255166447,
+              "no_speech_prob": 0.12104098498821259,
+              "compression_ratio": 0.9838709677419355,
+              "start_ms": 2250,
+              "end_ms": 5250,
+              "accepted": true
+            }
+          ]
+        },
+        "accepted_transcript_count": 1,
+        "rejected_transcript_count": 0
+      },
+      "warnings": [
+        "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint",
+        "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model"
+      ]
+    },
+    {
+      "start_ms": 4500,
+      "end_ms": 7500,
+      "audio": {
+        "duration_ms": 3000.0,
+        "rms": 0.14323467008435817,
+        "peak": 0.6091223955154419,
+        "clipping_percent": 0.0,
+        "silence_percent": 31.583333333333336
+      },
+      "timings": {
+        "vad_ms": 27.964624998276122,
+        "transcription_ms": 7545.632000001206
+      },
+      "diagnostics": {
+        "window_start_ms": 4500,
+        "window_end_ms": 7500,
+        "vad_probability": 0.9999908208847046,
+        "vad_frame_count": 94,
+        "speech_frame_count": 79,
+        "speech_duration_ms": 2528.0,
+        "accepted": true,
+        "asr": {
+          "language": "en",
+          "language_probability": 0.9895533323287964,
+          "vad_filter": true,
+          "no_speech_threshold": 0.6,
+          "log_prob_threshold": -1.0,
+          "compression_ratio_threshold": 2.4,
+          "condition_on_previous_text": false,
+          "vad_speech_proportion": 0.8404255319148937,
+          "audio_rms": 0.14323467008435817,
+          "audio_peak": 0.6091223955154419,
+          "segments_rejected": [],
+          "segments": [
+            {
+              "text": "There is no fever, there is no cough, the patient is dead.",
+              "avg_logprob": -0.42175935374365914,
+              "no_speech_prob": 0.07673522084951401,
+              "compression_ratio": 1.1372549019607843,
+              "start_ms": 4500,
+              "end_ms": 7500,
+              "accepted": true
+            }
+          ]
+        },
+        "accepted_transcript_count": 1,
+        "rejected_transcript_count": 0
+      },
+      "warnings": [
+        "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint",
+        "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model"
+      ]
+    },
+    {
+      "start_ms": 6750,
+      "end_ms": 9750,
+      "audio": {
+        "duration_ms": 3000.0,
+        "rms": 0.15533083904930958,
+        "peak": 0.7085406184196472,
+        "clipping_percent": 0.0,
+        "silence_percent": 16.477083333333333
+      },
+      "timings": {
+        "vad_ms": 9.354875001008622,
+        "transcription_ms": 1737.7735000045504
+      },
+      "diagnostics": {
+        "window_start_ms": 6750,
+        "window_end_ms": 9750,
+        "vad_probability": 0.9999886751174927,
+        "vad_frame_count": 94,
+        "speech_frame_count": 93,
+        "speech_duration_ms": 2976.0,
+        "accepted": true,
+        "asr": {
+          "language": "en",
+          "language_probability": 0.9916276931762695,
+          "vad_filter": true,
+          "no_speech_threshold": 0.6,
+          "log_prob_threshold": -1.0,
+          "compression_ratio_threshold": 2.4,
+          "condition_on_previous_text": false,
+          "vad_speech_proportion": 0.9893617021276596,
+          "audio_rms": 0.15533083904930958,
+          "audio_peak": 0.7085406184196472,
+          "segments_rejected": [],
+          "segments": [
+            {
+              "text": "The patient is taking paracetamol.",
+              "avg_logprob": -0.34581508338451383,
+              "no_speech_prob": 0.06954684853553772,
+              "compression_ratio": 0.9333333333333333,
+              "start_ms": 6750,
+              "end_ms": 8850,
+              "accepted": true
+            },
+            {
+              "text": "This is a transcript.",
+              "avg_logprob": -0.34581508338451383,
+              "no_speech_prob": 0.06954684853553772,
+              "compression_ratio": 0.9333333333333333,
+              "start_ms": 8850,
+              "end_ms": 9850,
+              "accepted": true
+            }
+          ]
+        },
+        "accepted_transcript_count": 1,
+        "rejected_transcript_count": 1
+      },
+      "warnings": [
+        "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint",
+        "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model",
+        "Transcript timestamps 8850-9850ms fall outside audio window 6750-9750ms"
+      ]
+    },
+    {
+      "start_ms": 9000,
+      "end_ms": 12000,
+      "audio": {
+        "duration_ms": 3000.0,
+        "rms": 0.1397800331889477,
+        "peak": 0.6312359571456909,
+        "clipping_percent": 0.0,
+        "silence_percent": 22.6
+      },
+      "timings": {
+        "vad_ms": 8.527375000994653,
+        "transcription_ms": 1691.1595830024453
+      },
+      "diagnostics": {
+        "window_start_ms": 9000,
+        "window_end_ms": 12000,
+        "vad_probability": 0.9999926090240479,
+        "vad_frame_count": 94,
+        "speech_frame_count": 86,
+        "speech_duration_ms": 2752.0,
+        "accepted": true,
+        "asr": {
+          "language": "en",
+          "language_probability": 0.9851202368736267,
+          "vad_filter": true,
+          "no_speech_threshold": 0.6,
+          "log_prob_threshold": -1.0,
+          "compression_ratio_threshold": 2.4,
+          "condition_on_previous_text": false,
+          "vad_speech_proportion": 0.9148936170212766,
+          "audio_rms": 0.1397800331889477,
+          "audio_peak": 0.6312359571456909,
+          "segments_rejected": [],
+          "segments": [
+            {
+              "text": "This is a transcription test.",
+              "avg_logprob": -0.30995938844150966,
+              "no_speech_prob": 0.128858745098114,
+              "compression_ratio": 1.0,
+              "start_ms": 9000,
+              "end_ms": 10860,
+              "accepted": true
+            },
+            {
+              "text": "The patient has had a headache.",
+              "avg_logprob": -0.30995938844150966,
+              "no_speech_prob": 0.128858745098114,
+              "compression_ratio": 1.0,
+              "start_ms": 10860,
+              "end_ms": 12020,
+              "accepted": true
+            }
+          ]
+        },
+        "accepted_transcript_count": 1,
+        "rejected_transcript_count": 1
+      },
+      "warnings": [
+        "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint",
+        "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model",
+        "Transcript timestamps 10860-12020ms fall outside audio window 9000-12000ms"
+      ]
+    },
+    {
+      "start_ms": 11250,
+      "end_ms": 14250,
+      "audio": {
+        "duration_ms": 3000.0,
+        "rms": 0.14902607100814494,
+        "peak": 0.6088932752609253,
+        "clipping_percent": 0.0,
+        "silence_percent": 23.852083333333333
+      },
+      "timings": {
+        "vad_ms": 8.3253330012667,
+        "transcription_ms": 1658.328249999613
+      },
+      "diagnostics": {
+        "window_start_ms": 11250,
+        "window_end_ms": 14250,
+        "vad_probability": 0.999991774559021,
+        "vad_frame_count": 94,
+        "speech_frame_count": 85,
+        "speech_duration_ms": 2720.0,
+        "accepted": true,
+        "asr": {
+          "language": "en",
+          "language_probability": 0.9966986775398254,
+          "vad_filter": true,
+          "no_speech_threshold": 0.6,
+          "log_prob_threshold": -1.0,
+          "compression_ratio_threshold": 2.4,
+          "condition_on_previous_text": false,
+          "vad_speech_proportion": 0.9042553191489362,
+          "audio_rms": 0.14902607100814494,
+          "audio_peak": 0.6088932752609253,
+          "segments_rejected": [],
+          "segments": [
+            {
+              "text": "has had a headache for three days, there is no fever.",
+              "avg_logprob": -0.27514999732375145,
+              "no_speech_prob": 0.023831509053707123,
+              "compression_ratio": 0.9298245614035088,
+              "start_ms": 11250,
+              "end_ms": 14170,
+              "accepted": true
+            }
+          ]
+        },
+        "accepted_transcript_count": 1,
+        "rejected_transcript_count": 0
+      },
+      "warnings": [
+        "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint",
+        "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model"
+      ]
+    },
+    {
+      "start_ms": 13500,
+      "end_ms": 14855,
+      "audio": {
+        "duration_ms": 1355.25,
+        "rms": 0.16179900491803895,
+        "peak": 0.6088932752609253,
+        "clipping_percent": 0.0,
+        "silence_percent": 27.010699133001292
+      },
+      "timings": {
+        "vad_ms": 4.132374997425359,
+        "transcription_ms": 1616.304000002856
+      },
+      "diagnostics": {
+        "window_start_ms": 13500,
+        "window_end_ms": 14855,
+        "vad_probability": 0.9999903440475464,
+        "vad_frame_count": 43,
+        "speech_frame_count": 36,
+        "speech_duration_ms": 1152.0,
+        "accepted": true,
+        "asr": {
+          "language": "en",
+          "language_probability": 0.9875339269638062,
+          "vad_filter": true,
+          "no_speech_threshold": 0.6,
+          "log_prob_threshold": -1.0,
+          "compression_ratio_threshold": 2.4,
+          "condition_on_previous_text": false,
+          "vad_speech_proportion": 0.8372093023255814,
+          "audio_rms": 0.16179900491803895,
+          "audio_peak": 0.6088932752609253,
+          "segments_rejected": [],
+          "segments": [
+            {
+              "text": "There is no fever.",
+              "avg_logprob": -0.5557332955873929,
+              "no_speech_prob": 0.3304574489593506,
+              "compression_ratio": 1.0,
+              "start_ms": 13500,
+              "end_ms": 14500,
+              "accepted": true
+            },
+            {
+              "text": "There is no",
+              "avg_logprob": -0.5557332955873929,
+              "no_speech_prob": 0.3304574489593506,
+              "compression_ratio": 1.0,
+              "start_ms": 14500,
+              "end_ms": 16000,
+              "accepted": true
+            }
+          ]
+        },
+        "accepted_transcript_count": 1,
+        "rejected_transcript_count": 1
+      },
+      "warnings": [
+        "WhisperX alignment is disabled; set WHISPERX_ENABLED=true to enable its local checkpoint",
+        "pyannote diarization is disabled; set DIARIZATION_ENABLED=true to enable its local model",
+        "Transcript timestamps 14500-16000ms fall outside audio window 13500-14855ms"
+      ]
+    }
+  ],
+  "asr_transcript": [
+    {
+      "text": "This is a transcription test, the patient has had a",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:00",
+      "start_ms": 0,
+      "end_ms": 3000
+    },
+    {
+      "text": "headache for three days there is no fever",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:02",
+      "start_ms": 2250,
+      "end_ms": 5250
+    },
+    {
+      "text": "there is no cough the patient is dead",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:04",
+      "start_ms": 4500,
+      "end_ms": 7500
+    },
+    {
+      "text": "The patient is taking paracetamol.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:06",
+      "start_ms": 6750,
+      "end_ms": 8850
+    },
+    {
+      "text": "This is a transcription test.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:09",
+      "start_ms": 9000,
+      "end_ms": 10860
+    },
+    {
+      "text": "has had a headache for three days, there is no fever.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:11",
+      "start_ms": 11250,
+      "end_ms": 14170
+    }
+  ],
+  "notes": "Review the saved WAV against the transcript. This report contains no inferred facts beyond the application record."
+}

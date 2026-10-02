@@ -1,0 +1,16 @@
+node_modules/
+.next/
+/.venv-local/
+.venv/
+backend/vocibot.db
+vocibot.db
+backend/*.egg-info/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+test-results/
+playwright-report/
+build/
+dist/
+tmp/
+.env

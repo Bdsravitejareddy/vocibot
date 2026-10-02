@@ -1,0 +1,44 @@
+{
+  "date": "2026-09-29",
+  "status": "prototype-built-and-smoke-tested",
+  "platform": "macOS arm64",
+  "artifact": "dist/mac-arm64/VociBot.app",
+  "artifact_size": "approximately 1.5 GB (uncompressed app bundle)",
+  "distribution": {
+    "signed": false,
+    "note": "Local prototype bundle; Developer ID signing and notarization were unavailable in this workspace."
+  },
+  "runtime": {
+    "frontend": "http://127.0.0.1:3000",
+    "backend": "http://127.0.0.1:8000",
+    "database": "SQLite under Electron user-data directory",
+    "offline_inference": true,
+    "huggingface_downloads_disabled_in_packaged_runtime": true
+  },
+  "available_local_models": {
+    "speech_to_text": "faster-whisper small, cached locally",
+    "clinical_extraction": "Ollama llama3.1:8b, local service"
+  },
+  "verification": {
+    "backend_pytest": "71 passed; 3 existing deprecation warnings",
+    "frontend_unit": "13 passed",
+    "browser_e2e": "6 passed",
+    "typecheck": "passed",
+    "lint": "passed",
+    "next_production_build": "passed",
+    "desktop_package_build": "passed",
+    "packaged_api_and_renderer_health": "passed; final rebuilt bundle API and web processes started on loopback and stopped cleanly",
+    "packaged_ui_browser_smoke": "passed; VociBot page and local runtime status reported",
+    "local_note_inference": "passed using a synthetic English transcript; supported field retained source segment ID",
+    "clinical_review_flow": "transcript remains editable and extraction failure is fail-closed; approval-only export is covered by tests",
+    "offline_asr_runtime": "Whisper small loaded with network-offline flag and completed a 2-second silence inference; no speech accuracy claim"
+  },
+  "language_scope": {
+    "initial_ui_languages": ["English", "Telugu", "Hindi", "Marathi", "Gujarati"],
+    "reference_recordings_received": false,
+    "measured_wer_or_cer": null,
+    "accuracy": "unvalidated per language/accent; provide de-identified recordings with reference transcripts for evaluation",
+    "indic_conformer": "adapter and explicit model provisioning path implemented; no local NeMo runtime/checkpoint available, so this engine was not run"
+  },
+  "safety": "Clinician review remains required; no diagnosis, prescribing, automatic cloud fallback, or external healthcare-system submission is implemented."
+}

@@ -1,0 +1,137 @@
+{
+  "consultation_id": "2e0b909e-9578-461b-8bfe-3dd6c5dc3382",
+  "wav_path": "/tmp/vocibot-audio-debug/2e0b909e-9578-461b-8bfe-3dd6c5dc3382.wav",
+  "diagnostics_path": "/tmp/vocibot-audio-debug/2e0b909e-9578-461b-8bfe-3dd6c5dc3382.json",
+  "audio": {
+    "input_encoding": "pcm_f32le",
+    "mime_type": "audio/raw;encoding=pcm_f32le",
+    "source_sample_rate": 48000,
+    "decoded_sample_rate": 48000,
+    "channel_count": 1,
+    "whisper_sample_rate": 16000,
+    "received_duration_ms": 208554.66666666666,
+    "rms": 0.023849047466094623,
+    "peak": 0.9882635474205017,
+    "clipping_percent": 0.0,
+    "silence_percent": 92.84204461180443
+  },
+  "window_count": 93,
+  "vad_accepted_windows": 21,
+  "vad_rejected_windows": 72,
+  "live_transcript": [
+    {
+      "text": "hear me?",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:29",
+      "start_ms": 29250,
+      "end_ms": 31690
+    },
+    {
+      "text": "Hey, can you hear me?",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:38",
+      "start_ms": 38490,
+      "end_ms": 40490
+    },
+    {
+      "text": "I am Ravi, by the way.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:00:45",
+      "start_ms": 45000,
+      "end_ms": 47000
+    },
+    {
+      "text": "Listen, I have CVR cuff",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:01:06",
+      "start_ms": 66000,
+      "end_ms": 68000
+    },
+    {
+      "text": "a cough and cold.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:01:07",
+      "start_ms": 67500,
+      "end_ms": 69100
+    },
+    {
+      "text": "and I've had it for",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:01:14",
+      "start_ms": 74360,
+      "end_ms": 76360
+    },
+    {
+      "text": "Two weeks",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:01:17",
+      "start_ms": 77030,
+      "end_ms": 79030
+    },
+    {
+      "text": "I am also feeling nauseous and headache",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:01:21",
+      "start_ms": 81000,
+      "end_ms": 84000
+    },
+    {
+      "text": "medicines for asthma",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:02:12",
+      "start_ms": 132750,
+      "end_ms": 135750
+    },
+    {
+      "text": "Asked them all before",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:02:15",
+      "start_ms": 135000,
+      "end_ms": 137000
+    },
+    {
+      "text": "I do think my doctor also recommended it.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:02:20",
+      "start_ms": 140000,
+      "end_ms": 142480
+    },
+    {
+      "text": "also recommended $650.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:02:21",
+      "start_ms": 141750,
+      "end_ms": 144750
+    },
+    {
+      "text": "650 for fever last time.",
+      "speaker": "UNKNOWN",
+      "timestamp": "00:02:24",
+      "start_ms": 144000,
+      "end_ms": 145840
+    }
+  ],
+  "final_reconciliation": {},
+  "consultation": {
+    "id": "2e0b909e-9578-461b-8bfe-3dd6c5dc3382",
+    "patient_identifier": "test-101",
+    "started_at": "2026-09-27 04:03:03.039289",
+    "ended_at": "2026-09-27 04:06:35.900807",
+    "status": "READY_FOR_REVIEW",
+    "structured_data": {
+      "chief_complaint": null,
+      "duration": null,
+      "presenting_symptoms": [],
+      "history_present_illness": "Cough and cold",
+      "relevant_negatives": [],
+      "past_medical_history": null,
+      "medications": [],
+      "allergies": [],
+      "vitals": {},
+      "examination_findings": [],
+      "assessment": null,
+      "plan": null,
+      "follow_up": null
+    }
+  }
+}
