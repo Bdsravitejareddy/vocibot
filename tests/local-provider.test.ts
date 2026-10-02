@@ -4,7 +4,7 @@ import { LocalWebSocketSpeechProvider, parseLocalEvent } from "../src/lib/speech
 
 test("local transcript event maps to a transcript draft", () => {
   const event = parseLocalEvent(JSON.stringify({ type: "transcript", id: "l1", text: "नमस्ते", speaker: "PATIENT", timestamp: "2026-09-26T10:00:00Z", sequence_number: 3 }));
-  assert.deepEqual(event, { id: "l1", text: "नमस्ते", speaker: "PATIENT", timestamp: "2026-09-26T10:00:00Z", sequence_number: 3 });
+  assert.deepEqual(event, { id: "l1", text: "नमस्ते", speaker: "PATIENT", timestamp: "2026-09-26T10:00:00Z", sequence_number: 3, provisional: true });
 });
 
 test("local transcript event preserves the detected language code", () => {
@@ -53,6 +53,7 @@ test("local microphone waits for the warmed server-ready event before streaming 
     }
 
     emitReady() { this.onmessage?.({ data: JSON.stringify({ type: "ready" }) }); }
+    emitPartial(text: string) { this.onmessage?.({ data: JSON.stringify({ type: "partial", text, start_ms: 0 }) }); }
     close() { this.readyState = 3; this.onclose?.(); }
   }
 
@@ -74,15 +75,22 @@ test("local microphone waits for the warmed server-ready event before streaming 
 
   try {
     const provider = new LocalWebSocketSpeechProvider("wait-for-ready");
+    const partials: string[] = [];
+    provider.onPartial = (text) => partials.push(text);
     let started = false;
     const start = provider.start(() => {}).then(() => { started = true; });
     await new Promise((resolve) => setTimeout(resolve, 0));
+    // Speech captured while the backend warms up is held, not sent or lost.
+    processor?.onaudioprocess?.({ inputBuffer: { getChannelData: () => new Float32Array(128) } });
     assert.equal(started, false);
     assert.equal(socket?.binaryFrames, 0);
     socket?.emitReady();
     await start;
-    processor?.onaudioprocess?.({ inputBuffer: { getChannelData: () => new Float32Array(128) } });
     assert.equal(socket?.binaryFrames, 1);
+    processor?.onaudioprocess?.({ inputBuffer: { getChannelData: () => new Float32Array(128) } });
+    assert.equal(socket?.binaryFrames, 2);
+    socket?.emitPartial("good morning every");
+    assert.deepEqual(partials, ["good morning every"]);
   } finally {
     for (const [key, descriptor] of [["navigator", originalNavigator], ["AudioContext", originalAudioContext], ["WebSocket", originalWebSocket], ["window", originalWindow]] as const) {
       if (descriptor) Object.defineProperty(globalThis, key, descriptor);
@@ -117,6 +125,8 @@ test("local stop waits for the server final-pass acknowledgment before closing a
 
     send(data: string | ArrayBuffer) {
       if (typeof data === "string" && JSON.parse(data).type === "stop") {
+        this.onmessage?.({ data: JSON.stringify({ type: "warning", category: "FINALIZATION", message: "Using live preview" }) });
+        this.onmessage?.({ data: JSON.stringify({ type: "transcript", text: "late provisional", start_ms: 0, end_ms: 500 }) });
         setTimeout(() => {
           if (this.readyState !== FakeWebSocket.OPEN) return;
           acknowledgedAt = Date.now();
@@ -150,7 +160,10 @@ test("local stop waits for the server final-pass acknowledgment before closing a
 
   try {
     const provider = new LocalWebSocketSpeechProvider("slow-final-pass");
-    await provider.start(() => {});
+    const lateSegments: string[] = [];
+    const warnings: string[] = [];
+    provider.onError = (message) => warnings.push(message);
+    await provider.start((segment) => lateSegments.push(segment.text));
     let stopError = "";
     const stopped = provider.stop().then(() => true, (error: unknown) => {
       stopError = error instanceof Error ? error.message : String(error);
@@ -164,6 +177,8 @@ test("local stop waits for the server final-pass acknowledgment before closing a
     assert.equal(result, true, `stop should wait for the delayed server acknowledgment (${stopError})`);
     assert.ok(acknowledgedAt > 0);
     assert.ok(websocketState.closedAt >= acknowledgedAt, "the client must close only after reconciliation completes");
+    assert.deepEqual(lateSegments, [], "transcripts flushed after Stop must not be persisted as provisional rows");
+    assert.deepEqual(warnings, ["Using live preview"]);
   } finally {
     for (const [key, descriptor] of [
       ["navigator", originalNavigator],

@@ -20,11 +20,13 @@ _RELATIVE_TIMESTAMP = re.compile(r"^(\d{2,}:)?\d{2}:\d{2}$")
 logger = logging.getLogger(__name__)
 
 
-def _extract_or_leave_reviewable(transcript_inputs: list[TranscriptSegmentInput], current: ClinicalRecord):
+def _extract_or_leave_reviewable(transcript_inputs: list[TranscriptSegmentInput], current: ClinicalRecord, warnings: list[str] | None = None):
     try:
         return build_extraction_provider(settings).extract(transcript_inputs, current)  # type: ignore[arg-type]
     except Exception:
         logger.exception("Local clinical extraction failed; preserving transcript for clinician review")
+        if warnings is not None:
+            warnings.append("Clinical note inference did not finish. The final transcript is available for manual review.")
         return None
 
 
@@ -85,6 +87,8 @@ def _find_consultation(session: Session, consultation_id: str) -> Consultation:
 
 def append_segment(session: Session, consultation_id: str, payload: SegmentCreate) -> dict:
     consultation = _find_consultation(session, consultation_id)
+    if payload.id.startswith(f"{consultation.id}-final-"):
+        raise ValueError("transcript segment id uses a server-reserved finalization prefix")
     existing = session.get(TranscriptSegment, payload.id)
     if existing is not None and existing.consultation_id == consultation.id:
         return {"duplicate": True, "consultation": get_consultation(session, consultation_id)}
@@ -93,6 +97,13 @@ def append_segment(session: Session, consultation_id: str, payload: SegmentCreat
     segment = TranscriptSegment(id=payload.id, consultation_id=consultation.id, speaker=payload.speaker.value, text=payload.text, language_code=payload.language_code, timestamp=_relative_timestamp(payload.timestamp, consultation.started_at), sequence_number=payload.sequence_number)
     session.add(segment)
     session.flush()
+    # Rolling-window ASR is intentionally low latency and may contain partial
+    # words. Persist it for the live transcript, but never let it populate the
+    # clinical record. The authoritative full-recording pass replaces these
+    # fragments and performs extraction once when recording stops.
+    if payload.provisional:
+        session.commit()
+        return {"duplicate": False, "consultation": get_consultation(session, consultation_id)}
     transcript = list(session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)))
     transcript_inputs = [TranscriptSegmentInput(
         id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code
@@ -126,8 +137,15 @@ def append_segment(session: Session, consultation_id: str, payload: SegmentCreat
     return {"duplicate": False, "consultation": get_consultation(session, consultation_id)}
 
 
-def replace_with_reconciled_transcript(session: Session, consultation_id: str, drafts: list[TranscriptDraft]) -> dict:
-    """Replace live fragments with one authoritative final ASR transcript and extract once."""
+def replace_with_reconciled_transcript(
+    session: Session,
+    consultation_id: str,
+    drafts: list[TranscriptDraft],
+    *,
+    warnings: list[str] | None = None,
+    extract: bool = True,
+) -> dict:
+    """Commit the authoritative ASR transcript before optional note extraction."""
 
     consultation = _find_consultation(session, consultation_id)
     if consultation.status != ConsultationStatus.IN_PROGRESS.value:
@@ -137,6 +155,8 @@ def replace_with_reconciled_transcript(session: Session, consultation_id: str, d
     for update in list(consultation.updates):
         if update.update_type == RecordUpdateType.AI_EXTRACTED.value:
             session.delete(update)
+    consultation.clinical_record.structured_data_json = ClinicalRecord().model_dump()
+    consultation.clinical_record.version += 1
     session.flush()
     for index, draft in enumerate(drafts):
         speaker = draft.speaker if draft.speaker in {Speaker.DOCTOR.value, Speaker.PATIENT.value, Speaker.UNKNOWN.value} else Speaker.UNKNOWN.value
@@ -149,11 +169,31 @@ def replace_with_reconciled_transcript(session: Session, consultation_id: str, d
             timestamp=draft.timestamp,
             sequence_number=index,
         ))
-    session.flush()
+    session.commit()
+    if not extract:
+        return get_consultation(session, consultation_id)
+    return extract_reconciled_clinical_record(session, consultation_id, warnings=warnings)
+
+
+def extract_reconciled_clinical_record(
+    session: Session,
+    consultation_id: str,
+    *,
+    warnings: list[str] | None = None,
+    require_authoritative: bool = False,
+) -> dict:
+    """Extract a note from the already-committed authoritative transcript."""
+
+    consultation = _find_consultation(session, consultation_id)
     transcript_rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
+    authoritative_prefix = f"{consultation.id}-final-"
+    if require_authoritative and (not transcript_rows or any(not item.id.startswith(authoritative_prefix) for item in transcript_rows)):
+        if warnings is not None:
+            warnings.append("Clinical note inference was skipped because no authoritative final transcript was available.")
+        return get_consultation(session, consultation_id)
     transcript_inputs = [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in transcript_rows]
     current = ClinicalRecord()
-    result = _extract_or_leave_reviewable(transcript_inputs, current)
+    result = _extract_or_leave_reviewable(transcript_inputs, current, warnings)
     validator = EvidenceValidator()
     validated_record = current.model_copy(deep=True)
     evidence: dict[str, list[str]] = {}
@@ -170,8 +210,9 @@ def replace_with_reconciled_transcript(session: Session, consultation_id: str, d
     changes = diff_clinical_record(current, validated_record, evidence, set())
     for change in changes:
         session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=RecordUpdateType.AI_EXTRACTED.value))
-    consultation.clinical_record.structured_data_json = validated_record.model_dump()
-    consultation.clinical_record.version += 1
+    if changes:
+        consultation.clinical_record.structured_data_json = validated_record.model_dump()
+        consultation.clinical_record.version += 1
     session.commit()
     return get_consultation(session, consultation_id)
 

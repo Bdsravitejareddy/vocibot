@@ -75,6 +75,7 @@ test("local microphone streams browser audio and waits for finalization before r
 
   await page.getByRole("button", { name: "Stop" }).click();
   await expect.poll(() => receivedStop).toBe(true);
+  await expect(page.getByText("Finalizing", { exact: true })).toBeVisible();
   await expect(page.getByText("Review before saving")).not.toBeVisible({ timeout: 500 });
   await expect(page.getByText("Review before saving")).toBeVisible({ timeout: 6_000 });
 });

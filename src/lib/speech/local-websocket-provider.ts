@@ -8,7 +8,7 @@ export function parseLocalEvent(payload: string): TranscriptDraft & { error?: st
   if (event.type === "error") return { text: "", timestamp: "", speaker: "UNKNOWN", error: (event as { message?: string }).message ?? "Local pipeline error" };
   if (event.type !== "transcript") return null;
   const transcript = event as LocalTranscriptEvent;
-  return { id: transcript.id, text: transcript.text, speaker: (transcript.speaker ?? "UNKNOWN") as Speaker, timestamp: transcript.timestamp ?? formatRelative(transcript.start_ms ?? 0), sequence_number: transcript.sequence_number ?? 0, ...(transcript.start_ms === undefined ? {} : { start_ms: transcript.start_ms }), ...(transcript.end_ms === undefined ? {} : { end_ms: transcript.end_ms }), ...(transcript.language_code === undefined ? {} : { language_code: transcript.language_code }) };
+  return { id: transcript.id, text: transcript.text, speaker: (transcript.speaker ?? "UNKNOWN") as Speaker, timestamp: transcript.timestamp ?? formatRelative(transcript.start_ms ?? 0), sequence_number: transcript.sequence_number ?? 0, provisional: true, ...(transcript.start_ms === undefined ? {} : { start_ms: transcript.start_ms }), ...(transcript.end_ms === undefined ? {} : { end_ms: transcript.end_ms }), ...(transcript.language_code === undefined ? {} : { language_code: transcript.language_code }) };
 }
 
 function formatRelative(milliseconds: number): string {
@@ -26,12 +26,14 @@ function websocketUrl(): string {
 
 export class LocalWebSocketSpeechProvider implements SpeechToTextProvider {
   onError?: (message: string) => void;
+  onPartial?: (text: string) => void;
   private socket: WebSocket | null = null;
   private stream: MediaStream | null = null;
   private context: AudioContext | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
   private processor: ScriptProcessorNode | null = null;
   private sequence = 0;
+  private stopping = false;
   private stopped = Promise.resolve();
 
   constructor(private readonly consultationId: string, private readonly language = "auto") {}
@@ -46,6 +48,17 @@ export class LocalWebSocketSpeechProvider implements SpeechToTextProvider {
     this.source = this.context.createMediaStreamSource(this.stream);
     this.processor = this.context.createScriptProcessor(4096, 1, 1);
     this.socket = new WebSocket(`${websocketUrl()}/${this.consultationId}/audio`);
+    // Capture from the moment the microphone opens: the backend needs a moment
+    // to load its model, and the clinician's first words must not be lost.
+    const pending: ArrayBuffer[] = [];
+    let streaming = false;
+    this.processor.onaudioprocess = (event) => {
+      const frame = event.inputBuffer.getChannelData(0).slice().buffer;
+      if (streaming && this.socket?.readyState === WebSocket.OPEN) this.socket.send(frame);
+      else if (!streaming) pending.push(frame);
+    };
+    this.source.connect(this.processor);
+    this.processor.connect(this.context.destination);
     await new Promise<void>((resolve, reject) => {
       const socket = this.socket!;
       let ready = false;
@@ -67,6 +80,8 @@ export class LocalWebSocketSpeechProvider implements SpeechToTextProvider {
           const payload = JSON.parse(String(message.data)) as { type?: string; message?: string };
           if (payload.type === "ready") {
             ready = true;
+            for (const frame of pending.splice(0)) socket.send(frame);
+            streaming = true;
             resolve();
             return;
           }
@@ -78,18 +93,23 @@ export class LocalWebSocketSpeechProvider implements SpeechToTextProvider {
             resolveStopped?.();
             return;
           }
+          if (payload.type === "partial") {
+            if (!this.stopping) this.onPartial?.((payload as { text?: string }).text ?? "");
+            return;
+          }
+          if (payload.type === "warning") {
+            this.onError?.(payload.message ?? "Local finalization warning");
+            return;
+          }
           const event = parseLocalEvent(String(message.data));
           if (event?.error) {
             this.onError?.(event.error);
             if (!ready) reject(new Error(event.error));
           }
-          else if (event?.text) onSegment({ ...event, id: event.id ?? `local-${this.sequence}`, sequence_number: event.sequence_number ?? this.sequence++ });
+          else if (event?.text && !this.stopping) onSegment({ ...event, id: event.id ?? `local-${this.sequence}`, sequence_number: event.sequence_number ?? this.sequence++ });
         } catch (error) { this.onError?.(error instanceof Error ? error.message : "Invalid local pipeline event."); }
       };
     });
-    this.processor.onaudioprocess = (event) => { if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(event.inputBuffer.getChannelData(0).buffer); };
-    this.source.connect(this.processor);
-    this.processor.connect(this.context.destination);
   }
 
   pause() { this.processor?.disconnect(); }
@@ -99,6 +119,8 @@ export class LocalWebSocketSpeechProvider implements SpeechToTextProvider {
 
   async stop() {
     const socket = this.socket;
+    this.stopping = true;
+    this.onPartial?.("");
     if (socket?.readyState === WebSocket.OPEN) {
       this.stopped = new Promise<void>((resolve, reject) => {
         this.resolveStopped = resolve;

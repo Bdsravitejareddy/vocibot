@@ -11,6 +11,9 @@ class AudioChunk:
     channels: int = 1
     waveform: Any = None
     vad_speech_proportion: float | None = None
+    # Live preview passes decode greedily once; temperature fallback can take
+    # several seconds per pass and is reserved for the authoritative final pass.
+    live: bool = False
 
 
 @dataclass(frozen=True)
@@ -133,6 +136,7 @@ class FasterWhisperProvider:
             log_prob_threshold=self.log_prob_threshold,
             compression_ratio_threshold=self.compression_ratio_threshold,
             condition_on_previous_text=False,
+            **({"temperature": 0.0} if chunk.live else {}),
             **language_option,
             **({"initial_prompt": self.initial_prompt} if self.initial_prompt else {}),
         )
@@ -211,6 +215,109 @@ class FasterWhisperProvider:
 
     def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
         return self.transcribe(chunk, language=language)
+
+
+class MlxWhisperProvider:
+    """Whisper on the Apple Silicon GPU via MLX.
+
+    Large-v3-turbo decodes an 8-12 s live buffer in ~0.4 s on an M-series GPU,
+    fast enough for sub-2-second live text with large-model accuracy.  The
+    same per-segment confidence filters as ``FasterWhisperProvider`` apply.
+    """
+
+    def __init__(
+        self,
+        model: str = "mlx-community/whisper-large-v3-turbo",
+        *,
+        no_speech_threshold: float = 0.6,
+        log_prob_threshold: float = -1.0,
+        compression_ratio_threshold: float = 2.4,
+        min_avg_logprob: float = -1.0,
+        max_no_speech_probability: float = 0.6,
+        max_compression_ratio: float = 2.4,
+        initial_prompt: str | None = None,
+        transcribe=None,
+    ) -> None:
+        self.model = model
+        self.no_speech_threshold = no_speech_threshold
+        self.log_prob_threshold = log_prob_threshold
+        self.compression_ratio_threshold = compression_ratio_threshold
+        self.min_avg_logprob = min_avg_logprob
+        self.max_no_speech_probability = max_no_speech_probability
+        self.max_compression_ratio = max_compression_ratio
+        self.initial_prompt = initial_prompt
+        self._transcribe = transcribe
+        self.last_diagnostics: dict[str, object] = {}
+
+    def _load(self):
+        if self._transcribe is None:
+            import os
+
+            # Local inference never performs an implicit first-run download.
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            import mlx_whisper  # type: ignore[import-not-found]
+
+            self._transcribe = mlx_whisper.transcribe
+        return self._transcribe
+
+    def warmup(self) -> None:
+        import numpy as np  # type: ignore[import-not-found]
+
+        self._load()(np.zeros(16_000, dtype=np.float32), path_or_hf_repo=self.model, temperature=0.0, language="en", verbose=None)
+
+    def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
+        import numpy as np  # type: ignore[import-not-found]
+
+        transcribe = self._load()
+        if chunk.waveform is None:
+            from .audio import decode_audio_payload
+
+            audio = decode_audio_payload(chunk.audio, encoding=chunk.encoding, sample_rate=chunk.sample_rate, channels=chunk.channels).waveform
+        else:
+            audio = np.asarray(chunk.waveform, dtype=np.float32)
+        options: dict[str, object] = {
+            "path_or_hf_repo": self.model,
+            "condition_on_previous_text": False,
+            "no_speech_threshold": self.no_speech_threshold,
+            "logprob_threshold": self.log_prob_threshold,
+            "compression_ratio_threshold": self.compression_ratio_threshold,
+            "verbose": None,
+        }
+        if chunk.live:
+            options["temperature"] = 0.0
+        if language and language != "auto":
+            options["language"] = language
+        if self.initial_prompt:
+            options["initial_prompt"] = self.initial_prompt
+        result = transcribe(audio, **options)
+        detected_language = result.get("language") or language
+        accepted: list[TranscriptDraft] = []
+        rejected: list[dict[str, object]] = []
+        for segment in result.get("segments", []):
+            text = str(segment.get("text", "")).strip()
+            start_ms = chunk.timestamp_ms + int(float(segment["start"]) * 1000)
+            end_ms = chunk.timestamp_ms + int(float(segment["end"]) * 1000)
+            reasons = []
+            if not text:
+                reasons.append("empty_text")
+            if segment.get("no_speech_prob", 0.0) > self.max_no_speech_probability and segment.get("avg_logprob", 0.0) < self.min_avg_logprob:
+                reasons.append("no_speech_probability")
+            if segment.get("avg_logprob", 0.0) < self.min_avg_logprob:
+                reasons.append("low_average_log_probability")
+            if segment.get("compression_ratio", 0.0) > self.max_compression_ratio:
+                reasons.append("high_compression_ratio")
+            if reasons:
+                rejected.append({"text": text, "start_ms": start_ms, "end_ms": end_ms, "rejection_reason": ",".join(reasons)})
+                continue
+            accepted.append(TranscriptDraft(text=text, timestamp=format_relative_timestamp(start_ms), start_ms=start_ms, end_ms=end_ms, language_code=detected_language))
+        self.last_diagnostics = {
+            "engine": "mlx_whisper",
+            "model": self.model,
+            "language": detected_language,
+            "segments_rejected": rejected,
+            "segments": [{"text": draft.text, "start_ms": draft.start_ms, "end_ms": draft.end_ms} for draft in accepted],
+        }
+        return accepted
 
 
 def format_relative_timestamp(timestamp_ms: int) -> str:

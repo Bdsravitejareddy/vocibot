@@ -15,8 +15,8 @@ from ..providers.diarization import PyannoteDiarizationProvider
 from ..providers.factory import build_speech_provider
 from ..providers.local_pipeline import LocalAudioPipeline
 from ..providers.reconciliation import FinalReconciler
-from ..providers.speech import AudioChunk
-from ..providers.streaming import TranscriptCommitter
+from ..providers.speech import AudioChunk, TranscriptDraft
+from ..providers.streaming import TranscriptCommitter, select_live_commits
 from ..db import SessionLocal
 from ..services.consultations import replace_with_reconciled_transcript
 from ..services.live_cpu import LocalPipelineExecutor
@@ -33,16 +33,27 @@ def build_local_pipeline() -> LocalAudioPipeline:
         build_speech_provider(settings),
         WhisperXAligner(model_name=settings.whisperx_model) if settings.whisperx_enabled else None,
         PyannoteDiarizationProvider(model_name=settings.pyannote_model) if settings.diarization_enabled else None,
+        # Whisper pads the last segment of a rolling buffer slightly past its
+        # end; clip that instead of rejecting the segment.
+        timestamp_tolerance_ms=1_000,
+        max_trailing_overshoot_ms=3_000,
     )
+
+
+def persist_reconciled_transcript(consultation_id: str, transcripts: list[TranscriptDraft]) -> None:
+    """Create and use the database session on the executor thread."""
+
+    with SessionLocal() as session:
+        replace_with_reconciled_transcript(session, consultation_id, transcripts, extract=False)
 
 
 @router.websocket("/api/consultations/{consultation_id}/audio")
 async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
     await websocket.accept()
-    primary_live_workers = settings.asr_parallel_workers if settings.ai_mode == "local" else 1
-    reserve_live_workers = settings.asr_reserve_workers if settings.ai_mode == "local" else 0
-    live_workers = primary_live_workers + reserve_live_workers
-    pipeline_executor = LocalPipelineExecutor(workers=live_workers)
+    # One model and one in-flight pass per consultation: the rolling buffer
+    # always transcribes the newest audio, so extra workers only add latency
+    # contention and memory.
+    pipeline_executor = LocalPipelineExecutor(workers=1)
     try:
         metadata = await websocket.receive_json()
         sample_rate = int(metadata.get("sample_rate", settings.audio_sample_rate))
@@ -58,16 +69,10 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             await websocket.send_json({"type": "error", "category": "INITIALIZATION", "message": "Select a language before using IndicConformer; automatic language detection is unavailable for this engine."})
             await websocket.close(code=1008)
             return
-        # Native CTranslate2 models are not thread-safe for concurrent calls.
-        # Give each live CPU worker an independent pipeline/model instead.
-        pipelines = [build_local_pipeline() for _ in range(live_workers)]
-        pipeline = pipelines[0]
-        # Load each independent native model before capture starts.  Warming
-        # sequentially avoids a large temporary CPU spike during startup.
-        for candidate in pipelines:
-            warmup = getattr(candidate, "warmup", None)
-            if callable(warmup):
-                await pipeline_executor.run(warmup)
+        pipeline = build_local_pipeline()
+        warmup = getattr(pipeline, "warmup", None)
+        if callable(warmup):
+            await pipeline_executor.run(warmup)
     except Exception as error:
         logger.exception("Local audio initialization failed for consultation %s", consultation_id)
         pipeline_executor.close()
@@ -77,8 +82,6 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
     await websocket.send_json({"type": "ready", "consultation_id": consultation_id, "sample_rate": sample_rate, "channels": channels, "encoding": encoding, "mime_type": mime_type, "language": language})
     timestamp_ms = 0
     transcript_sequence = 0
-    pending_waveform = np.empty(0, dtype=np.float32)
-    pending_start_ms = 0
     received_audio = bytearray()
     debug_windows: list[dict[str, object]] = []
     debug_transcripts: list[dict[str, object]] = []
@@ -87,7 +90,6 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
     capture_started_at: float | None = None
     first_text_latency_ms: float | None = None
     latest_capture_end_ms = 0
-    skipped_stale_live_windows = 0
 
     def persist_debug_audio() -> None:
         if not settings.audio_debug_dir or not received_audio:
@@ -110,16 +112,16 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             "transcript": debug_transcripts,
             "final_reconciliation": final_reconciliation,
             "first_text_latency_ms": first_text_latency_ms,
-            "skipped_stale_live_windows": skipped_stale_live_windows,
             "out_of_order_live_segments": committer.out_of_order_count,
             **audio_metrics(debug_audio.waveform, sample_rate=debug_audio.sample_rate),
         }
         (debug_dir / f"{consultation_id}.json").write_text(json.dumps(debug_report, indent=2) + "\n")
         logger.info("Audio debug artifact %s", json.dumps(debug_report, sort_keys=True))
-    window_samples = max(1, int(settings.asr_window_seconds * settings.audio_sample_rate))
-    overlap_samples = min(window_samples - 1, max(0, int(settings.asr_overlap_seconds * settings.audio_sample_rate)))
-    step_samples = window_samples - overlap_samples
-    min_speech_samples = max(1, int(settings.asr_min_speech_seconds * settings.audio_sample_rate))
+    sample_rate_hz = settings.audio_sample_rate
+    step_samples = max(1, int(settings.asr_live_step_seconds * sample_rate_hz))
+    min_speech_samples = max(1, int(settings.asr_min_speech_seconds * sample_rate_hz))
+    holdback_ms = int(settings.asr_live_holdback_seconds * 1000)
+    max_buffer_ms = int(settings.asr_live_max_buffer_seconds * 1000)
     committer = TranscriptCommitter()
     audio_queue: asyncio.Queue[np.ndarray | None] = asyncio.Queue()
     send_lock = asyncio.Lock()
@@ -128,37 +130,30 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
         async with send_lock:
             await websocket.send_json(message)
 
-    async def infer_payload(active_pipeline: LocalAudioPipeline, waveform: np.ndarray, payload_timestamp_ms: int) -> tuple[int, object | None]:
-        duration_ms = int(len(waveform) / settings.audio_sample_rate * 1000)
-        if len(waveform) < min_speech_samples:
-            logger.info("ASR window rejected consultation=%s start_ms=%s end_ms=%s rejection=below_minimum_window", consultation_id, payload_timestamp_ms, payload_timestamp_ms + duration_ms)
-            return duration_ms, None
+    async def infer_payload(waveform: np.ndarray, payload_timestamp_ms: int) -> object | None:
+        duration_ms = int(len(waveform) / sample_rate_hz * 1000)
         try:
-            chunk = AudioChunk(audio=b"", sample_rate=settings.audio_sample_rate, timestamp_ms=payload_timestamp_ms, encoding="pcm_f32le", channels=1, waveform=waveform)
-            # Two CTranslate2 workers keep up with incoming 450 ms windows; the
-            # queue below still publishes their results in capture order.
-            result = await pipeline_executor.run(active_pipeline.process, chunk, language=None if language == "auto" else language)
+            chunk = AudioChunk(audio=b"", sample_rate=sample_rate_hz, timestamp_ms=payload_timestamp_ms, encoding="pcm_f32le", channels=1, waveform=waveform, live=True)
+            result = await pipeline_executor.run(pipeline.process, chunk, language=None if language == "auto" else language)
             logger.info(
-                "ASR window consultation=%s start_ms=%s end_ms=%s duration_ms=%s audio=%s timings=%s warnings=%s",
+                "ASR live buffer consultation=%s start_ms=%s end_ms=%s timings=%s diagnostics=%s",
                 consultation_id,
                 payload_timestamp_ms,
                 payload_timestamp_ms + duration_ms,
-                duration_ms,
-                audio_metrics(waveform, sample_rate=settings.audio_sample_rate),
                 result.timings,
-                {"diagnostics": result.diagnostics, "warnings": [warning.message for warning in result.warnings]},
+                result.diagnostics,
             )
             debug_windows.append({
                 "start_ms": payload_timestamp_ms,
                 "end_ms": payload_timestamp_ms + duration_ms,
-                "audio": audio_metrics(waveform, sample_rate=settings.audio_sample_rate),
+                "audio": audio_metrics(waveform, sample_rate=sample_rate_hz),
                 "timings": result.timings,
                 "diagnostics": result.diagnostics,
                 "warnings": [warning.message for warning in result.warnings],
             })
         except Exception:
             logger.exception(
-                "Local audio pipeline failed for consultation %s: encoding=%s mime_type=%s sample_rate=%s channels=%s bytes=%s",
+                "Local audio pipeline failed for consultation %s: encoding=%s mime_type=%s sample_rate=%s channels=%s samples=%s",
                 consultation_id,
                 encoding,
                 mime_type,
@@ -167,144 +162,106 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                 len(waveform),
             )
             await send_json({"type": "error", "category": "PIPELINE", "message": "Local microphone audio could not be processed. See backend logs for details."})
-            return duration_ms, None
-        return duration_ms, result
+            return None
+        return result
 
-    async def publish_result(payload_timestamp_ms: int, duration_ms: int, result: object | None) -> None:
-        nonlocal transcript_sequence, first_text_latency_ms, skipped_stale_live_windows
+    async def publish_result(buffer_start_ms: int, buffer_end_ms: int, result: object | None) -> int | None:
+        """Publish settled segments and return the capture time they settle."""
+
+        nonlocal transcript_sequence, first_text_latency_ms
         if result is None:
-            return
-        segment_end_ms = payload_timestamp_ms + duration_ms
-        processing_delay_ms = (
-            (perf_counter() - capture_started_at) * 1000 - segment_end_ms
-            if capture_started_at is not None
-            else 0
-        )
-        if (
-            latest_capture_end_ms - segment_end_ms > settings.asr_live_max_staleness_seconds * 1000
-            or processing_delay_ms > settings.asr_live_max_staleness_seconds * 1000
-        ):
-            # Live preview must describe what the clinician is hearing now.  The
-            # complete audio is reconciled at Stop, so discarding a late preview
-            # result cannot drop it from the authoritative transcript.
-            skipped_stale_live_windows += 1
-            return
+            return None
         await send_json({"type": "status", "timings": result.timings, "diagnostics": result.diagnostics})
         for warning in result.warnings:
+            if warning.category in {"ALIGNMENT_DISABLED", "DIARIZATION_DISABLED", "VAD_REJECTION", "TIMESTAMP_REJECTED"}:
+                continue
             await send_json({"type": "warning", "category": warning.category, "message": warning.message})
-        for index, draft in enumerate(committer.add(result.transcripts)):
+        decision = select_live_commits(
+            result.transcripts,
+            buffer_start_ms=buffer_start_ms,
+            buffer_end_ms=buffer_end_ms,
+            holdback_ms=holdback_ms,
+            max_buffer_ms=max_buffer_ms,
+        )
+        for draft in committer.add(decision.committed):
             if first_text_latency_ms is None and capture_started_at is not None:
                 first_text_latency_ms = (perf_counter() - capture_started_at) * 1000
             debug_transcripts.append({"text": draft.text, "speaker": draft.speaker, "timestamp": draft.timestamp, "start_ms": draft.start_ms, "end_ms": draft.end_ms, "language_code": draft.language_code})
-            await send_json({"type": "transcript", "id": f"local-{payload_timestamp_ms}-{index}", "text": draft.text, "speaker": draft.speaker, "timestamp": draft.timestamp, "start_ms": draft.start_ms, "end_ms": draft.end_ms, "sequence_number": transcript_sequence, "language_code": draft.language_code})
+            await send_json({"type": "transcript", "id": f"local-{transcript_sequence}-{draft.start_ms}", "text": draft.text, "speaker": draft.speaker, "timestamp": draft.timestamp, "start_ms": draft.start_ms, "end_ms": draft.end_ms, "sequence_number": transcript_sequence, "language_code": draft.language_code})
             transcript_sequence += 1
+        tentative_text = " ".join(draft.text.strip() for draft in decision.tentative).strip()
+        await send_json({"type": "partial", "text": tentative_text, "start_ms": decision.tentative[0].start_ms if decision.tentative else None})
+        if decision.commit_until_ms is not None:
+            return decision.commit_until_ms
+        no_speech = result.diagnostics.get("accepted") is False
+        if not result.transcripts and buffer_end_ms - buffer_start_ms > holdback_ms and (no_speech or buffer_end_ms - buffer_start_ms >= 2 * max_buffer_ms):
+            # Silence (per VAD), or speech the decoder could not transcribe
+            # confidently for a whole buffer: keep only the trailing holdback
+            # so a word that is just starting is still heard next step.  A
+            # low-confidence pass over real speech is retried with more context.
+            return buffer_end_ms - holdback_ms
+        return None
 
     async def process_audio_queue() -> None:
-        nonlocal pending_waveform, pending_start_ms, timestamp_ms, latest_capture_end_ms
-        in_flight: list[tuple[int, LocalAudioPipeline, asyncio.Task[tuple[int, object | None]], float]] = []
-        ready_windows: list[tuple[np.ndarray, int]] = []
-        available_pipelines = list(pipelines[:primary_live_workers])
-        reserve_pipelines = list(pipelines[primary_live_workers:])
-        available_reserve_pipelines = list(reserve_pipelines)
+        """Re-transcribe the unsettled audio buffer, always on the newest audio.
 
-        async def publish_completed(done: set[asyncio.Task[object]]) -> None:
-            # A rare short-window decode can take several seconds.  Publish a
-            # later completed window rather than make the clinician wait behind
-            # it; TranscriptCommitter safely discards the eventual stale draft,
-            # and the authoritative final pass preserves the complete capture.
-            completed = sorted(
-                (item for item in in_flight if item[2] in done),
-                key=lambda item: item[0],
-            )
-            for payload_timestamp_ms, active_pipeline, task, started_at in completed:
-                in_flight.remove((payload_timestamp_ms, active_pipeline, task, started_at))
-                duration_ms, result = await task
-                (available_reserve_pipelines if active_pipeline in reserve_pipelines else available_pipelines).append(active_pipeline)
-                await publish_result(payload_timestamp_ms, duration_ms, result)
-            schedule_available()
+        Exactly one inference runs at a time.  Audio that arrives meanwhile is
+        appended to the buffer and included in the next pass, so the live
+        preview cannot fall behind real time no matter how slow a pass is.
+        """
 
-        def schedule_available() -> None:
-            def primary_stalled() -> bool:
-                return any(
-                    active_pipeline not in reserve_pipelines
-                    and perf_counter() - started_at >= settings.asr_live_stall_seconds
-                    for _, active_pipeline, _, started_at in in_flight
-                )
+        nonlocal latest_capture_end_ms
+        buffer = np.empty(0, dtype=np.float32)
+        buffer_start_ms = 0
+        samples_at_last_pass = 0
+        in_flight: asyncio.Task[object | None] | None = None
+        in_flight_span: tuple[int, int] = (0, 0)
+        next_audio: asyncio.Task[np.ndarray | None] = asyncio.create_task(audio_queue.get())
 
-            while ready_windows and (available_pipelines or available_reserve_pipelines):
-                latest_timestamp_ms = ready_windows[-1][1]
-                while (
-                    len(ready_windows) > 1
-                    and latest_timestamp_ms - ready_windows[0][1] > settings.asr_live_max_staleness_seconds * 1000
-                ):
-                    # Prefer the newest audio when a pathological decoder has
-                    # fallen behind.  Final reconciliation remains complete.
-                    ready_windows.pop(0)
-                if primary_stalled() and available_reserve_pipelines:
-                    active_pipeline = available_reserve_pipelines.pop(0)
-                elif available_pipelines:
-                    active_pipeline = available_pipelines.pop(0)
-                else:
-                    break
-                window, payload_timestamp_ms = ready_windows.pop(0)
-                in_flight.append((
-                    payload_timestamp_ms,
-                    active_pipeline,
-                    asyncio.create_task(infer_payload(active_pipeline, window, payload_timestamp_ms)),
-                    perf_counter(),
-                ))
-
-        def enqueue(window: np.ndarray, payload_timestamp_ms: int) -> None:
-            ready_windows.append((window, payload_timestamp_ms))
-            schedule_available()
-
-        async def wait_for_work_or_audio(next_audio: asyncio.Task[np.ndarray | None]) -> tuple[asyncio.Task[np.ndarray | None], bool]:
-            wait_for: set[asyncio.Task[object]] = {next_audio}
-            wait_for.update(item[2] for item in in_flight)
-            done, _ = await asyncio.wait(wait_for, return_when=asyncio.FIRST_COMPLETED)
-            await publish_completed(done)
-            return next_audio, next_audio in done
-
-        async def flush() -> None:
-            while in_flight or ready_windows:
-                schedule_available()
-                if in_flight:
-                    done, _ = await asyncio.wait(
-                        [item[2] for item in in_flight],
-                        return_when=asyncio.FIRST_COMPLETED,
-                    )
-                    await publish_completed(done)
-
-        next_audio = asyncio.create_task(audio_queue.get())
-        accepting_audio = True
-        while accepting_audio or in_flight or ready_windows:
-            if accepting_audio:
-                next_audio, audio_ready = await wait_for_work_or_audio(next_audio)
-                if not audio_ready:
-                    continue
-                decoded_waveform = next_audio.result()
-                if decoded_waveform is None:
-                    accepting_audio = False
-                    if len(pending_waveform) >= min_speech_samples:
-                        enqueue(pending_waveform.copy(), pending_start_ms)
-                    await flush()
-                    return
-                next_audio = asyncio.create_task(audio_queue.get())
-            else:
-                await flush()
+        def maybe_start_pass() -> None:
+            nonlocal in_flight, in_flight_span, samples_at_last_pass
+            if in_flight is not None or len(buffer) < min_speech_samples:
                 return
-            if not len(pending_waveform):
-                pending_start_ms = timestamp_ms
-            pending_waveform = np.concatenate((pending_waveform, decoded_waveform))
-            latest_capture_end_ms = pending_start_ms + int(len(pending_waveform) / settings.audio_sample_rate * 1000)
-            while len(pending_waveform) >= window_samples:
-                window = pending_waveform[:window_samples].copy()
-                enqueue(window, pending_start_ms)
-                pending_waveform = pending_waveform[step_samples:]
-                pending_start_ms += int(step_samples / settings.audio_sample_rate * 1000)
-                timestamp_ms = pending_start_ms + int(len(pending_waveform) / settings.audio_sample_rate * 1000)
+            if len(buffer) - samples_at_last_pass < step_samples:
+                return
+            samples_at_last_pass = len(buffer)
+            end_ms = buffer_start_ms + int(len(buffer) / sample_rate_hz * 1000)
+            in_flight_span = (buffer_start_ms, end_ms)
+            in_flight = asyncio.create_task(infer_payload(buffer.copy(), buffer_start_ms))
+
+        try:
+            while True:
+                wait_for: set[asyncio.Task[object]] = {next_audio}
+                if in_flight is not None:
+                    wait_for.add(in_flight)
+                done, _ = await asyncio.wait(wait_for, return_when=asyncio.FIRST_COMPLETED)
+                if in_flight is not None and in_flight in done:
+                    result = in_flight.result()
+                    in_flight = None
+                    settled_ms = await publish_result(*in_flight_span, result)
+                    if settled_ms is not None and settled_ms > buffer_start_ms:
+                        drop = min(len(buffer), int((settled_ms - buffer_start_ms) / 1000 * sample_rate_hz))
+                        buffer = buffer[drop:]
+                        buffer_start_ms += int(drop / sample_rate_hz * 1000)
+                        samples_at_last_pass = max(0, samples_at_last_pass - drop)
+                if next_audio in done:
+                    decoded_waveform = next_audio.result()
+                    if decoded_waveform is None:
+                        # Stop: the authoritative full-recording pass replaces
+                        # the live preview, so only let a running pass finish.
+                        if in_flight is not None:
+                            await in_flight
+                        return
+                    buffer = np.concatenate((buffer, decoded_waveform))
+                    latest_capture_end_ms = buffer_start_ms + int(len(buffer) / sample_rate_hz * 1000)
+                    next_audio = asyncio.create_task(audio_queue.get())
+                maybe_start_pass()
+        finally:
+            if not next_audio.done():
+                next_audio.cancel()
 
     worker = asyncio.create_task(process_audio_queue())
+    wait_for_executor_shutdown = True
     try:
         while True:
             message = await websocket.receive()
@@ -312,27 +269,53 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                 return
             if message.get("text"):
                 if message["text"] == '{"type":"stop"}' or message["text"] == '{"type": "stop"}':
-                    await audio_queue.put(None)
-                    await worker
-                    if settings.ai_mode == "local" and received_waveforms:
-                        complete_waveform = np.concatenate(received_waveforms)
-                        reconciled = await pipeline_executor.run(
-                            FinalReconciler().run,
-                            complete_waveform,
-                            pipeline.stt,
-                            sample_rate=settings.audio_sample_rate,
-                            language=None if language == "auto" else language,
-                        )
-                        final_reconciliation.update({
-                            "latency_ms": reconciled.latency_ms,
-                            "warnings": reconciled.warnings,
-                            "transcript": [{"text": draft.text, "speaker": draft.speaker, "timestamp": draft.timestamp, "start_ms": draft.start_ms, "end_ms": draft.end_ms, "language_code": draft.language_code} for draft in reconciled.transcripts],
-                            "live_transcript_count": len(debug_transcripts),
-                            "final_transcript_count": len(reconciled.transcripts),
-                        })
-                        if reconciled.transcripts:
-                            with SessionLocal() as session:
-                                replace_with_reconciled_transcript(session, consultation_id, reconciled.transcripts)
+                    reconciled = None
+                    try:
+                        async with asyncio.timeout(settings.asr_finalization_timeout_seconds):
+                            await audio_queue.put(None)
+                            await worker
+                            if settings.ai_mode == "local" and received_waveforms:
+                                complete_waveform = np.concatenate(received_waveforms)
+                                reconciled = await pipeline_executor.run(
+                                    FinalReconciler().run,
+                                    complete_waveform,
+                                    pipeline.stt,
+                                    sample_rate=settings.audio_sample_rate,
+                                    language=None if language == "auto" else language,
+                                )
+                                final_reconciliation.update({
+                                    "latency_ms": reconciled.latency_ms,
+                                    "warnings": reconciled.warnings,
+                                    "transcript": [{"text": draft.text, "speaker": draft.speaker, "timestamp": draft.timestamp, "start_ms": draft.start_ms, "end_ms": draft.end_ms, "language_code": draft.language_code} for draft in reconciled.transcripts],
+                                    "live_transcript_count": len(debug_transcripts),
+                                    "final_transcript_count": len(reconciled.transcripts),
+                                })
+                    except TimeoutError:
+                        # A native inference call cannot be killed safely from
+                        # Python. Acknowledge Stop and do not wait for that
+                        # worker during cleanup; the process stays responsive.
+                        wait_for_executor_shutdown = False
+                        final_reconciliation["error"] = "finalization_timeout"
+                        logger.error("Final audio reconciliation timed out for consultation %s", consultation_id)
+                        await send_json({"type": "warning", "category": "FINALIZATION", "message": "Final transcription took too long. The captured live preview remains available for review."})
+                    except Exception as error:
+                        logger.exception("Final audio reconciliation failed for consultation %s", consultation_id)
+                        final_reconciliation["error"] = str(error)
+                        await send_json({"type": "warning", "category": "FINALIZATION", "message": "Final transcription could not replace the live preview. The captured preview remains available for review."})
+                    if reconciled is not None:
+                        for warning in reconciled.warnings:
+                            await send_json({"type": "warning", "category": "FINALIZATION", "message": warning})
+                        if not reconciled.transcripts:
+                            await send_json({"type": "warning", "category": "FINALIZATION", "message": "No reliable final transcript was produced. The captured live preview remains available for review."})
+                        else:
+                            try:
+                                # This transaction only replaces transcript rows;
+                                # slow local-LLM extraction runs later via /stop.
+                                persist_reconciled_transcript(consultation_id, reconciled.transcripts)
+                            except Exception as error:
+                                logger.exception("Final transcript persistence failed for consultation %s", consultation_id)
+                                final_reconciliation["error"] = str(error)
+                                await send_json({"type": "warning", "category": "FINALIZATION", "message": "Final transcription could not replace the live preview. The captured preview remains available for review."})
                     persist_debug_audio()
                     await send_json({"type": "stopped"})
                     return
@@ -351,5 +334,5 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
     finally:
         if not worker.done():
             worker.cancel()
-        pipeline_executor.close()
+        pipeline_executor.close(wait=wait_for_executor_shutdown)
         persist_debug_audio()

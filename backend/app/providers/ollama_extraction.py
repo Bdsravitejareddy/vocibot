@@ -24,7 +24,7 @@ class OllamaClinicalExtractionProvider:
 
     def extract(self, transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> ExtractionResult:
         prompt = self._prompt(transcript, current_record)
-        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "options": {"temperature": 0}}, timeout=30)
+        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "options": {"temperature": 0}}, timeout=settings.ollama_timeout_seconds)
         response.raise_for_status()
         payload: Any = response.json()
         raw = payload.get("response", payload)
@@ -43,12 +43,22 @@ class OllamaClinicalExtractionProvider:
             for candidate in raw["candidates"]:
                 if not isinstance(candidate, dict) or not isinstance(candidate.get("field_name"), str):
                     continue
+                if candidate["field_name"] == "vitals":
+                    candidate["value"] = OllamaClinicalExtractionProvider._vitals(candidate.get("value"))
                 candidate["source_segment_ids"] = [item for item in candidate.get("source_segment_ids", []) if isinstance(item, str)]
                 candidate["speaker"] = candidate.get("speaker") if candidate.get("speaker") in {"DOCTOR", "PATIENT", "UNKNOWN"} else "UNKNOWN"
                 candidate["status"] = status_aliases.get(str(candidate.get("status", "REJECTED")).upper(), "REJECTED")
                 sanitized_candidates.append(candidate)
             raw["candidates"] = sanitized_candidates
         return ExtractionResult.model_validate(raw)
+
+    @staticmethod
+    def _vitals(value: Any) -> dict[str, str]:
+        """Models often emit readings as numbers (38.6); the record stores text."""
+
+        if not isinstance(value, dict):
+            return {}
+        return {str(key): str(reading) for key, reading in value.items() if reading is not None and not isinstance(reading, (dict, list))}
 
     @staticmethod
     def _sanitize_record(payload: Any) -> dict[str, Any]:
@@ -63,7 +73,7 @@ class OllamaClinicalExtractionProvider:
             if field_name in list_fields:
                 safe[field_name] = value if isinstance(value, list) else []
             elif field_name == "vitals":
-                safe[field_name] = value if isinstance(value, dict) else {}
+                safe[field_name] = OllamaClinicalExtractionProvider._vitals(value)
             elif value is None or isinstance(value, str):
                 safe[field_name] = value
         return safe

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from time import perf_counter
 
 import numpy as np
@@ -24,6 +24,10 @@ class FinalReconciler:
         accepted: list[TranscriptDraft] = []
         warnings: list[str] = []
         for draft in drafts:
+            if draft.start_ms is not None and draft.end_ms is not None and 0 <= draft.start_ms < duration_ms < draft.end_ms:
+                # Whisper pads a segment cut off by Stop past the end of the
+                # audio; keep the words and clamp the bound.
+                draft = replace(draft, end_ms=duration_ms)
             if draft.start_ms is None or draft.end_ms is None or not 0 <= draft.start_ms <= draft.end_ms <= duration_ms:
                 warnings.append(f"Rejected final transcript timestamp {draft.start_ms}-{draft.end_ms}ms outside 0-{duration_ms}ms")
                 continue

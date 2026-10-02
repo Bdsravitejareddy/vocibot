@@ -2,7 +2,7 @@ from ..config import Settings
 from .demo_extraction import DemoClinicalExtractionProvider
 from .extraction import ClinicalExtractionProvider
 from .ollama_extraction import OllamaClinicalExtractionProvider
-from .speech import DemoSpeechToTextProvider, FasterWhisperProvider, SpeechToTextProvider
+from .speech import DemoSpeechToTextProvider, FasterWhisperProvider, MlxWhisperProvider, SpeechToTextProvider
 
 
 class LocalProviderError(RuntimeError):
@@ -15,7 +15,18 @@ def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvide
         return DemoSpeechToTextProvider()
     if selected.ai_mode != "local":
         raise LocalProviderError(f"Unsupported AI_MODE={selected.ai_mode!r}; expected demo or local")
-    if selected.stt_provider == "whisper":
+    if selected.resolved_stt_provider == "mlx_whisper":
+        return MlxWhisperProvider(
+            model=selected.mlx_whisper_model,
+            no_speech_threshold=selected.asr_no_speech_threshold,
+            log_prob_threshold=selected.asr_log_prob_threshold,
+            compression_ratio_threshold=selected.asr_compression_ratio_threshold,
+            min_avg_logprob=selected.asr_min_avg_logprob,
+            max_no_speech_probability=selected.asr_max_no_speech_probability,
+            max_compression_ratio=selected.asr_max_compression_ratio,
+            initial_prompt=selected.asr_initial_prompt or None,
+        )
+    if selected.resolved_stt_provider == "whisper":
         return FasterWhisperProvider(
             model_size=selected.whisper_model,
             device=selected.whisper_device,
@@ -39,7 +50,7 @@ def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvide
         from .indic_conformer import IndicConformerProvider
 
         return IndicConformerProvider(model_path=selected.indic_conformer_model_path, device=selected.whisper_device)
-    raise LocalProviderError(f"Unsupported STT_PROVIDER={selected.stt_provider!r}; expected whisper or indic_conformer")
+    raise LocalProviderError(f"Unsupported STT_PROVIDER={selected.stt_provider!r}; expected auto, mlx_whisper, whisper or indic_conformer")
 
 
 def build_extraction_provider(config: Settings | None = None) -> ClinicalExtractionProvider:

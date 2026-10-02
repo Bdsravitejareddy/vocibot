@@ -6,25 +6,26 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./vocibot.db"
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.1:8b"
+    # A cold 8B model plus a long consultation can take well over 30 s locally.
+    ollama_timeout_seconds: float = 120.0
     whisper_model: str = "small"
     whisper_device: str = "auto"
     whisper_compute_type: str = "int8"
-    # Two model workers with six native threads each keep pace with 450 ms live
-    # windows on the target 14-core Apple Silicon machine without oversubscription.
     asr_cpu_threads: int = 6
-    asr_parallel_workers: int = 2
-    asr_reserve_workers: int = 0
-    asr_live_stall_seconds: float = 0.8
-    asr_live_max_staleness_seconds: float = 1.0
+    # Live preview re-transcribes the unsettled audio buffer every step.  A
+    # segment is settled once a later one follows it or `holdback` seconds of
+    # audio have passed after it; the buffer is force-settled at `max_buffer`.
+    asr_live_step_seconds: float = 0.35
+    asr_live_holdback_seconds: float = 1.2
+    asr_live_max_buffer_seconds: float = 8.0
+    asr_finalization_timeout_seconds: float = 60.0
     # Each live worker owns its model.  Do not invoke one native CTranslate2
     # model concurrently: that is unsafe on the supported macOS runtime.
     asr_model_workers: int = 1
     silero_threshold: float = 0.5
     audio_sample_rate: int = 16_000
     audio_debug_dir: str = ""
-    asr_window_seconds: float = 0.6
-    asr_overlap_seconds: float = 0.0
-    asr_min_speech_seconds: float = 0.25
+    asr_min_speech_seconds: float = 0.5
     asr_vad_filter: bool = True
     asr_no_speech_threshold: float = 0.6
     asr_log_prob_threshold: float = -1.0
@@ -40,10 +41,31 @@ class Settings(BaseSettings):
     pyannote_model: str = "pyannote/speaker-diarization-3.1"
     diarization_enabled: bool = False
     extraction_provider: str = "demo"
-    stt_provider: str = "whisper"
+    # "auto" uses MLX Whisper on the Apple Silicon GPU when it is installed,
+    # otherwise faster-whisper on the CPU.
+    stt_provider: str = "auto"
+    mlx_whisper_model: str = "mlx-community/whisper-large-v3-turbo"
     indic_conformer_model_path: str = ""
     diarization_provider: str = "demo"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def resolved_stt_provider(self) -> str:
+        if self.stt_provider != "auto":
+            return self.stt_provider
+        return "mlx_whisper" if mlx_whisper_available() else "whisper"
+
+
+def mlx_whisper_available() -> bool:
+    import importlib.util
+    import platform
+
+    if platform.system() != "Darwin" or platform.machine() != "arm64":
+        return False
+    try:
+        return importlib.util.find_spec("mlx_whisper") is not None
+    except (ImportError, ValueError):
+        return False
 
 
 settings = Settings()

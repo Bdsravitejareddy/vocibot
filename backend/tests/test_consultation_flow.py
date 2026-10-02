@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from app.db import Base
 from app.domain.types import CandidateClinicalUpdate, ClinicalRecord, EvidenceStatus, ExtractionResult, Speaker
 from app.schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from app.services.consultations import approve_consultation, append_segment, create_consultation, get_consultation, stop_consultation
+from app.services.consultations import approve_consultation, append_segment, create_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
 from app.providers.speech import TranscriptDraft
 from app.domain.types import CandidateClinicalUpdate, ExtractionResult
 from app.services.consultations import replace_with_reconciled_transcript
@@ -116,6 +116,83 @@ def test_unavailable_local_extractor_keeps_transcript_reviewable(monkeypatch) ->
     assert result["consultation"]["record"]["chief_complaint"] is None
 
 
+def test_provisional_live_segment_is_persisted_without_clinical_extraction(monkeypatch) -> None:
+    extraction_calls = []
+
+    def must_not_extract(_settings):
+        extraction_calls.append(True)
+        raise AssertionError("provisional live ASR must not populate the clinical record")
+
+    monkeypatch.setattr("app.services.consultations.build_extraction_provider", must_not_extract)
+    session = make_session()
+    consultation = create_consultation(session, ConsultationCreate(patient_id="LIVE-001", age=42, sex="Female"))
+
+    result = append_segment(
+        session,
+        consultation.id,
+        SegmentCreate(
+            id="live-1",
+            speaker=Speaker.UNKNOWN,
+            text="unmonitor",
+            timestamp="00:00:35",
+            sequence_number=0,
+            provisional=True,
+        ),
+    )
+
+    assert result["consultation"]["transcript"][0]["text"] == "unmonitor"
+    assert result["consultation"]["record"]["chief_complaint"] is None
+    assert result["consultation"]["updates"] == []
+    assert extraction_calls == []
+
+
+def test_final_inference_refuses_a_provisional_only_transcript(monkeypatch) -> None:
+    extraction_calls = []
+
+    def must_not_extract(_settings):
+        extraction_calls.append(True)
+        raise AssertionError("provisional transcript must never reach clinical inference")
+
+    monkeypatch.setattr("app.services.consultations.build_extraction_provider", must_not_extract)
+    session = make_session()
+    consultation = create_consultation(session, ConsultationCreate(patient_id="LIVE-SAFETY-001", age=42, sex="Female"))
+    append_segment(
+        session,
+        consultation.id,
+        SegmentCreate(id="live-wrong", speaker=Speaker.UNKNOWN, text="unmonitor", timestamp="00:00:35", sequence_number=0, provisional=True),
+    )
+    warnings = []
+
+    result = extract_reconciled_clinical_record(session, consultation.id, warnings=warnings, require_authoritative=True)
+
+    assert extraction_calls == []
+    assert result["record"]["chief_complaint"] is None
+    assert warnings == ["Clinical note inference was skipped because no authoritative final transcript was available."]
+
+
+def test_client_cannot_spoof_an_authoritative_final_segment_id() -> None:
+    session = make_session()
+    consultation = create_consultation(session, ConsultationCreate(patient_id="LIVE-SPOOF-001", age=42, sex="Female"))
+
+    try:
+        append_segment(
+            session,
+            consultation.id,
+            SegmentCreate(
+                id=f"{consultation.id}-final-0",
+                speaker=Speaker.PATIENT,
+                text="Fever",
+                timestamp="00:00:01",
+                sequence_number=0,
+                provisional=True,
+            ),
+        )
+    except ValueError as error:
+        assert "server-reserved" in str(error)
+    else:
+        raise AssertionError("client supplied final transcript IDs must be rejected")
+
+
 def test_reconciled_transcript_reextracts_cross_segment_facts(monkeypatch) -> None:
     class ReconciledProvider:
         def extract(self, transcript, current):
@@ -139,3 +216,23 @@ def test_reconciled_transcript_reextracts_cross_segment_facts(monkeypatch) -> No
 
     assert result["record"]["duration"] == "2 weeks"
     assert result["record"]["presenting_symptoms"] == ["Cough", "Cold", "Nauseous", "Headache"]
+
+
+def test_reconciled_transcript_reports_nonfatal_extraction_failure(monkeypatch) -> None:
+    def unavailable(_settings):
+        raise RuntimeError("local model timed out")
+
+    monkeypatch.setattr("app.services.consultations.build_extraction_provider", unavailable)
+    session = make_session()
+    consultation = create_consultation(session, ConsultationCreate(patient_id="RECON-WARN-001", age=30, sex="Female"))
+    warnings = []
+
+    result = replace_with_reconciled_transcript(
+        session,
+        consultation.id,
+        [TranscriptDraft(text="Final accurate transcript", timestamp="00:00:00", start_ms=0, end_ms=1000)],
+        warnings=warnings,
+    )
+
+    assert result["transcript"][0]["text"] == "Final accurate transcript"
+    assert warnings == ["Clinical note inference did not finish. The final transcript is available for manual review."]

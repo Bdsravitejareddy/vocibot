@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..db import get_session
 from ..models import Consultation
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from ..services.consultations import approve_consultation, append_segment, create_consultation, get_consultation, stop_consultation
+from ..services.consultations import approve_consultation, append_segment, create_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
 from ..services.approved_note_export import build_approved_note_payload
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
@@ -39,10 +39,15 @@ def add_segment(consultation_id: str, payload: SegmentCreate, session: Session =
 
 
 @router.post("/{consultation_id}/stop")
-def stop(consultation_id: str, session: Session = Depends(get_session)) -> dict:
+def stop(consultation_id: str, infer_final_record: bool = False, session: Session = Depends(get_session)) -> dict:
     try:
+        warnings: list[str] = []
+        if infer_final_record:
+            extract_reconciled_clinical_record(session, consultation_id, warnings=warnings, require_authoritative=True)
         stop_consultation(session, consultation_id)
-        return get_consultation(session, consultation_id)
+        result = get_consultation(session, consultation_id)
+        result["finalization_warnings"] = warnings
+        return result
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
 

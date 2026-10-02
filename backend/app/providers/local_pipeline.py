@@ -22,12 +22,13 @@ class PipelineResult:
 
 
 class LocalAudioPipeline:
-    def __init__(self, vad: VoiceActivityDetector, stt: SpeechToTextProvider, aligner: WhisperXAligner | None, diarizer: DiarizationProvider | None, *, timestamp_tolerance_ms: int = 100) -> None:
+    def __init__(self, vad: VoiceActivityDetector, stt: SpeechToTextProvider, aligner: WhisperXAligner | None, diarizer: DiarizationProvider | None, *, timestamp_tolerance_ms: int = 100, max_trailing_overshoot_ms: int = 0) -> None:
         self.vad = vad
         self.stt = stt
         self.aligner = aligner
         self.diarizer = diarizer
         self.timestamp_tolerance_ms = timestamp_tolerance_ms
+        self.max_trailing_overshoot_ms = max_trailing_overshoot_ms
 
     def warmup(self) -> None:
         """Make local models ready before the client begins streaming audio."""
@@ -125,7 +126,11 @@ class LocalAudioPipeline:
         if draft.start_ms is None or draft.end_ms is None:
             return draft
         start = max(window_start_ms, draft.start_ms) if draft.start_ms >= window_start_ms - self.timestamp_tolerance_ms else draft.start_ms
-        end = min(window_end_ms, draft.end_ms) if draft.end_ms <= window_end_ms + self.timestamp_tolerance_ms else draft.end_ms
+        # A segment that starts inside the window but is still being spoken at
+        # its end gets an end timestamp a few seconds late; keep its words.
+        # Grossly out-of-range timestamps are still rejected as hallucinations.
+        cut_off_mid_speech = window_start_ms <= start < window_end_ms and draft.end_ms <= window_end_ms + self.max_trailing_overshoot_ms
+        end = min(window_end_ms, draft.end_ms) if cut_off_mid_speech or draft.end_ms <= window_end_ms + self.timestamp_tolerance_ms else draft.end_ms
         return replace(draft, start_ms=start, end_ms=end)
 
     @staticmethod

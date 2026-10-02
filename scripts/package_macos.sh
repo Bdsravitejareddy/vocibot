@@ -28,4 +28,8 @@ if [[ ! -f dist/runtime/backend/vocibot-api/_internal/faster_whisper/assets/sile
   echo "Packaged backend is missing the required Faster-Whisper VAD model." >&2
   exit 2
 fi
+if .venv/bin/python -c "import mlx_whisper" >/dev/null 2>&1 && [[ ! -f dist/runtime/backend/vocibot-api/_internal/mlx/lib/mlx.metallib ]]; then
+  echo "Packaged backend is missing the MLX Metal kernels." >&2
+  exit 2
+fi
 npx electron-builder --mac dir
