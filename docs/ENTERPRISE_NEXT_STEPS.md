@@ -159,7 +159,17 @@ changes; re-run), typecheck and lint clean.
    and `vocibotenterpriseonecomputersamecell`, attach the artifacts to a GitHub
    Release. Ask the owner before merging `enterprise` into `main` (main is the
    original Mac app).
-5. **Open items to raise with the owner**
+5. **Port the language list (owner decision: each doctor chooses their own).**
+   The Mac app got "Settings > Consultation languages" in commit `e01e4b0` on
+   `feat/vocibot-mvp` (backend/app/languages.py, api/settings.py,
+   `choose_language` + `LanguageMemory` in providers/speech.py, settings page,
+   filtered language menu, tests in backend/tests/test_languages.py and
+   tests/browser/languages.spec.ts). For enterprise: store the list per user
+   (e.g. a `user_settings` table or a JSON column on `users`), expose
+   `/api/settings/languages` for the signed-in user, and pass that user's set
+   to the shared engine per request (the engine is shared, so the allowed set
+   must travel with each job/chunk, not live on the provider instance).
+6. **Open items to raise with the owner**
    - Windows installers are unsigned (SmartScreen warning) — needs a code-signing certificate.
    - Audio and database are not encrypted by VociBot (rely on BitLocker/FileVault).
    - No retention period / automatic deletion policy yet.
