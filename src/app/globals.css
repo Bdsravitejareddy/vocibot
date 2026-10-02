@@ -51,3 +51,4 @@ button, input, textarea, select { font: inherit; }
 
 .record-field input:focus-visible, .record-field textarea:focus-visible, .setup-form input:focus-visible, .setup-form select:focus-visible, .primary-button:focus-visible, .secondary-button:focus-visible, .stop-button:focus-visible, .icon-button:focus-visible { outline: 3px solid #2b6b42; outline-offset: 2px; box-shadow: none; }
 .sidebar .nav-link:focus-visible { outline: 3px solid var(--lime); outline-offset: 2px; }
+.transcript-item.partial p { color: var(--muted); font-style: italic; }

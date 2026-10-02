@@ -4,8 +4,13 @@ from dataclasses import dataclass, field
 from .speech import TranscriptDraft
 
 
+# Split on whitespace and punctuation only, so Indic scripts (whose vowel
+# signs are not \w characters) still produce words.
+_WORD = re.compile(r"[^\s.,!?;:\"“”‘’()\[\]{}।॥\-–—]+")
+
+
 def _words(text: str) -> list[str]:
-    return re.findall(r"[a-z0-9']+", text.lower())
+    return [word.strip("'") for word in _WORD.findall(text.lower()) if word.strip("'")]
 
 
 @dataclass
@@ -56,3 +61,51 @@ class TranscriptCommitter:
             if previous[-size:] == current[:size]:
                 return size
         return 0
+
+
+@dataclass(frozen=True)
+class LiveCommitDecision:
+    committed: list[TranscriptDraft]
+    tentative: list[TranscriptDraft]
+    # Absolute capture time (ms) up to which audio is settled and can be dropped.
+    commit_until_ms: int | None
+
+
+def select_live_commits(
+    drafts: list[TranscriptDraft],
+    *,
+    buffer_start_ms: int,
+    buffer_end_ms: int,
+    holdback_ms: int,
+    max_buffer_ms: int,
+) -> LiveCommitDecision:
+    """Decide which segments of a rolling-buffer transcription are settled.
+
+    Whisper re-transcribes the uncommitted audio each step.  A segment is
+    settled once a later segment follows it, or once enough trailing audio has
+    passed after it that Whisper will not revise it.  The final segment stays
+    tentative while the speaker may still be mid-sentence, unless the buffer
+    has grown past ``max_buffer_ms`` and must be trimmed to bound latency.
+    """
+
+    ordered = sorted(
+        (draft for draft in drafts if draft.text.strip() and draft.start_ms is not None and draft.end_ms is not None),
+        key=lambda draft: (draft.start_ms, draft.end_ms),
+    )
+    if not ordered:
+        return LiveCommitDecision([], [], None)
+    settled_before_ms = buffer_end_ms - holdback_ms
+    committed: list[TranscriptDraft] = []
+    for index, draft in enumerate(ordered):
+        is_last = index == len(ordered) - 1
+        if not is_last or draft.end_ms <= settled_before_ms:  # type: ignore[operator]
+            committed.append(draft)
+        else:
+            break
+    if not committed and buffer_end_ms - buffer_start_ms >= max_buffer_ms:
+        committed = list(ordered)
+    tentative = ordered[len(committed):]
+    commit_until_ms = None
+    if committed:
+        commit_until_ms = min(buffer_end_ms, max(buffer_start_ms, max(draft.end_ms for draft in committed)))  # type: ignore[type-var]
+    return LiveCommitDecision(committed, tentative, commit_until_ms)

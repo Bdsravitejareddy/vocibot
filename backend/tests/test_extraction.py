@@ -73,3 +73,18 @@ def test_ollama_prompt_does_not_seed_unrelated_clinical_facts() -> None:
 
     assert "Fever" not in prompt
     assert "Paracetamol" not in prompt
+
+
+def test_ollama_numeric_vitals_are_kept_as_text(monkeypatch) -> None:
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"response": '{"proposed_record":{"vitals":{"temperature":38.6,"pulse":96}},"candidates":[{"field_name":"vitals","value":{"temperature":38.6,"pulse":96},"source_segment_ids":["s1"],"speaker":"DOCTOR","status":"SUPPORTED"}]}'}
+
+    monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", lambda *args, **kwargs: Response())
+    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.DOCTOR, "Temperature 38.6, pulse 96.")), ClinicalRecord())
+
+    assert result.proposed_record.vitals == {"temperature": "38.6", "pulse": "96"}
+    assert result.candidates[0].value == {"temperature": "38.6", "pulse": "96"}

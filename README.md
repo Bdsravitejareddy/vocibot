@@ -15,9 +15,12 @@ cp .env.example .env
 Install the front-end and Python dependencies while online, then explicitly provision the desired local models. Model setup is separate from running consultations so the app cannot silently fetch weights during offline use:
 
 ```bash
+.venv/bin/python scripts/provision_local_models.py --engine mlx_whisper --model mlx-community/whisper-large-v3-turbo
 .venv/bin/python scripts/provision_local_models.py --engine whisper --model small
 ollama pull llama3.1:8b
 ```
+
+On Apple Silicon, speech recognition runs Whisper large-v3-turbo on the GPU through MLX (`STT_PROVIDER=auto`, the default). Elsewhere, or with `STT_PROVIDER=whisper`, it falls back to faster-whisper on the CPU. Live text comes from re-transcribing the unsettled audio (at most `ASR_LIVE_MAX_BUFFER_SECONDS`) every `ASR_LIVE_STEP_SECONDS`; when Stop is pressed, one authoritative pass over the full recording replaces the live preview.
 
 For Indian-language speech, the multilingual Whisper model can be selected using the conversation-language selector (English, Telugu, Hindi, Marathi, or Gujarati). If using AI4Bharat IndicConformer, install its compatible NeMo environment and provision a `.nemo` model explicitly:
 

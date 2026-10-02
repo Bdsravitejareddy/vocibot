@@ -105,3 +105,14 @@ def test_pipeline_clips_small_live_model_timestamp_padding_to_the_audio_boundary
 
     assert [draft.text for draft in result.transcripts] == ["live word"]
     assert result.transcripts[0].end_ms == 450
+
+
+def test_pipeline_keeps_a_segment_still_being_spoken_at_the_window_end() -> None:
+    class TrailingSTT(FakeSTT):
+        def transcribe_chunk(self, chunk, language=None):
+            return [TranscriptDraft(text="if you ever feel overwhelmed", timestamp="", start_ms=7_000, end_ms=10_400)]
+
+    pipeline = LocalAudioPipeline(FakeVAD(), TrailingSTT(), None, None, timestamp_tolerance_ms=1_000, max_trailing_overshoot_ms=3_000)
+    result = pipeline.process(AudioChunk(audio=b"audio", sample_rate=16_000, timestamp_ms=0, waveform=np.ones(128_000, dtype=np.float32)))
+
+    assert [(draft.text, draft.start_ms, draft.end_ms) for draft in result.transcripts] == [("if you ever feel overwhelmed", 7_000, 8_000)]

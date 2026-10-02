@@ -19,5 +19,5 @@ class LocalPipelineExecutor:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(self._executor, partial(operation, *args, **kwargs))
 
-    def close(self) -> None:
-        self._executor.shutdown(wait=True, cancel_futures=True)
+    def close(self, *, wait: bool = True) -> None:
+        self._executor.shutdown(wait=wait, cancel_futures=True)

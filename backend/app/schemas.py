@@ -17,6 +17,7 @@ class SegmentCreate(BaseModel):
     timestamp: str
     sequence_number: int = Field(ge=0)
     language_code: str | None = Field(default=None, max_length=20)
+    provisional: bool = False
 
 
 class ApproveRequest(BaseModel):
