@@ -228,6 +228,22 @@ def stop_consultation(session: Session, consultation_id: str) -> Consultation:
     return consultation
 
 
+def delete_consultation(session: Session, consultation_id: str) -> None:
+    """Permanently discard a consultation: transcript, record and audit trail.
+
+    The patient is removed too when no other consultation refers to them.
+    """
+
+    consultation = _find_consultation(session, consultation_id)
+    patient = consultation.patient
+    session.delete(consultation)
+    session.flush()
+    remaining = session.scalars(select(Consultation.id).where(Consultation.patient_id == patient.id).limit(1)).first()
+    if remaining is None:
+        session.delete(patient)
+    session.commit()
+
+
 def approve_consultation(session: Session, consultation_id: str, payload: ApproveRequest) -> Consultation:
     consultation = _find_consultation(session, consultation_id)
     if consultation.status != ConsultationStatus.READY_FOR_REVIEW.value:

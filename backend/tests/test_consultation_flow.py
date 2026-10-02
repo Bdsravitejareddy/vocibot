@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from app.db import Base
 from app.domain.types import CandidateClinicalUpdate, ClinicalRecord, EvidenceStatus, ExtractionResult, Speaker
 from app.schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from app.services.consultations import approve_consultation, append_segment, create_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
+from app.services.consultations import approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
 from app.providers.speech import TranscriptDraft
 from app.domain.types import CandidateClinicalUpdate, ExtractionResult
 from app.services.consultations import replace_with_reconciled_transcript
@@ -236,3 +236,46 @@ def test_reconciled_transcript_reports_nonfatal_extraction_failure(monkeypatch) 
 
     assert result["transcript"][0]["text"] == "Final accurate transcript"
     assert warnings == ["Clinical note inference did not finish. The final transcript is available for manual review."]
+
+
+def test_discarding_a_consultation_removes_its_transcript_record_audit_and_orphan_patient() -> None:
+    from app.models import ClinicalRecord as ClinicalRecordModel, Consultation, Patient, RecordUpdate, TranscriptSegment
+
+    session = make_session()
+    kept = create_consultation(session, ConsultationCreate(patient_id="KEEP-1", age=50, sex="Male"))
+    test_run = create_consultation(session, ConsultationCreate(patient_id="TEST-1", age=40, sex="Female"))
+    append_segment(session, test_run.id, SegmentCreate(id="t1", speaker=Speaker.PATIENT, text="I've had fever for three days.", timestamp="2026-09-26T10:32:05Z", sequence_number=0))
+    stop_consultation(session, test_run.id)
+    approve_consultation(session, test_run.id, ApproveRequest(record=ClinicalRecord(chief_complaint="Fever")))
+
+    delete_consultation(session, test_run.id)
+
+    assert [item.id for item in session.query(Consultation).all()] == [kept.id]
+    assert session.query(TranscriptSegment).count() == 0
+    assert session.query(RecordUpdate).count() == 0
+    assert session.query(ClinicalRecordModel).count() == 1
+    assert [item.patient_identifier for item in session.query(Patient).all()] == ["KEEP-1"]
+
+
+def test_discarding_one_visit_keeps_a_patient_with_other_visits() -> None:
+    from app.models import Patient
+
+    session = make_session()
+    first = create_consultation(session, ConsultationCreate(patient_id="SAME-1", age=40, sex="Female"))
+    second = create_consultation(session, ConsultationCreate(patient_id="SAME-1", age=40, sex="Female"))
+
+    delete_consultation(session, first.id)
+
+    assert get_consultation(session, second.id)["patient"]["patient_identifier"] == "SAME-1"
+    assert session.query(Patient).count() == 1
+
+
+def test_discard_endpoint_deletes_once_then_reports_not_found() -> None:
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    with TestClient(app) as client:
+        created = client.post("/api/consultations", json={"patient_id": "API-TEST", "age": 33, "sex": "Male"}).json()
+        assert client.delete(f"/api/consultations/{created['id']}").status_code == 204
+        assert client.get(f"/api/consultations/{created['id']}").status_code == 404
+        assert client.delete(f"/api/consultations/{created['id']}").status_code == 404
