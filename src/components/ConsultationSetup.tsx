@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { getLanguageSettings, type Language } from "@/lib/languages";
 import type { RuntimeStatus } from "@/lib/runtime-status";
 import { runtimePresentation } from "@/lib/runtime-status";
 
@@ -10,6 +12,8 @@ export function ConsultationSetup({ onStart, runtime }: { onStart: (input: { pat
   const [age, setAge] = useState("");
   const [sex, setSex] = useState("Female");
   const [languageCode, setLanguageCode] = useState("auto");
+  const [languages, setLanguages] = useState<Language[]>([]);
+  useEffect(() => { getLanguageSettings().then((settings) => setLanguages(settings.available.filter((language) => settings.enabled.includes(language.code)))).catch(() => setLanguages([])); }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,7 +33,7 @@ export function ConsultationSetup({ onStart, runtime }: { onStart: (input: { pat
       <label>Patient ID<input aria-label="Patient ID" value={patientId} onChange={(event) => setPatientId(event.target.value)} placeholder="e.g. PT-10482" /></label>
       <label>Patient name <span className="optional">optional</span><input aria-label="Patient name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Name for this visit" /></label>
       <div className="form-grid"><label>Age<input aria-label="Age" type="number" min="0" max="130" value={age} onChange={(event) => setAge(event.target.value)} placeholder="42" /></label><label>Sex<select aria-label="Sex" value={sex} onChange={(event) => setSex(event.target.value)}><option>Female</option><option>Male</option><option>Intersex</option><option>Prefer not to say</option></select></label></div>
-      <label>Conversation language<select aria-label="Conversation language" value={languageCode} onChange={(event) => setLanguageCode(event.target.value)}><option value="auto">Auto-detect</option><option value="en">Indian English</option><option value="te">Telugu</option><option value="hi">Hindi</option><option value="mr">Marathi</option><option value="gu">Gujarati</option></select></label>
+      <label>Conversation language<select aria-label="Conversation language" value={languageCode} onChange={(event) => setLanguageCode(event.target.value)}><option value="auto">{languages.length > 1 ? `Auto-detect (${languages.map((language) => language.name.replace(/ \(.*\)$/, "")).join(", ")})` : "Auto-detect"}</option>{languages.map((language) => <option key={language.code} value={language.code}>{language.name}</option>)}</select><span className="field-hint">Only languages enabled in <Link href="/settings">Settings</Link> are offered.</span></label>
       {error && <div className="form-error">{error}</div>}
       <button className="primary-button wide" disabled={busy}>{busy ? "Starting…" : "Start consultation"}</button>
     </form>

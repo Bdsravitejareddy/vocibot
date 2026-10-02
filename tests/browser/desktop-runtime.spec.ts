@@ -17,7 +17,8 @@ test("desktop renderer exposes local language setup and local-only readiness", a
   await page.goto("/");
   await page.getByRole("button", { name: "New consultation" }).click();
   const language = page.getByLabel("Conversation language");
-  await expect(language.locator("option")).toHaveText(["Auto-detect", "Indian English", "Telugu", "Hindi", "Marathi", "Gujarati"]);
+  // Default enabled languages; auto-detect only chooses among them.
+  await expect(language.locator("option")).toHaveText(["Auto-detect (English, Hindi, Telugu, Marathi, Gujarati)", "English (incl. Indian English)", "Hindi", "Telugu", "Marathi", "Gujarati"]);
   await expect(page.getByText("Local microphone pipeline")).toBeVisible();
   expect([...observedOrigins].every((origin) => origin.includes("127.0.0.1") || origin.includes("localhost"))).toBe(true);
 });
