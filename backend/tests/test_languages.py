@@ -82,9 +82,49 @@ def test_live_passes_reuse_the_detected_language_for_ten_seconds() -> None:
     provider.detect_language_probabilities = lambda audio: detections.append(1) or KANNADA_FIRST
     provider.allowed_languages = {"en", "te"}
 
+    # 4 s buffers: detected at the end of the first (4 s), re-checked once
+    # 10 s of audio have passed since (the buffer ending at 14.5 s).
     for timestamp_ms in (0, 3_000, 9_000, 10_500, 12_000):
-        provider.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=timestamp_ms, waveform=np.zeros(16_000, dtype=np.float32), live=True))
-    assert len(detections) == 2  # at 0 s and again at 10.5 s
+        provider.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=timestamp_ms, waveform=np.zeros(64_000, dtype=np.float32), live=True))
+    assert len(detections) == 2
 
     provider.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=0, waveform=np.zeros(16_000, dtype=np.float32)))
     assert len(detections) == 3  # the final (non-live) pass always detects
+
+
+def _live(start_ms: int, seconds: float) -> AudioChunk:
+    return AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=start_ms, waveform=np.zeros(int(seconds * 16_000), dtype=np.float32), live=True)
+
+
+def test_a_detection_on_a_short_greeting_is_not_locked_in() -> None:
+    """'Namaste' / 'Hi doctor' alone was detected as English and kept for the
+    whole Hindi or Telugu consultation, so the live preview stayed empty."""
+
+    detections = []
+    provider = MlxWhisperProvider(model="local", transcribe=lambda audio, **options: {"segments": [], "language": options["language"]})
+    provider.detect_language_probabilities = lambda audio: detections.append(1) or KANNADA_FIRST
+    provider.allowed_languages = {"en", "te"}
+    provider.transcribe_chunk(_live(0, 1.5))
+    provider.transcribe_chunk(_live(0, 2.5))
+    assert len(detections) == 2
+    provider.transcribe_chunk(_live(0, 3.5))
+    provider.transcribe_chunk(_live(0, 4.0))
+    assert len(detections) == 3
+
+
+def test_a_stuck_buffer_is_rechecked_and_rejected_passes_forget_the_language() -> None:
+    detections = []
+    segment = {"segments": [{"text": "foreign", "start": 0.0, "end": 3.0, "avg_logprob": -1.6, "no_speech_prob": 0.1, "compression_ratio": 1.0}]}
+    good = {"segments": [{"text": "జ్వరం ఉంది", "start": 0.0, "end": 3.0, "avg_logprob": -0.3, "no_speech_prob": 0.1, "compression_ratio": 1.0}]}
+    replies = iter([good, good, segment, good])
+    provider = MlxWhisperProvider(model="local", transcribe=lambda audio, **options: {**next(replies), "language": options["language"]})
+    provider.detect_language_probabilities = lambda audio: detections.append(1) or KANNADA_FIRST
+    provider.allowed_languages = {"en", "te"}
+    provider.transcribe_chunk(_live(0, 4))  # detected
+    # Nothing accepted, so the buffer start stays at 0 while audio grows:
+    # re-checked by the end of the audio, not the (stuck) start.
+    provider.transcribe_chunk(_live(0, 15))
+    assert len(detections) == 2
+    provider.transcribe_chunk(_live(0, 16))  # every line rejected: forget
+    provider.transcribe_chunk(_live(0, 17))
+    assert len(detections) == 3

@@ -186,6 +186,8 @@ class FasterWhisperProvider:
                 rejected.append(diagnostic)
             else:
                 accepted_segments.append(segment)
+        if chunk.live and rejected and not accepted_segments:
+            self._language_memory.forget()
         self.last_diagnostics = {
             "language": getattr(info, "language", None),
             "language_probability": language_probability,
@@ -418,6 +420,8 @@ class MlxWhisperProvider:
                 rejected.append({"text": text, "start_ms": start_ms, "end_ms": end_ms, "rejection_reason": ",".join(reasons)})
                 continue
             accepted.append(TranscriptDraft(text=text, timestamp=format_relative_timestamp(start_ms), start_ms=start_ms, end_ms=end_ms, language_code=detected_language))
+        if chunk.live and rejected and not accepted:
+            self._language_memory.forget()
         self.last_diagnostics = {
             "engine": "mlx_whisper",
             "model": self.model,
@@ -430,6 +434,9 @@ class MlxWhisperProvider:
 
 # Live passes re-detect the language at most this often (ms of session audio).
 LIVE_LANGUAGE_RECHECK_MS = 10_000
+# A detection on less audio than this (a "Namaste", a "Hi doctor") is used for
+# that pass only: locking it in sent Hindi and Telugu speech to English.
+LIVE_LANGUAGE_MIN_MS = 3_000
 
 
 class LanguageMemory:
@@ -437,6 +444,8 @@ class LanguageMemory:
 
     Detection costs a full extra encoder pass (~0.6 s on the GPU), so live
     passes reuse it; a switch (e.g. English to Telugu) is followed within 10 s.
+    Time is measured to the end of each pass's audio, so a buffer that stays
+    stuck (nothing accepted, start not advancing) is still re-checked.
     """
 
     def __init__(self) -> None:
@@ -446,12 +455,22 @@ class LanguageMemory:
     def get(self, chunk: "AudioChunk") -> str | None:
         if not chunk.live or self.language is None or self.detected_at_ms is None:
             return None
-        return self.language if 0 <= chunk.timestamp_ms - self.detected_at_ms < LIVE_LANGUAGE_RECHECK_MS else None
+        return self.language if 0 <= _chunk_end_ms(chunk) - self.detected_at_ms < LIVE_LANGUAGE_RECHECK_MS else None
 
     def remember(self, chunk: "AudioChunk", language: str) -> str:
-        if chunk.live:
-            self.language, self.detected_at_ms = language, chunk.timestamp_ms
+        if chunk.live and _chunk_end_ms(chunk) - chunk.timestamp_ms >= LIVE_LANGUAGE_MIN_MS:
+            self.language, self.detected_at_ms = language, _chunk_end_ms(chunk)
         return language
+
+    def forget(self) -> None:
+        """Every line of a pass was rejected: the language may be wrong."""
+
+        self.language = self.detected_at_ms = None
+
+
+def _chunk_end_ms(chunk: "AudioChunk") -> int:
+    samples = len(chunk.waveform) if chunk.waveform is not None else 0
+    return chunk.timestamp_ms + int(samples / chunk.sample_rate * 1000)
 
 
 def _keep_every_mlx_model_loaded() -> None:
