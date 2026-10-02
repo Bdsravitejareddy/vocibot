@@ -279,3 +279,33 @@ def test_discard_endpoint_deletes_once_then_reports_not_found() -> None:
         assert client.delete(f"/api/consultations/{created['id']}").status_code == 204
         assert client.get(f"/api/consultations/{created['id']}").status_code == 404
         assert client.delete(f"/api/consultations/{created['id']}").status_code == 404
+
+
+def test_hedged_grounded_value_fills_the_field_flagged_for_review(monkeypatch) -> None:
+    from app.domain.types import Speaker as S
+
+    session = make_session()
+    consultation = create_consultation(session, ConsultationCreate(patient_id="REVIEW-1", age=30, sex="Female"))
+    drafts = [
+        TranscriptDraft(text="It feels really dizzy and sometimes I feel nauseous.", timestamp="00:00:01", start_ms=0, end_ms=2_000),
+        TranscriptDraft(text="This may be an inner ear problem.", timestamp="00:00:03", start_ms=2_000, end_ms=4_000),
+    ]
+    replace_with_reconciled_transcript(session, consultation.id, drafts, extract=False)
+    prefix = f"{consultation.id}-final-"
+
+    class Extractor:
+        def extract(self, transcript, current):
+            return ExtractionResult(proposed_record=ClinicalRecord(), candidates=[
+                CandidateClinicalUpdate(field_name="presenting_symptoms", value=["dizziness", "nausea"], source_segment_ids=[prefix + "0"], speaker=S.PATIENT, status=EvidenceStatus.SUPPORTED),
+                CandidateClinicalUpdate(field_name="assessment", value="may be an inner ear problem", source_segment_ids=[prefix + "1"], speaker=S.DOCTOR, status=EvidenceStatus.SUPPORTED),
+                CandidateClinicalUpdate(field_name="follow_up", value="review in one week", source_segment_ids=[prefix + "1"], speaker=S.DOCTOR, status=EvidenceStatus.SUPPORTED),
+            ])
+
+    monkeypatch.setattr("app.services.consultations.build_extraction_provider", lambda _settings: Extractor())
+    loaded = extract_reconciled_clinical_record(session, consultation.id, require_authoritative=True)
+
+    assert loaded["record"]["presenting_symptoms"] == ["dizziness", "nausea"]
+    assert loaded["record"]["assessment"] == "may be an inner ear problem"
+    assert loaded["record"]["follow_up"] is None
+    update_types = {update["field_name"]: update["update_type"] for update in loaded["updates"]}
+    assert update_types == {"presenting_symptoms": "AI_EXTRACTED", "assessment": "AI_NEEDS_REVIEW"}
