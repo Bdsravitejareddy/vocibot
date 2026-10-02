@@ -20,7 +20,7 @@ from ..providers.streaming import TranscriptCommitter, select_live_commits
 from ..db import SessionLocal
 from ..services.consultations import replace_with_reconciled_transcript
 from ..services.live_cpu import LocalPipelineExecutor
-from ..services.recordings import SessionRecorder, recording_path
+from ..services.recordings import SessionRecorder, compress_soon, recording_path
 from ..models import Consultation, Recording
 from ..providers.vad import SileroVoiceActivityDetector
 
@@ -105,8 +105,10 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
         try:
             finished = active.close()
             with SessionLocal() as session:
-                session.add(Recording(consultation_id=consultation_id, file_path=str(finished.path), duration_ms=finished.duration_ms, sample_rate=active.sample_rate, language_code=None if language == "auto" else language, sha256=finished.sha256))
+                session.add(Recording(consultation_id=consultation_id, file_path=str(finished.path), duration_ms=finished.duration_ms, sample_rate=active.sample_rate, language_code=None if language == "auto" else language, sha256=finished.sha256, original_sha256=finished.sha256, format="wav", size_bytes=finished.path.stat().st_size))
                 session.commit()
+            # Lossless FLAC conversion runs off the request path.
+            compress_soon()
         except Exception:
             logger.exception("Saving the recording failed for consultation %s", consultation_id)
     debug_windows: list[dict[str, object]] = []

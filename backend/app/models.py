@@ -61,8 +61,12 @@ class Recording(Base):
     duration_ms: Mapped[int] = mapped_column(Integer, default=0)
     sample_rate: Mapped[int] = mapped_column(Integer)
     language_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    # SHA-256 of the finished file: proves the stored audio was not altered.
+    # SHA-256 of the file as stored now: proves it was not altered.
     sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # SHA-256 of the original capture (WAV); kept through every conversion.
+    original_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    format: Mapped[str] = mapped_column(String(10), default="wav")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
     consultation: Mapped[Consultation] = relationship(back_populates="recordings")
 
 

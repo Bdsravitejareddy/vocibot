@@ -1,6 +1,6 @@
 import type { ClinicalRecord, Speaker, TranscriptSegmentInput } from "../domain/types";
 
-export type Recording = { id: string; started_at: string; duration_ms: number; sample_rate: number; language_code: string | null; sha256: string | null; file_name: string; available: boolean };
+export type Recording = { id: string; started_at: string; duration_ms: number; sample_rate: number; language_code: string | null; sha256: string | null; original_sha256: string | null; format: "wav" | "flac" | "opus"; size_bytes: number; file_name: string; available: boolean };
 
 export type ConsultationState = {
   id: string;
