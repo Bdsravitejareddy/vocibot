@@ -102,3 +102,51 @@ def test_ollama_odd_candidate_shapes_do_not_sink_the_note(monkeypatch) -> None:
     result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.PATIENT, "I have had a fever for three days.")), ClinicalRecord())
 
     assert [(c.field_name, c.source_segment_ids, c.speaker) for c in result.candidates] == [("chief_complaint", ["s1"], Speaker.PATIENT), ("duration", ["s1"], Speaker.PATIENT)]
+
+
+def test_a_recording_that_is_not_a_consultation_gets_an_empty_note(monkeypatch) -> None:
+    """A travel video recorded by mistake filled chief complaint with
+    "Namaste and welcome" and symptoms with "cool morning air"."""
+
+    calls = []
+
+    class Response:
+        def __init__(self, body: dict) -> None:
+            self.body = body
+
+        def raise_for_status(self) -> None:
+            pass
+
+        def json(self) -> dict:
+            return self.body
+
+    def post(url, json, **kwargs):
+        calls.append(json)
+        if "format" not in json:  # the yes/no consultation check
+            return Response({"response": "No."})
+        return Response({"response": '{"candidates": [{"field_name": "chief_complaint", "value": "Namaste and welcome", "source_segment_ids": ["s0"], "speaker": "PATIENT", "status": "SUPPORTED"}]}'})
+
+    monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", post)
+    travel = segments(("x0", Speaker.UNKNOWN, "Namaste and welcome to Kashi."), ("x1", Speaker.UNKNOWN, "The cool morning air is touching the waves of the Ganges."))
+    result = OllamaClinicalExtractionProvider().extract(travel, ClinicalRecord())
+    assert result.candidates == [] and len(calls) == 1
+
+
+def test_the_consultation_check_failing_never_loses_a_note(monkeypatch) -> None:
+    import httpx
+
+    class Response:
+        def raise_for_status(self) -> None:
+            pass
+
+        def json(self) -> dict:
+            return {"response": '{"candidates": [{"field_name": "chief_complaint", "value": "fever", "source_segment_ids": ["s0"], "speaker": "PATIENT", "status": "SUPPORTED"}]}'}
+
+    def post(url, json, **kwargs):
+        if "format" not in json:
+            raise httpx.ConnectError("busy")
+        return Response()
+
+    monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", post)
+    result = OllamaClinicalExtractionProvider().extract(segments(("x0", Speaker.PATIENT, "I have a fever.")), ClinicalRecord())
+    assert [candidate.value for candidate in result.candidates] == ["fever"]

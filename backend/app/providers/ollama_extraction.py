@@ -48,13 +48,38 @@ class OllamaClinicalExtractionProvider:
         except Exception as error:
             raise RuntimeError(f"Ollama unavailable at {self.base_url}: {error}") from error
 
-    def extract(self, transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> ExtractionResult:
-        prompt = self._prompt(transcript, current_record)
-        options = {**OLLAMA_OPTIONS, "num_ctx": context_size(prompt)}
+    def _options(self, prompt: str, **overrides: Any) -> dict[str, Any]:
+        options = {**OLLAMA_OPTIONS, "num_ctx": context_size(prompt), **overrides}
         if settings.ollama_num_gpu >= 0:
             options["num_gpu"] = settings.ollama_num_gpu
         if settings.ollama_num_thread > 0:
             options["num_thread"] = settings.ollama_num_thread
+        return options
+
+    def is_consultation(self, transcript: list[TranscriptSegmentInput], num_ctx: int | None = None) -> bool:
+        """A separate yes/no question, so a talk or travel video recorded by
+        mistake gets an empty note.  It is kept out of the note prompt: any
+        change there lowered the facts the 8B model captures (86% -> 79-83%)."""
+
+        prompt = (
+            "Does this transcript contain a health problem, symptom, medical history or treatment being discussed "
+            "(a doctor-patient consultation, even a short or badly transcribed one)? Answer yes or no.\n"
+            + "\n".join(segment.text for segment in transcript)
+        )
+        try:
+            response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "stream": False, "keep_alive": settings.ollama_keep_alive, "options": self._options(prompt, num_predict=3, **({"num_ctx": num_ctx} if num_ctx else {}))}, timeout=settings.ollama_timeout_seconds)
+            response.raise_for_status()
+        except httpx.HTTPError:
+            return True  # never lose a note because the check failed
+        return not str(response.json().get("response", "")).strip().lower().startswith("no")
+
+    def extract(self, transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> ExtractionResult:
+        prompt = self._prompt(transcript, current_record)
+        options = self._options(prompt)
+        # Same context size as the note: a different one makes Ollama reload the model.
+        if transcript and not self.is_consultation(transcript, options["num_ctx"]):
+            self.last_stats = {"not_a_consultation": True}
+            return ExtractionResult(proposed_record=ClinicalRecord(), candidates=[])
         response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "keep_alive": settings.ollama_keep_alive, "options": options}, timeout=settings.ollama_timeout_seconds)
         response.raise_for_status()
         payload: Any = response.json()
