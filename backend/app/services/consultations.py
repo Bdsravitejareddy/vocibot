@@ -5,7 +5,7 @@ import re
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..domain.types import ClinicalRecord, ConsultationStatus, RecordUpdateType, Speaker, TranscriptSegmentInput
+from ..domain.types import ClinicalRecord, ConsultationStatus, EvidenceStatus, RecordUpdateType, Speaker, TranscriptSegmentInput
 from ..models import ClinicalRecord as ClinicalRecordModel
 from ..models import Consultation, Patient, RecordUpdate, TranscriptSegment
 from ..config import settings
@@ -28,6 +28,44 @@ def _extract_or_leave_reviewable(transcript_inputs: list[TranscriptSegmentInput]
         if warnings is not None:
             warnings.append("Clinical note inference did not finish. The final transcript is available for manual review.")
         return None
+
+
+def _apply_validated_candidates(result, current: ClinicalRecord, transcript_inputs: list[TranscriptSegmentInput]) -> tuple[ClinicalRecord, dict[str, list[str]], set[str]]:
+    """Apply evidence-checked candidates to the record.
+
+    SUPPORTED values fill their field.  NEEDS_REVIEW values are grounded in the
+    transcript but hedged or ambiguous; they fill the field flagged for review
+    unless a SUPPORTED value exists.  REJECTED values never reach the record.
+    """
+
+    validator = EvidenceValidator()
+    validated_record = current.model_copy(deep=True)
+    evidence: dict[str, list[str]] = {}
+    needs_review: set[str] = set()
+    supported_fields: set[str] = set()
+    for candidate in result.candidates if result is not None else []:
+        validated = validator.validate(candidate.field_name, candidate.value, candidate.source_segment_ids, transcript_inputs, claimed_speaker=candidate.speaker)  # type: ignore[arg-type]
+        if validated.status not in {EvidenceStatus.SUPPORTED, EvidenceStatus.NEEDS_REVIEW} or not hasattr(validated_record, candidate.field_name):
+            continue
+        if validated.status == EvidenceStatus.NEEDS_REVIEW and candidate.field_name in supported_fields:
+            continue
+        data = validated_record.model_dump()
+        data[candidate.field_name] = validated.value
+        try:
+            validated_record = ClinicalRecord.model_validate(data)
+        except Exception:
+            continue
+        evidence[candidate.field_name] = validated.source_segment_ids
+        if validated.status == EvidenceStatus.SUPPORTED:
+            supported_fields.add(candidate.field_name)
+            needs_review.discard(candidate.field_name)
+        else:
+            needs_review.add(candidate.field_name)
+    return validated_record, evidence, needs_review
+
+
+def _ai_update_type(field_name: str, needs_review: set[str]) -> str:
+    return (RecordUpdateType.AI_NEEDS_REVIEW if field_name in needs_review else RecordUpdateType.AI_EXTRACTED).value
 
 
 def _relative_timestamp(value: str, consultation_started_at: datetime) -> str:
@@ -110,23 +148,11 @@ def append_segment(session: Session, consultation_id: str, payload: SegmentCreat
     ) for item in transcript]
     current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
     result = _extract_or_leave_reviewable(transcript_inputs, current)
-    validator = EvidenceValidator()
-    evidence: dict[str, list[str]] = {}
-    validated_record = current.model_copy(deep=True)
-    for candidate in result.candidates if result is not None else []:
-        validated = validator.validate(candidate.field_name, candidate.value, candidate.source_segment_ids, transcript_inputs)  # type: ignore[arg-type]
-        if validated.status.value == "SUPPORTED" and hasattr(validated_record, candidate.field_name):
-            candidate_data = validated_record.model_dump()
-            candidate_data[candidate.field_name] = candidate.value
-            try:
-                validated_record = ClinicalRecord.model_validate(candidate_data)
-            except Exception:
-                continue
-            evidence[candidate.field_name] = candidate.source_segment_ids
+    validated_record, evidence, needs_review = _apply_validated_candidates(result, current, transcript_inputs)
     doctor_edited_fields = {update.field_name for update in consultation.updates if update.update_type == RecordUpdateType.DOCTOR_EDITED.value}
     changes = diff_clinical_record(current, validated_record, evidence, doctor_edited_fields)
     for change in changes:
-        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=RecordUpdateType.AI_EXTRACTED.value))
+        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=_ai_update_type(change.field_name, needs_review)))
     if changes:
         record_data = current.model_dump()
         for change in changes:
@@ -194,22 +220,10 @@ def extract_reconciled_clinical_record(
     transcript_inputs = [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in transcript_rows]
     current = ClinicalRecord()
     result = _extract_or_leave_reviewable(transcript_inputs, current, warnings)
-    validator = EvidenceValidator()
-    validated_record = current.model_copy(deep=True)
-    evidence: dict[str, list[str]] = {}
-    for candidate in result.candidates if result is not None else []:
-        validated = validator.validate(candidate.field_name, candidate.value, candidate.source_segment_ids, transcript_inputs)  # type: ignore[arg-type]
-        if validated.status.value == "SUPPORTED" and hasattr(validated_record, candidate.field_name):
-            data = validated_record.model_dump()
-            data[candidate.field_name] = candidate.value
-            try:
-                validated_record = ClinicalRecord.model_validate(data)
-            except Exception:
-                continue
-            evidence[candidate.field_name] = validated.source_segment_ids
+    validated_record, evidence, needs_review = _apply_validated_candidates(result, current, transcript_inputs)
     changes = diff_clinical_record(current, validated_record, evidence, set())
     for change in changes:
-        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=RecordUpdateType.AI_EXTRACTED.value))
+        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=_ai_update_type(change.field_name, needs_review)))
     if changes:
         consultation.clinical_record.structured_data_json = validated_record.model_dump()
         consultation.clinical_record.version += 1

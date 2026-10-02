@@ -30,7 +30,8 @@ def test_value_must_be_semantically_supported_by_cited_transcript() -> None:
 
     result = EvidenceValidator().validate("chief_complaint", "Fever", ["p1"], segments)
 
-    assert result.status == EvidenceStatus.NEEDS_REVIEW
+    # Unsupported values are rejected outright so nothing invented is shown.
+    assert result.status == EvidenceStatus.REJECTED
 
 
 def test_duration_can_be_supported_by_adjacent_transcript_segments() -> None:
@@ -54,3 +55,61 @@ def test_multiple_symptoms_can_be_supported_across_adjacent_segments() -> None:
     result = EvidenceValidator().validate("presenting_symptoms", ["Cough", "Cold", "Nauseous", "Headache"], ["p1", "p2"], segments)
 
     assert result.status == EvidenceStatus.SUPPORTED
+
+
+def _unknown(*texts: str) -> list[TranscriptSegmentInput]:
+    return [TranscriptSegmentInput(id=f"u{index}", speaker=Speaker.UNKNOWN, text=text, timestamp="00:00:00", sequence_number=index) for index, text in enumerate(texts)]
+
+
+def test_symptom_word_forms_match_what_the_patient_said() -> None:
+    segments = _unknown("It feels really dizzy and sometimes I feel sick and nauseous.", "Yeah, I've had a couple of headaches, like really bad ones.")
+
+    result = EvidenceValidator().validate("presenting_symptoms", ["dizziness", "nausea", "headache"], ["u0", "u1"], segments)
+
+    assert result.status == EvidenceStatus.SUPPORTED
+    assert result.value == ["dizziness", "nausea", "headache"]
+
+
+def test_list_items_are_judged_one_by_one() -> None:
+    segments = _unknown("It feels really dizzy and sometimes I feel sick and nauseous.", "No, I haven't been sick. I just feel nauseous.")
+
+    result = EvidenceValidator().validate("presenting_symptoms", ["dizziness", "vomiting"], ["u0", "u1"], segments)
+
+    assert result.status == EvidenceStatus.SUPPORTED
+    assert result.value == ["dizziness"]
+
+
+def test_contracted_negations_support_relevant_negatives() -> None:
+    segments = _unknown("I mean, I get the odd cough but I don't think it's like a fever.")
+
+    assert EvidenceValidator().validate("relevant_negatives", ["no fever"], ["u0"], segments).status == EvidenceStatus.SUPPORTED
+    assert EvidenceValidator().validate("presenting_symptoms", ["fever"], ["u0"], segments).status == EvidenceStatus.REJECTED
+
+
+def test_doctor_fields_accept_extractor_attribution_only_without_patient_labels() -> None:
+    unknown = _unknown("From what you're describing it sounds absolutely like an inner ear disturbance.")
+    patient = [TranscriptSegmentInput(id="p0", speaker=Speaker.PATIENT, text=unknown[0].text, timestamp="00:00:00", sequence_number=0)]
+    validator = EvidenceValidator()
+
+    assert validator.validate("assessment", "inner ear disturbance", ["u0"], unknown, claimed_speaker=Speaker.DOCTOR).status == EvidenceStatus.SUPPORTED
+    assert validator.validate("assessment", "inner ear disturbance", ["u0"], unknown, claimed_speaker=Speaker.PATIENT).status == EvidenceStatus.REJECTED
+    assert validator.validate("assessment", "inner ear disturbance", ["p0"], patient, claimed_speaker=Speaker.DOCTOR).status == EvidenceStatus.REJECTED
+
+
+def test_narrative_plan_is_grounded_by_most_of_its_words_but_inventions_are_rejected() -> None:
+    segments = _unknown("What we could try would be some regular stemetil.", "If things aren't settling then it would be reasonable to seek the ENT opinion, I can do a referral letter.")
+    validator = EvidenceValidator()
+
+    plan = validator.validate("plan", "regular stemetil; ENT referral letter if not settling", ["u0", "u1"], segments, claimed_speaker=Speaker.DOCTOR)
+    invented = validator.validate("follow_up", "follow up with patient in a week", ["u1"], segments, claimed_speaker=Speaker.DOCTOR)
+
+    assert plan.status == EvidenceStatus.SUPPORTED
+    assert invented.status == EvidenceStatus.REJECTED
+
+
+def test_chief_complaint_cannot_be_the_doctors_diagnosis() -> None:
+    segments = _unknown("This looks like a viral upper respiratory infection.")
+
+    result = EvidenceValidator().validate("chief_complaint", "viral upper respiratory infection", ["u0"], segments, claimed_speaker=Speaker.DOCTOR)
+
+    assert result.status == EvidenceStatus.REJECTED

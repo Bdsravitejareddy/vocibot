@@ -12,6 +12,8 @@ class ConsultationStatus(StrEnum):
 
 class RecordUpdateType(StrEnum):
     AI_EXTRACTED = "AI_EXTRACTED"
+    # Grounded in the transcript but hedged or ambiguous: shown, flagged.
+    AI_NEEDS_REVIEW = "AI_NEEDS_REVIEW"
     DOCTOR_EDITED = "DOCTOR_EDITED"
     DOCTOR_APPROVED = "DOCTOR_APPROVED"
 

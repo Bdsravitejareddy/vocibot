@@ -1,10 +1,19 @@
 import json
+import re
 from typing import Any
 
 import httpx
 
 from ..config import settings
 from ..domain.types import ClinicalRecord, ExtractionResult, TranscriptSegmentInput
+
+LIST_FIELDS = {"presenting_symptoms", "relevant_negatives", "medications", "allergies", "examination_findings"}
+# Values a model uses to say "not discussed"; a missing field must stay empty.
+# Small local models can loop ("feeling dizzy, feeling sick, ...") until the
+# token limit; penalise repeats and bound the output.  The transcript prompt of
+# a long consultation needs more than Ollama's small default context.
+OLLAMA_OPTIONS = {"temperature": 0, "repeat_penalty": 1.15, "num_predict": 2048, "num_ctx": 16384}
+PLACEHOLDERS = {"none", "n/a", "na", "nil", "null", "unknown", "not mentioned", "not discussed", "not stated", "not provided", "not applicable", "no information", "-", ""}
 
 
 class OllamaClinicalExtractionProvider:
@@ -24,12 +33,16 @@ class OllamaClinicalExtractionProvider:
 
     def extract(self, transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> ExtractionResult:
         prompt = self._prompt(transcript, current_record)
-        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "options": {"temperature": 0}}, timeout=settings.ollama_timeout_seconds)
+        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "options": OLLAMA_OPTIONS}, timeout=settings.ollama_timeout_seconds)
         response.raise_for_status()
         payload: Any = response.json()
         raw = payload.get("response", payload)
         if isinstance(raw, str):
             raw = json.loads(raw)
+        if isinstance(raw, dict) and "candidates" in raw:
+            # Only evidence-backed candidates fill the record; the model is not
+            # asked for a duplicate proposed record (8B models loop on it).
+            raw.setdefault("proposed_record", {})
         if isinstance(raw, dict) and "proposed_record" not in raw and "candidates" not in raw:
             record = ClinicalRecord.model_validate(raw)
             if any(value not in (None, "", [], {}) for value in record.model_dump().values()):
@@ -45,6 +58,10 @@ class OllamaClinicalExtractionProvider:
                     continue
                 if candidate["field_name"] == "vitals":
                     candidate["value"] = OllamaClinicalExtractionProvider._vitals(candidate.get("value"))
+                else:
+                    candidate["value"] = OllamaClinicalExtractionProvider._coerce(candidate["field_name"], candidate.get("value"))
+                if candidate["value"] in (None, [], {}):
+                    continue
                 candidate["source_segment_ids"] = [item for item in candidate.get("source_segment_ids", []) if isinstance(item, str)]
                 candidate["speaker"] = candidate.get("speaker") if candidate.get("speaker") in {"DOCTOR", "PATIENT", "UNKNOWN"} else "UNKNOWN"
                 candidate["status"] = status_aliases.get(str(candidate.get("status", "REJECTED")).upper(), "REJECTED")
@@ -53,12 +70,28 @@ class OllamaClinicalExtractionProvider:
         return ExtractionResult.model_validate(raw)
 
     @staticmethod
+    def _coerce(field_name: str, value: Any) -> Any:
+        """Shape a model value to its field: lists stay lists, text stays text."""
+
+        if field_name in LIST_FIELDS:
+            items = value if isinstance(value, list) else re.split(r"\s*(?:[,;\n]|\band\b)\s*", value) if isinstance(value, str) else []
+            cleaned = [str(item).strip(" .") for item in items if isinstance(item, (str, int, float))]
+            return [item for item in cleaned if item.lower() not in PLACEHOLDERS]
+        if isinstance(value, list):
+            value = "; ".join(str(item) for item in value if isinstance(item, (str, int, float)))
+        if isinstance(value, (int, float)):
+            value = str(value)
+        if not isinstance(value, str) or value.strip(" .").lower() in PLACEHOLDERS:
+            return None
+        return value.strip()
+
+    @staticmethod
     def _vitals(value: Any) -> dict[str, str]:
         """Models often emit readings as numbers (38.6); the record stores text."""
 
         if not isinstance(value, dict):
             return {}
-        return {str(key): str(reading) for key, reading in value.items() if reading is not None and not isinstance(reading, (dict, list))}
+        return {str(key): str(reading) for key, reading in value.items() if reading is not None and not isinstance(reading, (dict, list)) and str(reading).strip().lower() not in PLACEHOLDERS}
 
     @staticmethod
     def _sanitize_record(payload: Any) -> dict[str, Any]:
@@ -71,17 +104,28 @@ class OllamaClinicalExtractionProvider:
                 continue
             value = payload[field_name]
             if field_name in list_fields:
-                safe[field_name] = value if isinstance(value, list) else []
+                safe[field_name] = OllamaClinicalExtractionProvider._coerce(field_name, value) if isinstance(value, list) else []
             elif field_name == "vitals":
                 safe[field_name] = OllamaClinicalExtractionProvider._vitals(value)
-            elif value is None or isinstance(value, str):
-                safe[field_name] = value
+            else:
+                safe[field_name] = OllamaClinicalExtractionProvider._coerce(field_name, value)
         return safe
 
     @staticmethod
     def _prompt(transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> str:
         return (
-            "Return strict JSON matching this shape: {proposed_record: ClinicalRecord, candidates: [{field_name, value, source_segment_ids, speaker, status}]}. "
+            "Return strict JSON matching this shape: {candidates: [{field_name, value, source_segment_ids, speaker, status}]}. "
+            "ClinicalRecord fields: chief_complaint (text: the patient's main problem in a few words, as the patient describes it, never a diagnosis), duration (text), presenting_symptoms (array of short strings, one symptom each), "
+            "history_present_illness (text), relevant_negatives (array, e.g. \"no fever\"), past_medical_history (text), medications (array), allergies (array), "
+            "vitals (object of text readings), examination_findings (array: what the doctor observed when examining), assessment (text: the doctor's stated impression), "
+            "plan (text: treatment, prescriptions and referrals the doctor proposes), follow_up (text). "
+            "Emit at most one candidate per field; array fields take a JSON array value of distinct items, never a comma-separated string and never the same item twice. Use the patient's own symptom words where possible. "
+            "Speaker labels may be UNKNOWN because speakers are not separated: set each candidate's speaker to DOCTOR or PATIENT from the content "
+            "(questions, examination instructions, impressions and plans are DOCTOR; the patient or a companion describing the illness is PATIENT). "
+            "A symptom the patient denies belongs in relevant_negatives, not presenting_symptoms. Never write placeholders such as none or not mentioned: omit the candidate. "
+            "examination_findings are only what the doctor observed while examining (e.g. eye movements, temperature reading); a doctor's 'it sounds like X' or 'this looks like X' is the assessment. "
+            "Earlier diagnoses, investigations and specialist opinions from before this visit belong in past_medical_history. "
+            "history_present_illness summarises only facts stated in the transcript: never add a symptom the patient did not report. "
             "Extract only explicitly supported facts. Every candidate must include one or more exact transcript source_segment_ids. "
             "Never diagnose from symptoms. Assessment and plan require DOCTOR statements. "
             "Preserve uncertainty. Missing values must stay null or empty. "
