@@ -17,6 +17,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
   if (!response.ok) throw new Error((await response.json().catch(() => null))?.detail ?? `Request failed: ${response.status}`);
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 
@@ -35,6 +36,11 @@ export function stopConsultation(consultationId: string, inferFinalRecord = fals
 
 export function approveConsultation(consultationId: string, record: ClinicalRecord) {
   return request<ConsultationState>(`/api/consultations/${consultationId}/approve`, { method: "POST", body: JSON.stringify({ record }) });
+}
+
+/** Permanently delete a consultation with its transcript, record and audit trail. */
+export function discardConsultation(consultationId: string) {
+  return request<void>(`/api/consultations/${consultationId}`, { method: "DELETE" });
 }
 
 export function listConsultations() {

@@ -117,6 +117,18 @@ export class LocalWebSocketSpeechProvider implements SpeechToTextProvider {
   private resolveStopped?: () => void;
   private rejectStopped?: (error: Error) => void;
 
+  abort() {
+    this.stopping = true;
+    this.onPartial?.("");
+    this.resolveStopped = undefined;
+    this.rejectStopped = undefined;
+    const socket = this.socket;
+    this.processor?.disconnect(); this.source?.disconnect(); this.stream?.getTracks().forEach((track) => track.stop()); void this.context?.close();
+    this.processor = null; this.source = null; this.stream = null; this.context = null; this.socket = null;
+    // Closing without "stop" skips the final pass; nothing is persisted.
+    socket?.close();
+  }
+
   async stop() {
     const socket = this.socket;
     this.stopping = true;

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..db import get_session
 from ..models import Consultation
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from ..services.consultations import approve_consultation, append_segment, create_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
+from ..services.consultations import approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, stop_consultation
 from ..services.approved_note_export import build_approved_note_payload
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
@@ -26,6 +26,14 @@ def list_consultations(session: Session = Depends(get_session)) -> list[dict]:
 def detail(consultation_id: str, session: Session = Depends(get_session)) -> dict:
     try:
         return get_consultation(session, consultation_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@router.delete("/{consultation_id}", status_code=204)
+def discard(consultation_id: str, session: Session = Depends(get_session)) -> None:
+    try:
+        delete_consultation(session, consultation_id)
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
 
