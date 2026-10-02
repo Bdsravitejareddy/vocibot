@@ -7,7 +7,7 @@ const localRuntime = { mode: "local", backend: { status: "connected" }, provider
 } };
 
 test("demo runtime renders demo labels and no local microphone workflow", async ({ page }) => {
-  await page.route("**/api/runtime-status", (route) => route.fulfill({ json: demoRuntime }));
+  await page.route("**/api/runtime-status*", (route) => route.fulfill({ json: demoRuntime }));
   await page.goto("/");
   await expect(page.getByText("Demo mode", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "New consultation" }).click();
@@ -16,7 +16,7 @@ test("demo runtime renders demo labels and no local microphone workflow", async 
 });
 
 test("local runtime renders local status and local microphone action", async ({ page }) => {
-  await page.route("**/api/runtime-status", (route) => route.fulfill({ json: localRuntime }));
+  await page.route("**/api/runtime-status*", (route) => route.fulfill({ json: localRuntime }));
   await page.goto("/");
   await expect(page.getByText("Local AI", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "New consultation" }).click();

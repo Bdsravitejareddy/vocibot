@@ -10,4 +10,7 @@ __pycache__/
 *.tsbuildinfo
 test-results/
 playwright-report/
+build/
+dist/
+tmp/
 .env

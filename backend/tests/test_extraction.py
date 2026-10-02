@@ -1,5 +1,6 @@
 from app.domain.types import ClinicalRecord, EvidenceStatus, Speaker, TranscriptSegmentInput
 from app.providers.demo_extraction import DemoClinicalExtractionProvider
+from app.providers.ollama_extraction import OllamaClinicalExtractionProvider
 from app.services.evidence import EvidenceValidator
 
 
@@ -47,3 +48,28 @@ def test_unsupported_information_is_rejected_by_evidence_validator() -> None:
     rejected = validator.validate("assessment", "Pneumonia", ["missing"], segments(("s1", Speaker.PATIENT, "I have cough.")))
     assert accepted.status == EvidenceStatus.SUPPORTED
     assert rejected.status == EvidenceStatus.REJECTED
+
+
+def test_ollama_malformed_candidate_metadata_is_sanitized(monkeypatch) -> None:
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"response": '{"proposed_record":{"presenting_symptoms":"patient"},"candidates":[{"field_name":"chief_complaint","value":"Fever","source_segment_ids":["s1"],"speaker":"","status":"SUPPORTED"}]}' }
+
+    monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", lambda *args, **kwargs: Response())
+    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.PATIENT, "I have fever.")), ClinicalRecord())
+
+    assert result.proposed_record.presenting_symptoms == []
+    assert result.candidates[0].speaker == Speaker.UNKNOWN
+
+
+def test_ollama_prompt_does_not_seed_unrelated_clinical_facts() -> None:
+    prompt = OllamaClinicalExtractionProvider._prompt(
+        segments(("s1", Speaker.PATIENT, "I have a cough and cold for two weeks.")),
+        ClinicalRecord(),
+    )
+
+    assert "Fever" not in prompt
+    assert "Paracetamol" not in prompt

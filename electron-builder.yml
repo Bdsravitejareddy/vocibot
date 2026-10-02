@@ -1,0 +1,14 @@
+appId: health.vocibot.desktop
+productName: VociBot
+asar: true
+files:
+  - desktop/**/*
+extraResources:
+  - from: dist/runtime
+    to: .
+mac:
+  target:
+    - dir
+  category: public.app-category.medical
+directories:
+  output: dist

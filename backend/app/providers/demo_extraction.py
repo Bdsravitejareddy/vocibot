@@ -27,7 +27,8 @@ class DemoClinicalExtractionProvider:
             if segment.speaker == Speaker.PATIENT and "dry cough" in lower:
                 if "Dry cough" not in record.presenting_symptoms:
                     record.presenting_symptoms.append("Dry cough")
-                self._add_candidate(candidates, "presenting_symptoms", list(record.presenting_symptoms), segment, Speaker.PATIENT)
+                supporting_ids = [item.id for item in transcript if item.speaker == Speaker.PATIENT and any(token.lower() in item.text.lower() for token in record.presenting_symptoms)]
+                self._add_candidate(candidates, "presenting_symptoms", list(record.presenting_symptoms), segment, Speaker.PATIENT, source_segment_ids=supporting_ids)
                 match = re.search(r"since\s+(yesterday|today|\d+\s+days?)", lower)
                 if match and not record.duration:
                     record.duration = match.group(1)
@@ -65,10 +66,12 @@ class DemoClinicalExtractionProvider:
         return ExtractionResult(proposed_record=record, candidates=candidates)
 
     @staticmethod
-    def _add_candidate(candidates: list[CandidateClinicalUpdate], field_name: str, value: object, segment: TranscriptSegmentInput, speaker: Speaker) -> None:
+    def _add_candidate(candidates: list[CandidateClinicalUpdate], field_name: str, value: object, segment: TranscriptSegmentInput, speaker: Speaker, source_segment_ids: list[str] | None = None) -> None:
+        ids = source_segment_ids or [segment.id]
         for candidate in candidates:
             if candidate.field_name == field_name and candidate.value == value:
-                if segment.id not in candidate.source_segment_ids:
-                    candidate.source_segment_ids.append(segment.id)
+                for source_id in ids:
+                    if source_id not in candidate.source_segment_ids:
+                        candidate.source_segment_ids.append(source_id)
                 return
-        candidates.append(CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=[segment.id], speaker=speaker, status=EvidenceStatus.SUPPORTED))
+        candidates.append(CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=ids, speaker=speaker, status=EvidenceStatus.SUPPORTED))

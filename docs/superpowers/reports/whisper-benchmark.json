@@ -1,0 +1,95 @@
+{
+  "audio": "/private/tmp/vocibot-close-mic.wav",
+  "input_sample_rate": 44100,
+  "model_sample_rate": 16000,
+  "duration_seconds": 8.8335625,
+  "reference": "This is a transcription test. The patient has had a headache for three days. There is no fever. There is no cough. The patient is taking paracetamol.",
+  "results": [
+    {
+      "model": "small",
+      "transcript": "This is a transcription test. The patient has had a headache for three days. There is no fever. There is no cough. The patient is taking paracetamol.",
+      "latency_seconds": 2.641406167000241,
+      "real_time_factor": 0.2990193556676869,
+      "max_rss_delta": 977518592,
+      "word_error_rate": 0.0,
+      "clinical_fact_preservation": {
+        "headache": true,
+        "3 days": true,
+        "NO fever": true,
+        "NO cough": true,
+        "paracetamol": true
+      },
+      "language": "en",
+      "language_probability": 0.9980270266532898,
+      "segments": [
+        {
+          "text": "This is a transcription test.",
+          "start": 0.0,
+          "end": 2.0,
+          "avg_logprob": -0.17509442250779333,
+          "no_speech_prob": 0.003330145962536335,
+          "compression_ratio": 1.4466019417475728
+        },
+        {
+          "text": "The patient has had a headache for three days.",
+          "start": 2.0,
+          "end": 4.52,
+          "avg_logprob": -0.17509442250779333,
+          "no_speech_prob": 0.003330145962536335,
+          "compression_ratio": 1.4466019417475728
+        },
+        {
+          "text": "There is no fever.",
+          "start": 4.52,
+          "end": 5.68,
+          "avg_logprob": -0.17509442250779333,
+          "no_speech_prob": 0.003330145962536335,
+          "compression_ratio": 1.4466019417475728
+        },
+        {
+          "text": "There is no cough.",
+          "start": 5.68,
+          "end": 6.84,
+          "avg_logprob": -0.17509442250779333,
+          "no_speech_prob": 0.003330145962536335,
+          "compression_ratio": 1.4466019417475728
+        },
+        {
+          "text": "The patient is taking paracetamol.",
+          "start": 6.84,
+          "end": 8.84,
+          "avg_logprob": -0.17509442250779333,
+          "no_speech_prob": 0.003330145962536335,
+          "compression_ratio": 1.4466019417475728
+        }
+      ],
+      "error": null
+    },
+    {
+      "model": "medium",
+      "transcript": "",
+      "latency_seconds": 0.0013771669982816093,
+      "real_time_factor": 0.00015590165330030883,
+      "max_rss_delta": 32768,
+      "word_error_rate": null,
+      "clinical_fact_preservation": null,
+      "language": null,
+      "language_probability": null,
+      "segments": [],
+      "error": "LocalEntryNotFoundError: An error happened while trying to locate the files on the Hub and we cannot find the appropriate snapshot folder for the specified revision on the local disk. Please check your internet connection and try again."
+    },
+    {
+      "model": "large-v3",
+      "transcript": "",
+      "latency_seconds": 0.0003235830008634366,
+      "real_time_factor": 3.663108749877942e-05,
+      "max_rss_delta": 49152,
+      "word_error_rate": null,
+      "clinical_fact_preservation": null,
+      "language": null,
+      "language_probability": null,
+      "segments": [],
+      "error": "LocalEntryNotFoundError: An error happened while trying to locate the files on the Hub and we cannot find the appropriate snapshot folder for the specified revision on the local disk. Please check your internet connection and try again."
+    }
+  ]
+}

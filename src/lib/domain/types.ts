@@ -25,6 +25,7 @@ export type TranscriptSegmentInput = {
   text: string;
   timestamp: string;
   sequence_number: number;
+  language_code?: string | null;
 };
 
 export type TranscriptDraft = Omit<TranscriptSegmentInput, "id" | "sequence_number"> & {

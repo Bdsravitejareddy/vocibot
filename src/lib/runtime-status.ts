@@ -3,7 +3,7 @@ export type RuntimeMode = "demo" | "local" | "unknown";
 export type RuntimeStatus = {
   mode: RuntimeMode;
   backend?: { status: "connected" | "unavailable"; error?: string };
-  providers: Record<string, { status: string; error?: string }>;
+  providers: Record<string, { status: string; error?: string; engine?: string; model?: string }>;
 };
 
 export function runtimePresentation(status: Pick<RuntimeStatus, "mode" | "providers">) {

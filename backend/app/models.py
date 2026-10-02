@@ -43,7 +43,10 @@ class TranscriptSegment(Base):
     consultation_id: Mapped[str] = mapped_column(ForeignKey("consultations.id"), index=True)
     speaker: Mapped[str] = mapped_column(String(30))
     text: Mapped[str] = mapped_column(Text)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    language_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # Consultation-relative audio time, formatted as HH:MM:SS. This is deliberately
+    # not a wall-clock datetime so persisted transcripts cannot leak system time.
+    timestamp: Mapped[str] = mapped_column(String(12))
     sequence_number: Mapped[int] = mapped_column(Integer)
     consultation: Mapped[Consultation] = relationship(back_populates="transcript_segments")
 

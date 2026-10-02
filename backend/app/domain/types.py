@@ -52,6 +52,7 @@ class TranscriptSegmentInput(BaseModel):
     text: str
     timestamp: str
     sequence_number: int
+    language_code: str | None = None
 
 
 class CandidateClinicalUpdate(BaseModel):

@@ -18,11 +18,19 @@
     "ollama": "reachable (llama3.1:8b)"
   },
   "latency_ms": {
-    "vad_ms": 424.3,
-    "transcription_ms": 2228.98,
-    "extraction_ms": 2112.71
+    "vad_ms": 412.05,
+    "transcription_ms": 2322.36,
+    "extraction_ms": 4223.97
   },
-  "unsupported_facts": [],
+  "unsupported_facts": [
+    {
+      "field": "chief_complaint",
+      "value": null,
+      "source_segment_ids": [
+        "local-0"
+      ]
+    }
+  ],
   "omissions": [
     "The available audio fixture was not a full spoken consultation; transcription was too short to validate English clinical coverage"
   ],
@@ -42,7 +50,7 @@
   "mock_flow": {
     "mock_emr": {
       "updated": true,
-      "reference": "mock-emr-c8c0e049ea"
+      "reference": "mock-emr-db20fca756"
     },
     "doctor_edit": {
       "chief_complaint": "Doctor-reviewed smoke note",
@@ -81,7 +89,7 @@
   "persistence_flow": {
     "approved_status": "APPROVED",
     "reopened_status": "APPROVED",
-    "consultation_id": "3c641586-cf96-4c09-9e75-d214ca7b6fe5"
+    "consultation_id": "77d01ee3-a347-44b3-8744-905297a0864c"
   },
   "transcripts": [
     {

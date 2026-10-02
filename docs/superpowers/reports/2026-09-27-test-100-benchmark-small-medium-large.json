@@ -1,0 +1,185 @@
+{
+  "audio": "/private/tmp/vocibot-audio-debug/2e0b909e-9578-461b-8bfe-3dd6c5dc3382.wav",
+  "input_sample_rate": 48000,
+  "model_sample_rate": 16000,
+  "duration_seconds": 208.5546875,
+  "reference": "I have a cough and cold and I have had it for two weeks. I am also feeling nauseous and have a headache. I have medicines for asthma. My doctor also recommended Dolo 650 for fever last time.",
+  "configuration": {
+    "beam_size": 1,
+    "initial_prompt": "Clinical consultation: Dolo 650, cough, cold, nausea, nauseous, headache, asthma, fever.",
+    "vad_filter": true,
+    "condition_on_previous_text": false
+  },
+  "results": [
+    {
+      "model": "small",
+      "transcript": "Can you hear me? I am Ravi by the way. Listen, I have severe cough and cold and I've had it for two weeks. I'm also feeling nauseous and headache. I've used to have medicines for asthma before. I do think my doctor also recommended dolo 650 for fever last time.",
+      "latency_seconds": 3.7744533749937546,
+      "real_time_factor": 0.018098146918868723,
+      "max_rss_delta": 946782208,
+      "word_error_rate": 0.631578947368421,
+      "clinical_entity_recall": {
+        "cough": true,
+        "cold": true,
+        "two weeks": true,
+        "nausea": true,
+        "headache": true,
+        "asthma": true,
+        "Dolo 650": true
+      },
+      "language": "en",
+      "language_probability": 0.9861311912536621,
+      "segments": [
+        {
+          "text": "Can you hear me?",
+          "start": 25.14,
+          "end": 44.54,
+          "avg_logprob": -0.265278401474158,
+          "no_speech_prob": 0.45217257738113403,
+          "compression_ratio": 1.3496503496503496
+        },
+        {
+          "text": "I am Ravi by the way.",
+          "start": 44.54,
+          "end": 66.38,
+          "avg_logprob": -0.265278401474158,
+          "no_speech_prob": 0.45217257738113403,
+          "compression_ratio": 1.3496503496503496
+        },
+        {
+          "text": "Listen, I have severe cough and cold and I've had it for two weeks.",
+          "start": 66.38,
+          "end": 78.18,
+          "avg_logprob": -0.265278401474158,
+          "no_speech_prob": 0.45217257738113403,
+          "compression_ratio": 1.3496503496503496
+        },
+        {
+          "text": "I'm also feeling nauseous and headache.",
+          "start": 78.18,
+          "end": 84.46,
+          "avg_logprob": -0.265278401474158,
+          "no_speech_prob": 0.45217257738113403,
+          "compression_ratio": 1.3496503496503496
+        },
+        {
+          "text": "I've used to have medicines for asthma before.",
+          "start": 84.46,
+          "end": 136.27,
+          "avg_logprob": -0.265278401474158,
+          "no_speech_prob": 0.45217257738113403,
+          "compression_ratio": 1.3496503496503496
+        },
+        {
+          "text": "I do think my doctor also recommended dolo 650 for fever last time.",
+          "start": 136.27,
+          "end": 145.76,
+          "avg_logprob": -0.282606119910876,
+          "no_speech_prob": 0.018103035166859627,
+          "compression_ratio": 0.9436619718309859
+        }
+      ],
+      "error": null
+    },
+    {
+      "model": "medium",
+      "transcript": "Can you hear me? Hey, can you hear me? I am Ravi, by the way. Listen, I have severe cough and cold and I've had it for two weeks. I'm also feeling nauseous and headache. I've used to have medicines for asthma before. I do think my doctor also recommended Dolo 650 for fever last time.",
+      "latency_seconds": 9.810180792002939,
+      "real_time_factor": 0.047038888982070655,
+      "max_rss_delta": 1589100544,
+      "word_error_rate": 0.7631578947368421,
+      "clinical_entity_recall": {
+        "cough": true,
+        "cold": true,
+        "two weeks": true,
+        "nausea": true,
+        "headache": true,
+        "asthma": true,
+        "Dolo 650": true
+      },
+      "language": "en",
+      "language_probability": 0.9827417731285095,
+      "segments": [
+        {
+          "text": "Can you hear me? Hey, can you hear me? I am Ravi, by the way. Listen, I have severe",
+          "start": 25.14,
+          "end": 67.58,
+          "avg_logprob": -0.16533042306769385,
+          "no_speech_prob": 0.4538033604621887,
+          "compression_ratio": 1.4715909090909092
+        },
+        {
+          "text": "cough and cold and I've had it for two weeks. I'm also feeling nauseous and headache. I've",
+          "start": 67.58,
+          "end": 131.75,
+          "avg_logprob": -0.16533042306769385,
+          "no_speech_prob": 0.4538033604621887,
+          "compression_ratio": 1.4715909090909092
+        },
+        {
+          "text": "used to have medicines for asthma before. I do think my doctor also recommended Dolo",
+          "start": 131.75,
+          "end": 143.72,
+          "avg_logprob": -0.16533042306769385,
+          "no_speech_prob": 0.4538033604621887,
+          "compression_ratio": 1.4715909090909092
+        },
+        {
+          "text": "650 for fever last time.",
+          "start": 143.72,
+          "end": 145.72,
+          "avg_logprob": -0.32610336939493817,
+          "no_speech_prob": 0.575161874294281,
+          "compression_ratio": 0.75
+        }
+      ],
+      "error": null
+    },
+    {
+      "model": "large-v3",
+      "transcript": "Can you hear me? Hey, can you hear me? I am Ravi, by the way. Listen, I have severe cough and cold, and I've had it for two weeks. I'm also feeling nauseous and headache. I've used to have medicines for asthma before. I do think my doctor also recommended Dolo 650 for fever last time.",
+      "latency_seconds": 179.12941012499505,
+      "real_time_factor": 0.8589085782356009,
+      "max_rss_delta": 3819257856,
+      "word_error_rate": 0.7631578947368421,
+      "clinical_entity_recall": {
+        "cough": true,
+        "cold": true,
+        "two weeks": true,
+        "nausea": true,
+        "headache": true,
+        "asthma": true,
+        "Dolo 650": true
+      },
+      "language": "en",
+      "language_probability": 0.9923627376556396,
+      "segments": [
+        {
+          "text": "Can you hear me? Hey, can you hear me? I am Ravi, by the way. Listen, I have severe cough and cold, and I've had it for two weeks. I'm also feeling nauseous and headache.",
+          "start": 25.14,
+          "end": 84.46,
+          "avg_logprob": -0.21882229575923845,
+          "no_speech_prob": 0.04481201246380806,
+          "compression_ratio": 1.317829457364341
+        },
+        {
+          "text": "I've used to have medicines for asthma before.",
+          "start": 84.46,
+          "end": 136.11,
+          "avg_logprob": -0.25073651870091757,
+          "no_speech_prob": 0.02205808274447918,
+          "compression_ratio": 1.1287128712871286
+        },
+        {
+          "text": "I do think my doctor also recommended Dolo 650 for fever last time.",
+          "start": 140.22,
+          "end": 145.7,
+          "avg_logprob": -0.25073651870091757,
+          "no_speech_prob": 0.02205808274447918,
+          "compression_ratio": 1.1287128712871286
+        }
+      ],
+      "error": null
+    }
+  ]
+}
