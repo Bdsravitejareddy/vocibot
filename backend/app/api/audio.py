@@ -18,6 +18,7 @@ from ..providers.reconciliation import FinalReconciler
 from ..providers.speech import AudioChunk, TranscriptDraft
 from ..providers.streaming import TranscriptCommitter, select_live_commits
 from ..db import SessionLocal
+from ..languages import enabled_languages
 from ..services.consultations import replace_with_reconciled_transcript
 from ..services.live_cpu import LocalPipelineExecutor
 from ..services.recordings import SessionRecorder, compress_soon, recording_path
@@ -26,7 +27,16 @@ from ..providers.vad import SileroVoiceActivityDetector
 
 router = APIRouter(tags=["audio"])
 logger = logging.getLogger(__name__)
-SUPPORTED_LANGUAGE_CODES = {"auto", "en", "te", "hi", "mr", "gu"}
+def restrict_languages(stt, allowed: set[str]) -> None:
+    if stt is not None and hasattr(stt, "allowed_languages"):
+        stt.allowed_languages = set(allowed)
+
+
+def session_languages() -> set[str]:
+    """The languages enabled in Settings; auto-detect chooses only among these."""
+
+    with SessionLocal() as session:
+        return set(enabled_languages(session))
 
 
 def build_local_pipeline() -> LocalAudioPipeline:
@@ -63,8 +73,9 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
         encoding = str(metadata.get("encoding", "pcm_f32le"))
         mime_type = str(metadata.get("mime_type", "audio/raw"))
         language = str(metadata.get("language", "auto")).lower()
-        if language not in SUPPORTED_LANGUAGE_CODES:
-            await websocket.send_json({"type": "error", "category": "INITIALIZATION", "message": f"Unsupported language code: {language}"})
+        allowed = session_languages()
+        if language != "auto" and language not in allowed:
+            await websocket.send_json({"type": "error", "category": "INITIALIZATION", "message": f"Unsupported language code: {language}. Enable it in Settings first."})
             await websocket.close(code=1008)
             return
         if settings.ai_mode == "local" and settings.stt_provider == "indic_conformer" and language == "auto":
@@ -72,6 +83,7 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             await websocket.close(code=1008)
             return
         pipeline = build_local_pipeline()
+        restrict_languages(getattr(pipeline, "stt", None), allowed)
         warmup = getattr(pipeline, "warmup", None)
         if callable(warmup):
             await pipeline_executor.run(warmup)

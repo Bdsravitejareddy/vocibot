@@ -106,3 +106,11 @@ class RecordUpdate(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     update_type: Mapped[str] = mapped_column(String(40))
     consultation: Mapped[Consultation] = relationship(back_populates="updates")
+
+
+class AppSetting(Base):
+    """Small app-wide preferences (e.g. enabled languages), stored as JSON."""
+
+    __tablename__ = "app_settings"
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[dict | list | str | None] = mapped_column(JSON, nullable=True)
