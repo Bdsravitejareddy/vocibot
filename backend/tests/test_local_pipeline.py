@@ -116,3 +116,12 @@ def test_pipeline_keeps_a_segment_still_being_spoken_at_the_window_end() -> None
     result = pipeline.process(AudioChunk(audio=b"audio", sample_rate=16_000, timestamp_ms=0, waveform=np.ones(128_000, dtype=np.float32)))
 
     assert [(draft.text, draft.start_ms, draft.end_ms) for draft in result.transcripts] == [("if you ever feel overwhelmed", 7_000, 8_000)]
+
+
+def test_onnx_vad_ignores_background_noise_and_hears_speech() -> None:
+    from app.providers.vad import OnnxSileroVoiceActivityDetector
+
+    vad = OnnxSileroVoiceActivityDetector(threshold=0.5)
+    noise = np.random.default_rng(0).normal(0, 0.003, 64_000).astype(np.float32)
+    silence = vad.detect(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=0, waveform=noise))
+    assert silence.has_speech is False and silence.frame_count == 125

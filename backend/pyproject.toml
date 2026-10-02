@@ -17,7 +17,13 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8.3,<9"]
-local = ["numpy>=2.0,<3", "faster-whisper>=1.1,<2", "mlx-whisper>=0.4,<1; sys_platform == 'darwin' and platform_machine == 'arm64'", "silero-vad>=5.1,<6", "whisperx>=3.3,<4", "pyannote.audio>=3.3,<4"]
+# Speech models. Voice activity runs on ONNX (bundled with faster-whisper), so
+# PyTorch is not needed.
+local = ["numpy>=2.0,<3", "faster-whisper>=1.1,<2", "soundfile>=0.12", "mlx-whisper>=0.4,<1; sys_platform == 'darwin' and platform_machine == 'arm64'"]
+# Optional research add-ons that pull in PyTorch.
+diarization = ["silero-vad>=5.1,<6", "whisperx>=3.3,<4", "pyannote.audio>=3.3,<4"]
+# Enterprise server: HTTPS certificates.
+server = ["cryptography>=43"]
 indic-asr = ["nemo_toolkit[asr]"]
 desktop = ["pyinstaller>=6.10,<7"]
 

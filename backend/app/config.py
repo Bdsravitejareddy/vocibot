@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     # model concurrently: that is unsafe on the supported macOS runtime.
     asr_model_workers: int = 1
     silero_threshold: float = 0.5
+    # "onnx": faster-whisper's bundled Silero model on ONNX Runtime (no PyTorch,
+    # fewer false triggers on background noise); "torch": the silero-vad package.
+    vad_engine: str = "onnx"
     audio_sample_rate: int = 16_000
     audio_debug_dir: str = ""
     # Accounts and sign-in.
@@ -61,6 +64,11 @@ class Settings(BaseSettings):
     @property
     def allowed_origin_list(self) -> list[str]:
         return [origin.strip().rstrip("/") for origin in self.allowed_origins.split(",") if origin.strip()]
+    # Folder of the exported web app; when set, the server also serves the UI
+    # (same origin for cookies and the audio websocket).
+    web_root: str = ""
+    # Clinic server HTTPS: the local CA certificate devices install (/ca.crt).
+    ca_cert_path: str = ""
     # Consultation audio kept for compliance, retrieval and re-transcription.
     recordings_dir: str = "recordings"
     # Recordings are captured as WAV, converted losslessly to FLAC after the

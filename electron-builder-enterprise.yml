@@ -1,0 +1,29 @@
+# VociBot Enterprise - one computer (vocibotenterpriseonecomputersamecell).
+# Build after the server bundle exists in dist/enterprise/vocibot-server:
+#   npx electron-builder --config electron-builder-enterprise.yml --win nsis
+appId: health.vocibot.enterprise.onecomputer
+productName: VociBot Enterprise
+artifactName: vocibotenterpriseonecomputersamecell-${version}-${os}-${arch}.${ext}
+asar: true
+files:
+  - desktop/enterprise/**/*
+extraMetadata:
+  main: desktop/enterprise/main.cjs
+extraResources:
+  - from: dist/enterprise/vocibot-server
+    to: server/vocibot-server
+win:
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: VociBot Enterprise
+mac:
+  target:
+    - dir
+  category: public.app-category.medical
+directories:
+  output: dist/enterprise-app

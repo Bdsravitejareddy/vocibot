@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { AudioLines, ChevronLeft, RefreshCw, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AuditTrail } from "@/components/AuditTrail";
@@ -25,14 +25,19 @@ function formatDuration(milliseconds: number) {
 }
 
 export default function ConsultationDetailPage() {
-  const params = useParams<{ id: string }>();
+  // useSearchParams needs a Suspense boundary in statically exported pages.
+  return <Suspense fallback={<AppShell><div className="history-page"><div className="loading-state">Loading consultation…</div></div></AppShell>}><ConsultationDetail /></Suspense>;
+}
+
+function ConsultationDetail() {
+  const id = useSearchParams().get("id");
   const router = useRouter();
   const [consultation, setConsultation] = useState<ConsultationState | null>(null);
   const [record, setRecord] = useState<ClinicalRecord | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const show = useCallback((next: ConsultationState) => { setConsultation(next); setRecord(next.record); setNotice(next.processing?.status === "done" ? next.processing.warnings.join(" ") : ""); }, []);
-  useEffect(() => { if (params.id) getConsultation(params.id).then(show).catch((err) => setError(err instanceof Error ? err.message : "Unable to load consultation.")); }, [params.id, show]);
+  useEffect(() => { if (id) getConsultation(id).then(show).catch((err) => setError(err instanceof Error ? err.message : "Unable to load consultation.")); }, [id, show]);
   useProcessingPoll(consultation, show);
   if (error) return <AppShell><div className="history-page"><div className="warning-banner">{error}</div></div></AppShell>;
   if (!consultation || !record) return <AppShell><div className="history-page"><div className="loading-state">Loading consultation…</div></div></AppShell>;

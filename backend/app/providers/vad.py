@@ -100,3 +100,44 @@ class SileroVoiceActivityDetector:
             speech_frame_count=speech_frame_count,
             speech_duration_ms=speech_duration_ms,
         )
+
+
+class OnnxSileroVoiceActivityDetector(SileroVoiceActivityDetector):
+    """The Silero VAD shipped with faster-whisper, run through ONNX Runtime.
+
+    Same decisions as the PyTorch build without loading PyTorch: roughly
+    700 MB less to install and ~300 MB less memory, which matters on small
+    Windows machines.
+    """
+
+    def _load(self):
+        if self._model is None:
+            from faster_whisper.vad import get_vad_model  # type: ignore[import-not-found]
+
+            self._model = get_vad_model()
+        return self._model
+
+    def detect(self, chunk: AudioChunk) -> ActivityResult:
+        started = perf_counter()
+        model = self._load()
+        import numpy as np  # type: ignore[import-not-found]
+
+        if chunk.waveform is None:
+            from .audio import decode_audio_payload
+
+            waveform = decode_audio_payload(chunk.audio, encoding=chunk.encoding, sample_rate=chunk.sample_rate, channels=chunk.channels).waveform
+        else:
+            waveform = np.asarray(chunk.waveform, dtype=np.float32).reshape(-1)
+        frame_size = 512
+        padded = np.pad(waveform, (0, (-len(waveform)) % frame_size)) if len(waveform) else np.zeros(frame_size, dtype=np.float32)
+        probabilities = np.asarray(model(np.ascontiguousarray(padded, dtype=np.float32)), dtype=np.float32).reshape(-1)
+        confidence = float(probabilities.max(initial=0.0))
+        speech_frame_count = int((probabilities >= self.threshold).sum())
+        return ActivityResult(
+            probability=confidence,
+            has_speech=confidence >= self.threshold,
+            latency_ms=(perf_counter() - started) * 1000,
+            frame_count=int(probabilities.size),
+            speech_frame_count=speech_frame_count,
+            speech_duration_ms=speech_frame_count * frame_size / 16_000 * 1000,
+        )

@@ -21,7 +21,7 @@ from ..services.inference import ENGINE, LIVE
 from ..services.recordings import SessionRecorder, compress_soon, recording_path
 from ..models import Consultation, Recording
 from ..services.auth import resolve_session
-from ..providers.vad import SileroVoiceActivityDetector
+from ..providers.vad import OnnxSileroVoiceActivityDetector, SileroVoiceActivityDetector
 
 router = APIRouter(tags=["audio"])
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ SUPPORTED_LANGUAGE_CODES = {"auto", "en", "te", "hi", "mr", "gu"}
 
 def build_local_pipeline() -> LocalAudioPipeline:
     return LocalAudioPipeline(
-        SileroVoiceActivityDetector(threshold=settings.silero_threshold),
+        (OnnxSileroVoiceActivityDetector if settings.vad_engine == "onnx" else SileroVoiceActivityDetector)(threshold=settings.silero_threshold),
         build_speech_provider(settings),
         WhisperXAligner(model_name=settings.whisperx_model) if settings.whisperx_enabled else None,
         PyannoteDiarizationProvider(model_name=settings.pyannote_model) if settings.diarization_enabled else None,
@@ -45,11 +45,19 @@ def allowed_origins() -> list[str]:
     return settings.allowed_origin_list
 
 
+def _same_origin(origin: str, host: str | None) -> bool:
+    """The page was served by this server (packaged builds serve the UI themselves)."""
+
+    from urllib.parse import urlsplit
+
+    return bool(host) and urlsplit(origin).netloc.lower() == host.lower()
+
+
 def authorise_stream(websocket: WebSocket, consultation_id: str) -> bool:
     """Signed-in owner of an in-progress consultation, from an allowed origin."""
 
     origin = websocket.headers.get("origin")
-    if origin and origin not in allowed_origins():
+    if origin and origin.rstrip("/") not in allowed_origins() and not _same_origin(origin, websocket.headers.get("host")):
         return False
     with SessionLocal() as session:
         user = resolve_session(session, websocket.cookies.get(settings.session_cookie_name))

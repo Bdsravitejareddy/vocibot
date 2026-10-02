@@ -26,6 +26,33 @@ def startup() -> None:
     resume_unfinished()
 
 
+def mount_web_app() -> None:
+    """Serve the exported UI after every API route, when configured."""
+
+    from pathlib import Path
+
+    from fastapi.staticfiles import StaticFiles
+
+    root = Path(settings.web_root).expanduser() if settings.web_root else None
+    if root is not None and (root / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=str(root), html=True), name="web")
+
+
+@app.get("/ca.crt", include_in_schema=False)
+def ca_certificate():
+    """The clinic's local CA certificate, for doctors' devices to trust (public, no secrets)."""
+
+    from pathlib import Path
+
+    from fastapi import HTTPException
+    from fastapi.responses import FileResponse
+
+    path = Path(settings.ca_cert_path) if settings.ca_cert_path else None
+    if path is None or not path.is_file():
+        raise HTTPException(status_code=404, detail="This server does not use a local certificate authority.")
+    return FileResponse(path, media_type="application/x-x509-ca-cert", filename="vocibot-clinic-ca.crt")
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -34,3 +61,6 @@ def health() -> dict[str, str]:
 @app.get("/api/runtime-status")
 def runtime_status_route() -> dict:
     return runtime_status()
+
+
+mount_web_app()

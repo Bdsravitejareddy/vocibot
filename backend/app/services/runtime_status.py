@@ -34,7 +34,7 @@ def runtime_status(config: Settings = settings) -> dict[str, Any]:
         "pyannote": _provider("not_used"),
     }
     if config.ai_mode == "local":
-        for key, module in (("silero_vad", "silero_vad"),):
+        for key, module in (("silero_vad", "onnxruntime" if config.vad_engine == "onnx" else "silero_vad"),):
             status = _check_import(module)
             providers[key] = _provider("ready" if status == "ready" else "unavailable", None if status == "ready" else status)
         stt_provider = config.resolved_stt_provider
