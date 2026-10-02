@@ -8,6 +8,12 @@ export default defineConfig({
   testDir: "./tests/browser",
   workers: 1,
   use: { baseURL: webUrl, ...devices["Desktop Chrome"], trace: "retain-on-failure" },
+  // Every test runs signed in as the administrator created by auth.setup.ts,
+  // except specs that clear storageState to exercise sign-in itself.
+  projects: [
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    { name: "chromium", dependencies: ["setup"], use: { ...devices["Desktop Chrome"], storageState: "test-results/.auth/admin.json" } },
+  ],
   webServer: [
     {
       command: "../.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001",

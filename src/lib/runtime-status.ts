@@ -1,3 +1,4 @@
+import { API_URL } from "./api-base";
 export type RuntimeMode = "demo" | "local" | "unknown";
 
 export type RuntimeStatus = {
@@ -16,10 +17,9 @@ export function runtimePresentation(status: Pick<RuntimeStatus, "mode" | "provid
   return { modeLabel: "Runtime unavailable", providerLabel: "Backend unavailable", microphoneEnabled: false };
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 export async function getRuntimeStatus(): Promise<RuntimeStatus> {
-  const response = await fetch(`${API_URL}/api/runtime-status`, { cache: "no-store" });
+  const response = await fetch(`${API_URL}/api/runtime-status`, { cache: "no-store", credentials: "include" });
   if (!response.ok) throw new Error(`Runtime status unavailable (${response.status})`);
   return response.json() as Promise<RuntimeStatus>;
 }

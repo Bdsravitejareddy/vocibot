@@ -14,8 +14,8 @@ async function startConsultation(page: Page, patientId: string) {
 }
 
 async function stored(page: Page, patientId: string) {
-  const consultations = await (await page.request.get(`${apiUrl}/api/consultations`)).json() as Array<{ patient: { patient_identifier: string } }>;
-  return consultations.filter((item) => item.patient.patient_identifier === patientId).length;
+  const page_ = await (await page.request.get(`${apiUrl}/api/consultations?limit=200`)).json() as { items: Array<{ patient: { patient_identifier: string } }> };
+  return page_.items.filter((item) => item.patient.patient_identifier === patientId).length;
 }
 
 test.beforeEach(async ({ page }) => {

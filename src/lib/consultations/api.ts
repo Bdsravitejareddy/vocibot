@@ -1,4 +1,5 @@
 import type { ClinicalRecord, Speaker, TranscriptSegmentInput } from "../domain/types";
+import { API_URL, apiRequest as request } from "../api-base";
 
 export type Recording = { id: string; started_at: string; duration_ms: number; sample_rate: number; language_code: string | null; sha256: string | null; original_sha256: string | null; format: "wav" | "flac" | "opus"; size_bytes: number; file_name: string; available: boolean };
 
@@ -17,14 +18,6 @@ export type ConsultationState = {
   finalization_warnings?: string[];
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
-  if (!response.ok) throw new Error((await response.json().catch(() => null))?.detail ?? `Request failed: ${response.status}`);
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
-}
 
 export function createConsultation(input: { patient_id: string; patient_name?: string; age: number; sex: string }) {
   return request<ConsultationState>("/api/consultations", { method: "POST", body: JSON.stringify(input) });
@@ -62,8 +55,12 @@ export function recordingAudioUrl(consultationId: string, recordingId: string) {
   return `${API_URL}/api/consultations/${consultationId}/recordings/${recordingId}/audio`;
 }
 
-export function listConsultations() {
-  return request<ConsultationState[]>("/api/consultations");
+export type ConsultationSummary = Pick<ConsultationState, "id" | "session_code" | "status" | "started_at" | "ended_at" | "patient"> & { chief_complaint: string | null; has_audio: boolean };
+
+/** One page of the signed-in clinician's consultations, newest first. */
+export function listConsultations({ limit = 50, offset = 0, q = "" }: { limit?: number; offset?: number; q?: string } = {}) {
+  const query = new URLSearchParams({ limit: String(limit), offset: String(offset), ...(q ? { q } : {}) });
+  return request<{ total: number; limit: number; offset: number; items: ConsultationSummary[] }>(`/api/consultations?${query}`);
 }
 
 export function getConsultation(consultationId: string) {

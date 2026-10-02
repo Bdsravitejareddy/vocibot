@@ -1,5 +1,6 @@
 import type { Speaker, TranscriptDraft } from "../domain/types";
 import type { SpeechToTextProvider } from "./provider";
+import { API_URL } from "../api-base";
 
 type LocalTranscriptEvent = { type: "transcript"; id?: string; text: string; speaker?: string; timestamp?: string; sequence_number?: number; start_ms?: number; end_ms?: number; language_code?: string | null };
 
@@ -20,8 +21,9 @@ function formatRelative(milliseconds: number): string {
 }
 
 function websocketUrl(): string {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
-  return `${apiUrl.replace(/^http/, "ws")}/api/consultations`;
+  // Same-origin builds (empty API_URL) follow the page: wss:// under HTTPS.
+  const base = API_URL || window.location.origin;
+  return `${base.replace(/^http/, "ws")}/api/consultations`;
 }
 
 export class LocalWebSocketSpeechProvider implements SpeechToTextProvider {
