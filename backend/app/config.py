@@ -8,6 +8,15 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.1:8b"
     # A cold 8B model plus a long consultation can take well over 30 s locally.
     ollama_timeout_seconds: float = 120.0
+    # Upper bound for the per-consultation context (a 30-minute consultation
+    # needs ~10k tokens); the context is otherwise sized to each prompt.
+    ollama_max_context: int = 12288
+    # How long the note model stays loaded after a note.
+    ollama_keep_alive: str = "30m"
+    # GPU layers for the note model: -1 lets Ollama decide, 0 forces CPU.
+    ollama_num_gpu: int = -1
+    # CPU threads for the note model (0 = Ollama default).
+    ollama_num_thread: int = 0
     whisper_model: str = "small"
     whisper_device: str = "auto"
     whisper_compute_type: str = "int8"
@@ -18,7 +27,8 @@ class Settings(BaseSettings):
     asr_live_step_seconds: float = 0.35
     asr_live_holdback_seconds: float = 1.2
     asr_live_max_buffer_seconds: float = 8.0
-    asr_finalization_timeout_seconds: float = 60.0
+    # Includes the English translation of non-English consultations.
+    asr_finalization_timeout_seconds: float = 180.0
     # Each live worker owns its model.  Do not invoke one native CTranslate2
     # model concurrently: that is unsafe on the supported macOS runtime.
     asr_model_workers: int = 1
@@ -52,6 +62,13 @@ class Settings(BaseSettings):
     # otherwise faster-whisper on the CPU.
     stt_provider: str = "auto"
     mlx_whisper_model: str = "mlx-community/whisper-large-v3-turbo"
+    # Language identification and English translation need the full model:
+    # turbo identifies Telugu 0% of the time and was not trained to translate.
+    mlx_language_id_model: str = "mlx-community/whisper-large-v3-mlx"
+    mlx_translation_model: str = "mlx-community/whisper-large-v3-mlx"
+    # Non-English consultations get an English translation (from the audio)
+    # that the clinical note is written from.
+    translate_to_english: bool = True
     indic_conformer_model_path: str = ""
     diarization_provider: str = "demo"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

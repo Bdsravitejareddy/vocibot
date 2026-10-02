@@ -68,3 +68,9 @@ button, input, textarea, select { font: inherit; }
 .notice-banner { color: #2f5d1e; background: #f3fae6; border: 1px solid #cce0ad; padding: 10px 12px; border-radius: 7px; font-size: 12px; margin-bottom: 16px; }
 .history-search { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #dbe1d7; border-radius: 12px; background: var(--surface); color: var(--muted); }
 .history-search input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 13px; outline: none; color: var(--ink); }
+.view-toggle { display: inline-flex; border: 1px solid #d9e1d4; border-radius: 999px; overflow: hidden; }
+.view-toggle button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; padding: 6px 11px; cursor: pointer; }
+.view-toggle button[aria-pressed="true"] { background: var(--forest); color: #fff; }
+.translation-note { margin: 10px 21px 0; padding: 8px 10px; border-radius: 8px; background: #f4f8ef; color: #4a5a4b; font-size: 11px; }
+.field-label .translated { color: #3e5a8a; background: #e9eff9; margin-left: 4px; }
+.field-label { gap: 4px; }

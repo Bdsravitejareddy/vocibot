@@ -21,7 +21,13 @@ class EvidenceValidator:
         segments = [sources[segment_id] for segment_id in source_segment_ids if segment_id in sources]
         if not segments or not value:
             return CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=source_segment_ids, speaker=Speaker.UNKNOWN, status=EvidenceStatus.REJECTED)
-        if field_name in DOCTOR_ONLY_FIELDS and not _attributable_to_doctor(segments, claimed_speaker):
+        # Notes from an English translation: who said what is unreliable
+        # through translation ("Doctor, it seems viral" reads as the patient
+        # addressing the doctor), so doubtful attribution is flagged for review
+        # instead of discarding the doctor's assessment or plan.
+        translated = bool(transcript) and all("-en-" in segment.id for segment in transcript)
+        doubtful = field_name in DOCTOR_ONLY_FIELDS and not _attributable_to_doctor(segments, claimed_speaker)
+        if doubtful and not translated:
             return CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=source_segment_ids, speaker=Speaker.PATIENT, status=EvidenceStatus.REJECTED)
         # The chief complaint is the patient's problem, never the doctor's diagnosis.
         if field_name == "chief_complaint" and (claimed_speaker == Speaker.DOCTOR or all(segment.speaker == Speaker.DOCTOR for segment in segments)):
@@ -33,23 +39,53 @@ class EvidenceValidator:
         # ASR splits one spoken sentence across segments and extractors often
         # cite only part of it, so the joined evidence includes each cited
         # segment's immediate neighbours.
-        texts = [segment.text for segment in segments]
+        cited_texts = [segment.text for segment in segments]
         context = _with_neighbours(segments, transcript)
-        if len(context) > len(segments):
-            texts.append(" ".join(segment.text for segment in context))
+        texts = [*cited_texts, " ".join(segment.text for segment in context)] if len(context) > len(segments) else cited_texts
+
+        def provenance(item) -> list[str] | None:
+            """The segments that actually say ``item``: cited, cited plus
+            neighbours, or (wrong citation) found elsewhere; None if unsaid."""
+
+            if _is_semantically_supported(item, cited_texts):
+                return [segment.id for segment in segments]
+            if _is_semantically_supported(item, texts):
+                return _find_support(item, context) or [segment.id for segment in context]
+            return _find_support(item, transcript)
         if isinstance(value, list):
             # Judge list items one by one: one unsupported item (e.g. a symptom
             # the patient denied) must not discard the supported ones.
-            supported_items = [item for item in value if _is_semantically_supported(item, texts)]
+            supported_items, cited = [], []
+            for item in value:
+                if found := provenance(item):
+                    supported_items.append(item)
+                    cited += [segment_id for segment_id in found if segment_id not in cited]
             if not supported_items:
                 return CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=[segment.id for segment in segments], speaker=speaker, status=EvidenceStatus.REJECTED)
             value = supported_items
             normalized = str(value).lower()
-        elif not _is_semantically_supported(value, texts):
-            # Not grounded in what was said: never shown, so nothing is invented.
-            return CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=[segment.id for segment in segments], speaker=speaker, status=EvidenceStatus.REJECTED)
-        status = EvidenceStatus.NEEDS_REVIEW if any(marker in normalized for marker in ("maybe", "may be", "possibly", "possible", "uncertain", "could be")) else EvidenceStatus.SUPPORTED
-        return CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=[segment.id for segment in segments], speaker=speaker, status=status)
+        else:
+            # Extractors often cite the wrong lines: cite the lines that do say
+            # it. Not said anywhere: rejected, never shown.
+            cited = provenance(value)
+            if not cited:
+                return CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=[segment.id for segment in segments], speaker=speaker, status=EvidenceStatus.REJECTED)
+        hedged = any(marker in normalized for marker in ("maybe", "may be", "possibly", "possible", "uncertain", "could be"))
+        status = EvidenceStatus.NEEDS_REVIEW if hedged or doubtful else EvidenceStatus.SUPPORTED
+        return CandidateClinicalUpdate(field_name=field_name, value=value, source_segment_ids=cited, speaker=speaker, status=status)
+
+
+def _find_support(value: object, transcript: list[TranscriptSegmentInput]) -> list[str] | None:
+    """The first run of up to three consecutive segments that says ``value``."""
+
+    ordered = sorted(transcript, key=lambda segment: segment.sequence_number)
+    for size in (1, 2, 3):
+        for start in range(0, max(0, len(ordered) - size + 1)):
+            window = ordered[start:start + size]
+            texts = [segment.text for segment in window]
+            if _is_semantically_supported(value, texts):
+                return [segment.id for segment in window]
+    return None
 
 
 def _is_semantically_supported(value: object, texts: list[str]) -> bool:
@@ -103,7 +139,7 @@ def _single_value_supported(value: str, texts: list[str]) -> bool:
         required = len(content_tokens) if len(content_tokens) < NARRATIVE_MIN_TOKENS else math.ceil(NARRATIVE_COVERAGE * len(content_tokens))
         if matched < required:
             continue
-        negated = _contains_negation(text_tokens, content_tokens)
+        negated = any(_contains_negation(_tokens(clause), content_tokens) for clause in _clauses(text))
         # "No fever" needs a denial in the source; "fever" must not be denied
         # there unless the value itself carries the negation ("if not settling").
         if value_is_negative and not negated:
@@ -114,9 +150,14 @@ def _single_value_supported(value: str, texts: list[str]) -> bool:
     return False
 
 
+# English words as before, plus runs of any non-Latin script (Telugu, Hindi,
+# ...): their vowel signs are not regex word characters, so match by exclusion.
+WORD = re.compile(r"[a-z]+|[^\x00-\x7f\s.,!?;:\"“”‘’()\[\]{}।॥\-–—]+")
+
+
 def _tokens(value: str) -> list[str]:
     normalized = value.lower().replace("3", "three").replace("2", "two").replace("1", "one")
-    return re.findall(r"[a-z]+", normalized)
+    return WORD.findall(normalized)
 
 
 def _same_word(left: str, right: str) -> bool:
@@ -133,6 +174,15 @@ def _same_word(left: str, right: str) -> bool:
             break
         prefix += 1
     return prefix >= max(4, shorter - 3)
+
+
+# A negation only reaches the end of its clause: in "no chest pain, but I
+# feel very tired" the tiredness is reported, not denied.
+CLAUSE_BREAK = re.compile(r"[.,;:!?]|\b(?:but|however|although|though|yet|except|whereas)\b", re.IGNORECASE)
+
+
+def _clauses(text: str) -> list[str]:
+    return [clause for clause in CLAUSE_BREAK.split(text) if clause.strip()]
 
 
 def _contains_negation(tokens: list[str], content_tokens: list[str]) -> bool:

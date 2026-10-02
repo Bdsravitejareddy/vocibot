@@ -88,3 +88,17 @@ def test_ollama_numeric_vitals_are_kept_as_text(monkeypatch) -> None:
 
     assert result.proposed_record.vitals == {"temperature": "38.6", "pulse": "96"}
     assert result.candidates[0].value == {"temperature": "38.6", "pulse": "96"}
+
+
+def test_ollama_odd_candidate_shapes_do_not_sink_the_note(monkeypatch) -> None:
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"response": '{"candidates":[{"field_name":"chief_complaint","value":"Fever","source_segment_ids":[["s0"]],"speaker":["PATIENT","DOCTOR"],"status":"SUPPORTED"},{"field_name":"duration","value":"three days","source_segment_ids":"s0","speaker":"PATIENT","status":"SUPPORTED"}]}'}
+
+    monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", lambda *args, **kwargs: Response())
+    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.PATIENT, "I have had a fever for three days.")), ClinicalRecord())
+
+    assert [(c.field_name, c.source_segment_ids, c.speaker) for c in result.candidates] == [("chief_complaint", ["s1"], Speaker.PATIENT), ("duration", ["s1"], Speaker.PATIENT)]

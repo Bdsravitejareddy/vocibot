@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -248,8 +249,14 @@ class MlxWhisperProvider:
         max_compression_ratio: float = 2.4,
         initial_prompt: str | None = None,
         transcribe=None,
+        language_id_model: str | None = None,
+        translation_model: str | None = None,
     ) -> None:
         self.model = model
+        # The turbo model cannot identify Telugu (0/100 dataset clips) or
+        # translate; the full large-v3 model does both (Telugu 93-97%).
+        self.language_id_model = language_id_model or model
+        self.translation_model = translation_model
         self.no_speech_threshold = no_speech_threshold
         self.log_prob_threshold = log_prob_threshold
         self.compression_ratio_threshold = compression_ratio_threshold
@@ -271,13 +278,19 @@ class MlxWhisperProvider:
             os.environ.setdefault("HF_HUB_OFFLINE", "1")
             import mlx_whisper  # type: ignore[import-not-found]
 
+            _keep_every_mlx_model_loaded()
             self._transcribe = mlx_whisper.transcribe
         return self._transcribe
 
     def _detect_allowed(self, audio) -> str:
         if len(self.allowed_languages) == 1:
+            self.last_language_confidence = 1.0
             return next(iter(self.allowed_languages))
-        return choose_language(self.detect_language_probabilities(audio), self.allowed_languages) or next(iter(sorted(self.allowed_languages)))
+        probabilities = self.detect_language_probabilities(audio)
+        chosen = choose_language(probabilities, self.allowed_languages) or next(iter(sorted(self.allowed_languages)))
+        allowed_total = sum(probability for code, probability in probabilities.items() if code in self.allowed_languages) or 1.0
+        self.last_language_confidence = probabilities.get(chosen, 0.0) / allowed_total
+        return chosen
 
     def detect_language_probabilities(self, audio) -> dict[str, float]:
         """Whisper's language probabilities for the first 30 s (as transcribe does)."""
@@ -286,7 +299,8 @@ class MlxWhisperProvider:
         from mlx_whisper.audio import N_FRAMES, N_SAMPLES, log_mel_spectrogram, pad_or_trim  # type: ignore[import-not-found]
         from mlx_whisper.transcribe import ModelHolder  # type: ignore[import-not-found]
 
-        model = ModelHolder.get_model(self.model, mx.float16)
+        _keep_every_mlx_model_loaded()
+        model = ModelHolder.get_model(self.language_id_model, mx.float16)
         mel = log_mel_spectrogram(audio, n_mels=model.dims.n_mels, padding=N_SAMPLES)
         _, probabilities = model.detect_language(pad_or_trim(mel, N_FRAMES, axis=-2).astype(mx.float16))
         return dict(probabilities)
@@ -295,6 +309,66 @@ class MlxWhisperProvider:
         import numpy as np  # type: ignore[import-not-found]
 
         self._load()(np.zeros(16_000, dtype=np.float32), path_or_hf_repo=self.model, temperature=0.0, language="en", verbose=None)
+        if self.allowed_languages and len(self.allowed_languages) > 1 and self.language_id_model != self.model:
+            self.detect_language_probabilities(np.zeros(16_000, dtype=np.float32))
+
+    def translate_chunk(self, chunk: AudioChunk, language: str, *, _depth: int = 0) -> list[TranscriptDraft]:
+        """English translation of non-English speech, straight from the audio.
+
+        Whisper's translation can loop ("I have been suffering ..." twelve
+        times), invent text on noise, or skip most of a window. Repeated,
+        highly compressible, low-confidence and non-English lines are dropped,
+        and a piece whose translation covers too little of it is split at a
+        pause and translated in halves.
+        """
+
+        import numpy as np  # type: ignore[import-not-found]
+
+        if not self.translation_model:
+            return []
+        audio = np.asarray(chunk.waveform, dtype=np.float32)
+        result = self._load()(
+            audio,
+            path_or_hf_repo=self.translation_model,
+            task="translate",
+            language=language,
+            condition_on_previous_text=False,
+            no_speech_threshold=self.no_speech_threshold,
+            logprob_threshold=self.log_prob_threshold,
+            compression_ratio_threshold=self.compression_ratio_threshold,
+            verbose=None,
+        )
+        kept: list[TranscriptDraft] = []
+        recent: list[str] = []
+        covered = 0.0
+        for segment in result.get("segments", []):
+            text = str(segment.get("text", "")).strip()
+            key = " ".join(re.findall(r"[a-z0-9']+", text.lower()))
+            letters = [character for character in text if character.isalpha()]
+            if not key or key in recent or not letters or sum(character.isascii() for character in letters) / len(letters) < 0.8:
+                continue
+            log_prob = segment.get("avg_logprob", 0.0)
+            # Whisper's own silence rule: high no-speech *and* low confidence.
+            if segment.get("compression_ratio", 0.0) > self.max_compression_ratio or log_prob < self.min_avg_logprob or (segment.get("no_speech_prob", 0.0) > self.max_no_speech_probability and log_prob < self.log_prob_threshold):
+                continue
+            start_ms = chunk.timestamp_ms + int(float(segment["start"]) * 1000)
+            end_ms = chunk.timestamp_ms + int(float(segment["end"]) * 1000)
+            covered += max(0.0, float(segment["end"]) - float(segment["start"]))
+            kept.append(TranscriptDraft(text=text, timestamp=format_relative_timestamp(start_ms), start_ms=start_ms, end_ms=end_ms, language_code="en"))
+            recent = (recent + [key])[-3:]
+        seconds = len(audio) / chunk.sample_rate
+        if _depth < 2 and seconds > 10 and covered < 0.4 * seconds:
+            from .reconciliation import split_at_pauses
+
+            halves = split_at_pauses(audio, chunk.sample_rate, seconds / 2 * 0.8)
+            if len(halves) > 1:
+                retried: list[TranscriptDraft] = []
+                for begin, finish in halves:
+                    part = AudioChunk(audio=b"", sample_rate=chunk.sample_rate, timestamp_ms=chunk.timestamp_ms + int(begin / chunk.sample_rate * 1000), waveform=np.ascontiguousarray(audio[begin:finish]))
+                    retried += self.translate_chunk(part, language, _depth=_depth + 1)
+                if sum((draft.end_ms or 0) - (draft.start_ms or 0) for draft in retried) > covered * 1000:
+                    return retried
+        return kept
 
     def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
         import numpy as np  # type: ignore[import-not-found]
@@ -314,8 +388,9 @@ class MlxWhisperProvider:
             "compression_ratio_threshold": self.compression_ratio_threshold,
             "verbose": None,
         }
-        if chunk.live:
-            options["temperature"] = 0.0
+        # Live: greedy only. Final: one retry at a higher temperature; more
+        # retries cost ~25% more time without recovering more words.
+        options["temperature"] = 0.0 if chunk.live else (0.0, 0.4)
         if language and language != "auto":
             options["language"] = language
         elif self.allowed_languages:
@@ -377,6 +452,33 @@ class LanguageMemory:
         if chunk.live:
             self.language, self.detected_at_ms = language, chunk.timestamp_ms
         return language
+
+
+def _keep_every_mlx_model_loaded() -> None:
+    """mlx-whisper caches a single model; keep each one used (turbo for speech,
+    large-v3 for language identification and translation) instead of
+    reloading on every switch."""
+
+    import importlib
+
+    # mlx_whisper re-exports a *function* named transcribe, which shadows the
+    # module of the same name for "import ... as"; load the module itself.
+    mlx_transcribe = importlib.import_module("mlx_whisper.transcribe")
+
+    if getattr(mlx_transcribe.ModelHolder, "_vocibot_cache", None) is not None:
+        return
+    from mlx_whisper.load_models import load_model  # type: ignore[import-not-found]
+
+    cache: dict = {}
+
+    def get_model(cls, model_path, dtype):
+        key = (model_path, dtype)
+        if key not in cache:
+            cache[key] = load_model(model_path, dtype=dtype)
+        return cache[key]
+
+    mlx_transcribe.ModelHolder._vocibot_cache = cache
+    mlx_transcribe.ModelHolder.get_model = classmethod(get_model)
 
 
 def choose_language(probabilities: dict[str, float], allowed: set[str] | None) -> str | None:

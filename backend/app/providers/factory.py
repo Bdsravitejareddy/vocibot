@@ -18,6 +18,8 @@ def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvide
     if selected.resolved_stt_provider == "mlx_whisper":
         return MlxWhisperProvider(
             model=selected.mlx_whisper_model,
+            language_id_model=selected.mlx_language_id_model,
+            translation_model=selected.mlx_translation_model if selected.translate_to_english else None,
             no_speech_threshold=selected.asr_no_speech_threshold,
             log_prob_threshold=selected.asr_log_prob_threshold,
             compression_ratio_threshold=selected.asr_compression_ratio_threshold,
