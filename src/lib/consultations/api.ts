@@ -45,6 +45,11 @@ export function approveConsultation(consultationId: string, record: ClinicalReco
   return request<ConsultationState>(`/api/consultations/${consultationId}/approve`, { method: "POST", body: JSON.stringify({ record }) });
 }
 
+/** Save the doctor's edits so far; the note stays unapproved, waiting in History. */
+export function reviewLater(consultationId: string, record: ClinicalRecord) {
+  return request<ConsultationState>(`/api/consultations/${consultationId}/review-later`, { method: "POST", body: JSON.stringify({ record }) });
+}
+
 /** Permanently delete a consultation with its transcript, record and audit trail. */
 export function discardConsultation(consultationId: string) {
   return request<void>(`/api/consultations/${consultationId}`, { method: "DELETE" });

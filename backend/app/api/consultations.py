@@ -14,7 +14,7 @@ from ..providers.factory import build_speech_provider
 from ..providers.reconciliation import FinalReconciler
 from ..services.recordings import AUDIO_MEDIA_TYPES
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
-from ..services.consultations import ConsultationStateError, approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, reanalyse_consultation, retranscribe_consultation, stop_consultation
+from ..services.consultations import ConsultationStateError, approve_consultation, append_segment, create_consultation, delete_consultation, extract_reconciled_clinical_record, get_consultation, reanalyse_consultation, retranscribe_consultation, save_for_later_review, stop_consultation
 from ..services.approved_note_export import build_approved_note_payload
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
@@ -115,6 +115,15 @@ def recording_audio(consultation_id: str, recording_id: str, session: Session = 
 def approve(consultation_id: str, payload: ApproveRequest, session: Session = Depends(get_session)) -> dict:
     try:
         approve_consultation(session, consultation_id, payload)
+        return get_consultation(session, consultation_id)
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@router.post("/{consultation_id}/review-later")
+def review_later(consultation_id: str, payload: ApproveRequest, session: Session = Depends(get_session)) -> dict:
+    try:
+        save_for_later_review(session, consultation_id, payload)
         return get_consultation(session, consultation_id)
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
