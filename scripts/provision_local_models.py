@@ -40,19 +40,7 @@ def main() -> int:
         return 0
 
     if args.engine == "indic_conformer":
-        try:
-            from huggingface_hub import snapshot_download
-        except ImportError as error:
-            raise SystemExit("Install backend[indic-asr] or huggingface_hub before provisioning") from error
-        local_path = Path(snapshot_download(repo_id=args.model)).resolve()
-        checkpoints = sorted(local_path.rglob("*.nemo"))
-        if not checkpoints:
-            raise SystemExit(f"Repository contains no NeMo .nemo checkpoint: {local_path}")
-        checkpoint = checkpoints[0]
-        print(f"Set INDIC_CONFORMER_MODEL_PATH={checkpoint} for offline inference")
-        if args.language:
-            print(f"Select language code {args.language} in VociBot")
-        return 0
+        raise SystemExit("IndicConformer models are exported once with scripts/export_indicconformer.py (see its instructions).")
     return 2
 
 

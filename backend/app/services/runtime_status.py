@@ -55,21 +55,18 @@ def runtime_status(config: Settings = settings) -> dict[str, Any]:
             error = status if status != "ready" else None if cached else "Whisper model is not provisioned locally; run scripts/provision_local_models.py before offline use"
             providers["faster_whisper"] = _provider(readiness, error)
             providers["speech_to_text"] = {"status": readiness, "engine": "whisper", "model": config.whisper_model, **({"error": error} if error else {})}
-        elif stt_provider == "indic_conformer":
-            dependency_status = _check_import("nemo.collections.asr")
-            model_available = bool(config.indic_conformer_model_path and Path(config.indic_conformer_model_path).is_file())
-            error = None if dependency_status == "ready" else dependency_status
-            if not model_available:
-                error = "IndicConformer checkpoint is missing; provision a local model and set INDIC_CONFORMER_MODEL_PATH"
-            ready = dependency_status == "ready" and model_available
-            readiness = "configured" if ready else "missing_dependency" if dependency_status != "ready" else "missing_model"
-            if ready:
-                error = "Checkpoint and dependency are configured; model load and inference have not been verified."
-            providers["indic_conformer"] = _provider(readiness, error)
-            providers["speech_to_text"] = {"status": readiness, "engine": "indic_conformer", "model": "configured local checkpoint" if model_available else "missing", **({"error": error} if error else {})}
         else:
-            error = f"Unsupported STT_PROVIDER={config.stt_provider!r}; expected auto, mlx_whisper, whisper or indic_conformer"
+            error = f"Unsupported STT_PROVIDER={config.stt_provider!r}; expected auto, mlx_whisper or whisper"
             providers["speech_to_text"] = {"status": "unavailable", "engine": config.stt_provider, "model": "", "error": error}
+        if config.indic_asr_models_dir:
+            from ..providers.indic_conformer import IndicConformerProvider
+
+            indic = IndicConformerProvider(config.indic_asr_models_dir)
+            dependency = _check_import("onnxruntime")
+            ready = dependency == "ready" and indic.available()
+            providers["indic_conformer"] = {"status": "ready" if ready else "missing_dependency" if dependency != "ready" else "missing_model", "languages": sorted(indic.languages), **({} if ready else {"error": dependency if dependency != "ready" else "IndicConformer models are not installed; run scripts/export_indicconformer.py"})}
+        else:
+            providers["indic_conformer"] = _provider("disabled", "Indian-language transcripts use Whisper; install IndicConformer models for better Telugu and Hindi")
         if config.whisperx_enabled:
             status = _check_import("whisperx")
             providers["whisperx"] = _provider("ready" if status == "ready" else "unavailable", None if status == "ready" else status)

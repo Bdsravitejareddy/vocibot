@@ -3,7 +3,7 @@ import importlib.util
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 backend_dir = Path(SPECPATH)
-hidden = ["app.main", "app.providers.indic_conformer"] + collect_submodules("faster_whisper") + collect_submodules("silero_vad")
+hidden = ["app.main", "app.providers.indic_conformer", "app.providers.indic_features"] + collect_submodules("onnxruntime") + collect_submodules("faster_whisper") + collect_submodules("silero_vad")
 datas = collect_data_files("silero_vad") + collect_data_files("faster_whisper")
 binaries = []
 if importlib.util.find_spec("mlx_whisper") is not None:

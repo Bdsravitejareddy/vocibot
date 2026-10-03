@@ -20,13 +20,15 @@ def test_local_runtime_status_reports_provider_health_without_fallback(monkeypat
     assert "demo" not in str(result).lower()
 
 
-def test_local_runtime_status_reports_selected_indic_engine_without_exposing_model_path(monkeypatch, tmp_path) -> None:
-    checkpoint = tmp_path / "indic-multi.nemo"
-    checkpoint.write_bytes(b"checkpoint")
+def test_local_runtime_status_reports_installed_indic_languages_without_exposing_the_folder(monkeypatch, tmp_path) -> None:
+    for code in ("te", "hi"):
+        (tmp_path / code).mkdir()
+        (tmp_path / code / "model.onnx").write_bytes(b"onnx")
+        (tmp_path / code / "vocab.json").write_text("{}")
+    (tmp_path / "features.npz").write_bytes(b"npz")
     monkeypatch.setattr("app.services.runtime_status._check_import", lambda module: "ready")
 
-    result = runtime_status(Settings(ai_mode="local", stt_provider="indic_conformer", indic_conformer_model_path=str(checkpoint)))
+    result = runtime_status(Settings(ai_mode="local", indic_asr_models_dir=str(tmp_path)))
 
-    assert result["providers"]["speech_to_text"]["engine"] == "indic_conformer"
-    assert result["providers"]["speech_to_text"]["status"] == "configured"
-    assert str(checkpoint) not in str(result)
+    assert result["providers"]["indic_conformer"] == {"status": "ready", "languages": ["hi", "te"]}
+    assert str(tmp_path) not in str(result)

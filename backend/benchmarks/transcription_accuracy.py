@@ -241,6 +241,7 @@ def main() -> None:
     parser.add_argument("--primary")
     parser.add_argument("--skip-final", action="store_true")
     parser.add_argument("--skip-note", action="store_true")
+    parser.add_argument("--skip-live", action="store_true")
     parser.add_argument("--only")
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
@@ -252,8 +253,8 @@ def main() -> None:
         audio = load_audio(VOICES / item["audio"])
         reference = reference_text(item)
         row = {"id": item["id"], "language": item["language"], "audio_s": round(len(audio) / 16_000, 1), "primary": args.primary}
-        live = run_live(pipeline, audio)
-        row["live"] = {**{k: v for k, v in live.items() if k not in ("text", "languages")}, **accuracy(reference, live["text"]), "wrong_script_share": wrong_script_share(live["text"], item["language"])}
+        live = run_live(pipeline, audio) if not args.skip_live else {"text": "", "languages": []}
+        row["live"] = {} if args.skip_live else {**{k: v for k, v in live.items() if k not in ("text", "languages")}, **accuracy(reference, live["text"]), "wrong_script_share": wrong_script_share(live["text"], item["language"])}
         if not args.skip_final:
             final = run_final(pipeline, audio)
             row["final"] = {"seconds": final["seconds"], **accuracy(reference, final["text"]), "wrong_script_share": wrong_script_share(final["text"], item["language"]), "languages": sorted(set(filter(None, final["languages"])))}

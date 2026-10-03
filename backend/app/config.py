@@ -69,7 +69,9 @@ class Settings(BaseSettings):
     # Non-English consultations get an English translation (from the audio)
     # that the clinical note is written from.
     translate_to_english: bool = True
-    indic_conformer_model_path: str = ""
+    # Folder of exported IndicConformer models (<lang>/model.onnx, vocab.json,
+    # features.npz): used for the final transcript of those languages.
+    indic_asr_models_dir: str = ""
     diarization_provider: str = "demo"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
