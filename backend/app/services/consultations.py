@@ -15,6 +15,7 @@ from ..providers.speech import TranscriptDraft
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
 from .evidence import EvidenceValidator
 from .native_terms import add_terms_lost_in_translation
+from .speaker_roles import SpeakerRoleLabeler
 from ..providers.ollama_extraction import mentions_health
 from .record_diff import diff_clinical_record
 
@@ -225,9 +226,72 @@ def _note_source(session: Session, consultation: Consultation) -> list[Transcrip
 
     translated = session.scalars(select(TranslationSegment).where(TranslationSegment.consultation_id == consultation.id).order_by(TranslationSegment.sequence_number)).all()
     if translated:
-        return [TranscriptSegmentInput(id=item.id, speaker=Speaker.UNKNOWN, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code="en") for item in translated]
+        return [TranscriptSegmentInput(id=item.id, speaker=item.speaker or Speaker.UNKNOWN, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code="en") for item in translated]
     rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
     return [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in rows]
+
+
+def _seconds(timestamp: str) -> float | None:
+    parts = timestamp.split(":") if _RELATIVE_TIMESTAMP.match(timestamp or "") else None
+    if not parts:
+        return None
+    total = 0.0
+    for part in parts:
+        total = total * 60 + float(part)
+    return total
+
+
+def _recognise_speakers(session: Session, consultation: Consultation) -> bool:
+    """Label each line DOCTOR or PATIENT from its content, before the note.
+
+    The English lines (the translation, for Telugu or Hindi) are labelled;
+    each original-language line takes the label of the English line it
+    falls under in time.  Recognition failing leaves the lines unlabelled.
+    """
+
+    if not settings.speaker_roles_enabled or settings.ai_mode != "local":
+        return False
+    translated = session.scalars(select(TranslationSegment).where(TranslationSegment.consultation_id == consultation.id).order_by(TranslationSegment.sequence_number)).all()
+    rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
+    source = translated or rows
+    if not source:
+        return False
+    labels = SpeakerRoleLabeler().label([item.text for item in source])
+    for item, label in zip(source, labels):
+        item.speaker = label
+    if translated:
+        starts = [(_seconds(item.timestamp), item.speaker) for item in translated]
+        for row in rows:
+            at = _seconds(row.timestamp)
+            if at is None:
+                continue
+            # The English line this one falls under (lines can start slightly early).
+            earlier = [speaker for start, speaker in starts if start is not None and start <= at + 0.5]
+            row.speaker = earlier[-1] if earlier else starts[0][1]
+    session.flush()
+    return any(label != Speaker.UNKNOWN.value for label in labels)
+
+
+DOCTOR_FIELDS = {"assessment", "plan", "follow_up", "examination_findings", "vitals"}
+
+
+def _for_extraction(transcript_inputs: list[TranscriptSegmentInput], recognised: bool) -> list[TranscriptSegmentInput]:
+    """Recognised roles are not shown to the note model or the evidence check:
+    measured, they lowered English notes (60 -> 57 of 70 facts) and did not
+    help Telugu. They are used afterwards, in _check_who_said_it."""
+
+    return [item.model_copy(update={"speaker": Speaker.UNKNOWN}) for item in transcript_inputs] if recognised else transcript_inputs
+
+
+def _check_who_said_it(transcript_inputs: list[TranscriptSegmentInput], evidence: dict[str, list[str]], needs_review: set[str]) -> None:
+    """A doctor's field (assessment, plan, ...) cited only to lines recognised
+    as the patient's is flagged for review rather than accepted."""
+
+    speakers = {item.id: str(getattr(item.speaker, "value", item.speaker)) for item in transcript_inputs}
+    for field_name, cited in evidence.items():
+        said = {speakers.get(segment_id) for segment_id in cited}
+        if field_name in DOCTOR_FIELDS and said == {Speaker.PATIENT.value}:
+            needs_review.add(field_name)
 
 
 def _with_original_language_terms(session: Session, consultation: Consultation, transcript_inputs: list[TranscriptSegmentInput], record: ClinicalRecord, evidence: dict[str, list[str]], needs_review: set[str]) -> ClinicalRecord:
@@ -253,6 +317,7 @@ def extract_reconciled_clinical_record(
     """Extract a note from the already-committed authoritative transcript."""
 
     consultation = _find_consultation(session, consultation_id)
+    recognised = _recognise_speakers(session, consultation)
     transcript_inputs = _note_source(session, consultation)
     authoritative = (f"{consultation.id}-final-", f"{consultation.id}-en-")
     if require_authoritative and (not transcript_inputs or any(not item.id.startswith(authoritative) for item in transcript_inputs)):
@@ -260,10 +325,12 @@ def extract_reconciled_clinical_record(
             warnings.append("Clinical note inference was skipped because no authoritative final transcript was available.")
         return get_consultation(session, consultation_id)
     current = ClinicalRecord()
-    result = _extract_or_leave_reviewable(transcript_inputs, current, warnings)
-    validated_record, evidence, needs_review = _apply_validated_candidates(result, current, transcript_inputs)
+    note_inputs = _for_extraction(transcript_inputs, recognised)
+    result = _extract_or_leave_reviewable(note_inputs, current, warnings)
+    validated_record, evidence, needs_review = _apply_validated_candidates(result, current, note_inputs)
     if result is not None:
         validated_record = _with_original_language_terms(session, consultation, transcript_inputs, validated_record, evidence, needs_review)
+        _check_who_said_it(transcript_inputs, evidence, needs_review)
     changes = diff_clinical_record(current, validated_record, evidence, set())
     for change in changes:
         session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=_ai_update_type(change.field_name, needs_review)))
@@ -285,15 +352,18 @@ def reanalyse_consultation(session: Session, consultation_id: str, *, warnings: 
     consultation = _find_consultation(session, consultation_id)
     if consultation.status == ConsultationStatus.IN_PROGRESS.value:
         raise ConsultationStateError("stop the consultation before re-analysing its note")
+    recognised = _recognise_speakers(session, consultation)
     transcript_inputs = _note_source(session, consultation)
     if not transcript_inputs:
         raise ConsultationStateError("this consultation has no transcript to analyse")
-    result = _extract_or_leave_reviewable(transcript_inputs, ClinicalRecord(), warnings)
+    note_inputs = _for_extraction(transcript_inputs, recognised)
+    result = _extract_or_leave_reviewable(note_inputs, ClinicalRecord(), warnings)
     if result is None:
         # Extraction failed: leave the existing note exactly as it was.
         return get_consultation(session, consultation_id)
-    analysed, evidence, needs_review = _apply_validated_candidates(result, ClinicalRecord(), transcript_inputs)
+    analysed, evidence, needs_review = _apply_validated_candidates(result, ClinicalRecord(), note_inputs)
     analysed = _with_original_language_terms(session, consultation, transcript_inputs, analysed, evidence, needs_review)
+    _check_who_said_it(transcript_inputs, evidence, needs_review)
     current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
     doctor_edited_fields = {update.field_name for update in consultation.updates if update.update_type == RecordUpdateType.DOCTOR_EDITED.value}
     refreshed = analysed.model_dump()
@@ -448,7 +518,7 @@ def get_consultation(session: Session, consultation_id: str) -> dict:
         "started_at": consultation.started_at.isoformat(),
         "ended_at": consultation.ended_at.isoformat() if consultation.ended_at else None,
         "patient": {"id": consultation.patient.id, "patient_identifier": consultation.patient.patient_identifier, "name": consultation.patient.name, "age": consultation.patient.age, "sex": consultation.patient.sex},
-        "translation": [{"id": item.id, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number} for item in consultation.translation_segments],
+        "translation": [{"id": item.id, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number, "speaker": item.speaker or "UNKNOWN"} for item in consultation.translation_segments],
         "recordings": [{"id": item.id, "started_at": item.started_at.isoformat(), "duration_ms": item.duration_ms, "sample_rate": item.sample_rate, "language_code": item.language_code, "sha256": item.sha256, "original_sha256": item.original_sha256, "format": item.format, "size_bytes": item.size_bytes, "file_name": Path(item.file_path).name, "available": Path(item.file_path).is_file()} for item in consultation.recordings],
         "transcript": [{"id": item.id, "speaker": item.speaker, "text": item.text, "timestamp": item.timestamp, "sequence_number": item.sequence_number, "language_code": item.language_code} for item in transcript_rows],
         "record": record,
