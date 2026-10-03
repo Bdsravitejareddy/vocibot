@@ -74,3 +74,6 @@ button, input, textarea, select { font: inherit; }
 .translation-note { margin: 10px 21px 0; padding: 8px 10px; border-radius: 8px; background: #f4f8ef; color: #4a5a4b; font-size: 11px; }
 .field-label .translated { color: #3e5a8a; background: #e9eff9; margin-left: 4px; }
 .field-label { gap: 4px; }
+.review-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.review-queue-link { color: var(--forest); background: var(--lime-soft); border-radius: 999px; padding: 8px 12px; font-size: 11px; font-weight: 750; text-decoration: none; }
+.review-queue-link:hover { text-decoration: underline; }

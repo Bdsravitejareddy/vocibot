@@ -382,16 +382,35 @@ def delete_consultation(session: Session, consultation_id: str) -> None:
         path.unlink(missing_ok=True)
 
 
+def _save_doctor_edits(session: Session, consultation: Consultation, record: ClinicalRecord) -> bool:
+    current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
+    doctor_changes = diff_clinical_record(current, record, {field: [] for field in record.model_dump()}, set())
+    for change in doctor_changes:
+        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=[], update_type=RecordUpdateType.DOCTOR_EDITED.value))
+    if doctor_changes:
+        consultation.clinical_record.structured_data_json = record.model_dump()
+        consultation.clinical_record.version += 1
+    return bool(doctor_changes)
+
+
+def save_for_later_review(session: Session, consultation_id: str, payload: ApproveRequest) -> Consultation:
+    """Keep the doctor's edits so far; the note stays unapproved in History."""
+
+    consultation = _find_consultation(session, consultation_id)
+    if consultation.status != ConsultationStatus.READY_FOR_REVIEW.value:
+        raise ValueError("only a note awaiting review can be saved for later")
+    _save_doctor_edits(session, consultation, payload.record)
+    session.commit()
+    session.refresh(consultation)
+    return consultation
+
+
 def approve_consultation(session: Session, consultation_id: str, payload: ApproveRequest) -> Consultation:
     consultation = _find_consultation(session, consultation_id)
     if consultation.status != ConsultationStatus.READY_FOR_REVIEW.value:
         raise ValueError("consultation must be ready for review before approval")
-    current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
-    doctor_changes = diff_clinical_record(current, payload.record, {field: [] for field in payload.record.model_dump()}, set())
-    for change in doctor_changes:
-        session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=[], update_type=RecordUpdateType.DOCTOR_EDITED.value))
-    consultation.clinical_record.structured_data_json = payload.record.model_dump()
-    consultation.clinical_record.version += 1
+    if not _save_doctor_edits(session, consultation, payload.record):
+        consultation.clinical_record.version += 1
     session.add(RecordUpdate(consultation_id=consultation.id, field_name="__approval__", previous_value=ConsultationStatus.READY_FOR_REVIEW.value, new_value=ConsultationStatus.APPROVED.value, source_transcript_segment_ids=[], update_type=RecordUpdateType.DOCTOR_APPROVED.value))
     consultation.status = ConsultationStatus.APPROVED.value
     session.commit()

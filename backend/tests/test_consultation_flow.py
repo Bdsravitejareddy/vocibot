@@ -370,3 +370,26 @@ def test_reanalysis_is_refused_while_recording() -> None:
 
     with pytest.raises(ConsultationStateError):
         reanalyse_consultation(session, consultation.id, warnings=[])
+
+
+def test_review_later_keeps_the_doctors_edits_without_approving() -> None:
+    from app.services.consultations import save_for_later_review
+
+    session = make_session()
+    consultation = create_consultation(session, ConsultationCreate(patient_id="LATER-001", age=40, sex="Female"))
+    append_segment(session, consultation.id, SegmentCreate(id="s1", speaker=Speaker.PATIENT, text="I have a headache.", timestamp="00:00:01", sequence_number=0))
+    try:
+        save_for_later_review(session, consultation.id, ApproveRequest(record=ClinicalRecord(chief_complaint="Headache")))
+        raise AssertionError("a consultation still recording cannot be saved for review")
+    except ValueError:
+        pass
+    stop_consultation(session, consultation.id)
+    saved = save_for_later_review(session, consultation.id, ApproveRequest(record=ClinicalRecord(chief_complaint="Headache", duration="10 days")))
+    assert saved.status == "READY_FOR_REVIEW"
+    loaded = get_consultation(session, consultation.id)
+    assert loaded["record"]["duration"] == "10 days"
+    assert any(update["update_type"] == "DOCTOR_EDITED" and update["field_name"] == "duration" for update in loaded["updates"])
+    assert not any(update["update_type"] == "DOCTOR_APPROVED" for update in loaded["updates"])
+    # Later: approval still works and keeps the saved edits.
+    final = approve_consultation(session, consultation.id, ApproveRequest(record=ClinicalRecord(chief_complaint="Headache", duration="10 days")))
+    assert final.status == "APPROVED" and get_consultation(session, consultation.id)["record"]["duration"] == "10 days"
