@@ -32,3 +32,12 @@ def test_local_runtime_status_reports_installed_indic_languages_without_exposing
 
     assert result["providers"]["indic_conformer"] == {"status": "ready", "languages": ["hi", "te"]}
     assert str(tmp_path) not in str(result)
+
+
+def test_runtime_status_reports_text_translation_languages(monkeypatch, tmp_path) -> None:
+    (tmp_path / "vocab").mkdir()
+    (tmp_path / "vocab" / "model.SRC").write_bytes(b"spm")
+    (tmp_path / "model.bin").write_bytes(b"ct2")
+    monkeypatch.setattr("app.services.runtime_status._check_import", lambda module: "ready")
+    result = runtime_status(Settings(ai_mode="local", indic_translation_model_dir=str(tmp_path), indic_text_translation_languages="hi"))
+    assert result["providers"]["indic_translation"] == {"status": "ready", "languages": ["hi"]}

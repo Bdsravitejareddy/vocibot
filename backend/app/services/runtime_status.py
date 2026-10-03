@@ -67,6 +67,12 @@ def runtime_status(config: Settings = settings) -> dict[str, Any]:
             providers["indic_conformer"] = {"status": "ready" if ready else "missing_dependency" if dependency != "ready" else "missing_model", "languages": sorted(indic.languages), **({} if ready else {"error": dependency if dependency != "ready" else "IndicConformer models are not installed; run scripts/export_indicconformer.py"})}
         else:
             providers["indic_conformer"] = _provider("disabled", "Indian-language transcripts use Whisper; install IndicConformer models for better Telugu and Hindi")
+        if config.indic_translation_model_dir:
+            from ..providers.indic_translation import IndicTranslator
+
+            languages = sorted(code.strip() for code in config.indic_text_translation_languages.split(",") if code.strip())
+            installed = IndicTranslator(config.indic_translation_model_dir).available()
+            providers["indic_translation"] = {"status": "ready" if installed else "missing_model", "languages": languages, **({} if installed else {"error": "IndicTrans2 model is not installed; Whisper translates from the audio"})}
         if config.whisperx_enabled:
             status = _check_import("whisperx")
             providers["whisperx"] = _provider("ready" if status == "ready" else "unavailable", None if status == "ready" else status)

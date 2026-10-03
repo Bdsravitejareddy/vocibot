@@ -78,7 +78,11 @@ class FinalReconciler:
                 piece.append(draft)
             accepted += piece
             spoken = next((draft.language_code for draft in piece if draft.language_code), detected or language)
-            if spoken and spoken != "en" and translate and hasattr(stt, "translate_chunk"):
+            if spoken and spoken != "en" and translate and getattr(stt, "translates_text", lambda _: False)(spoken):
+                # IndicTrans2 translates the (IndicConformer) text of the piece.
+                any_foreign = True
+                translations += stt.translate_text(piece, spoken) if piece else []
+            elif spoken and spoken != "en" and translate and hasattr(stt, "translate_chunk"):
                 any_foreign = True
                 translations += stt.translate_chunk(chunk, spoken)
             else:

@@ -17,7 +17,14 @@ def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvide
 
         indic = IndicConformerProvider(selected.indic_asr_models_dir, threads=selected.asr_cpu_threads)
         if indic.available():
-            return IndicRoutingProvider(provider, indic)  # type: ignore[return-value]
+            translator = None
+            if selected.translate_to_english and selected.indic_translation_model_dir:
+                from .indic_translation import IndicTranslator
+
+                candidate = IndicTranslator(selected.indic_translation_model_dir, threads=selected.asr_cpu_threads)
+                translator = candidate if candidate.available() else None
+            languages = {code.strip() for code in selected.indic_text_translation_languages.split(",") if code.strip()}
+            return IndicRoutingProvider(provider, indic, translator, languages)  # type: ignore[return-value]
     return provider
 
 

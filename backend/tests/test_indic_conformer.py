@@ -95,3 +95,50 @@ def test_the_factory_adds_indicconformer_only_when_models_are_installed(tmp_path
     (tmp_path / "features.npz").write_bytes(b"")
     routed = build_speech_provider(Settings(ai_mode="local", stt_provider="whisper", indic_asr_models_dir=str(tmp_path)))
     assert isinstance(routed, IndicRoutingProvider) and routed.indic.languages == {"te"}
+
+
+class FakeTranslator:
+    def __init__(self) -> None:
+        self.batches = []
+
+    def supports(self, language):
+        return language in {"te", "hi"}
+
+    def translate(self, sentences, language):
+        self.batches.append((sentences, language))
+        return [f"EN({sentence})" for sentence in sentences]
+
+
+def test_text_translation_groups_whole_lines_and_keeps_their_timing() -> None:
+    translator = FakeTranslator()
+    router = IndicRoutingProvider(FakeWhisper(), FakeIndic(), translator, {"te"})
+    assert router.translates_text("te") and not router.translates_text("hi") and not router.translates_text("en")
+    lines = [TranscriptDraft(text=" ".join(["పదం"] * words), timestamp=f"00:00:0{index}", start_ms=index * 1000, end_ms=index * 1000 + 900, language_code="te") for index, words in enumerate((8, 8, 8, 25))]
+    english = router.translate_text(lines, "te")
+    # 8 + 8 words fit in one group of 20; the next 8 start a new one; 25 alone.
+    assert [len(sentence.split()) for sentence in translator.batches[0][0]] == [16, 8, 25]
+    assert [(draft.start_ms, draft.end_ms, draft.language_code) for draft in english] == [(0, 1900, "en"), (2000, 2900, "en"), (3000, 3900, "en")]
+
+
+def test_the_final_pass_translates_text_where_enabled_and_audio_elsewhere() -> None:
+    from app.providers.reconciliation import FinalReconciler
+
+    class Detecting(FakeWhisper):
+        language = "te"
+        audio_translations = 0
+
+        def detect_piece_language(self, audio):
+            return self.language, 0.95
+
+        def translate_chunk(self, chunk, language):
+            self.audio_translations += 1
+            return super().translate_chunk(chunk, language)
+
+    whisper, translator = Detecting(), FakeTranslator()
+    router = IndicRoutingProvider(whisper, FakeIndic(), translator, {"te"})
+    audio = np.full(16_000 * 8, 0.1, dtype=np.float32)
+    result = FinalReconciler().run(audio, router, sample_rate=16_000)
+    assert [draft.text for draft in result.translations] == ["EN(నాకు జ్వరం ఉంది)"] and whisper.audio_translations == 0
+    whisper.language = "hi"  # Hindi not enabled for text translation: Whisper from the audio
+    result = FinalReconciler().run(audio, router, sample_rate=16_000)
+    assert [draft.text for draft in result.translations] == ["I have a fever."] and whisper.audio_translations == 1

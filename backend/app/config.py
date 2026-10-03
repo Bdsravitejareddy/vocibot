@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     # Folder of exported IndicConformer models (<lang>/model.onnx, vocab.json,
     # features.npz): used for the final transcript of those languages.
     indic_asr_models_dir: str = ""
+    # IndicTrans2 CTranslate2 model folder, and the languages whose
+    # IndicConformer text it translates (others: Whisper from the audio).
+    indic_translation_model_dir: str = ""
+    indic_text_translation_languages: str = "hi"
     diarization_provider: str = "demo"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
