@@ -11,6 +11,17 @@ class LocalProviderError(RuntimeError):
 
 def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvider:
     selected = config or Settings()
+    provider = _build_whisper_provider(selected)
+    if selected.ai_mode == "local" and selected.indic_asr_models_dir:
+        from .indic_conformer import IndicConformerProvider, IndicRoutingProvider
+
+        indic = IndicConformerProvider(selected.indic_asr_models_dir, threads=selected.asr_cpu_threads)
+        if indic.available():
+            return IndicRoutingProvider(provider, indic)  # type: ignore[return-value]
+    return provider
+
+
+def _build_whisper_provider(selected: Settings) -> SpeechToTextProvider:
     if selected.ai_mode == "demo":
         return DemoSpeechToTextProvider()
     if selected.ai_mode != "local":
@@ -46,13 +57,7 @@ def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvide
             initial_prompt=selected.asr_initial_prompt or None,
             beam_size=selected.asr_beam_size,
         )
-    if selected.stt_provider == "indic_conformer":
-        if not selected.indic_conformer_model_path:
-            raise LocalProviderError("IndicConformer model path is missing; provision a local checkpoint and set INDIC_CONFORMER_MODEL_PATH")
-        from .indic_conformer import IndicConformerProvider
-
-        return IndicConformerProvider(model_path=selected.indic_conformer_model_path, device=selected.whisper_device)
-    raise LocalProviderError(f"Unsupported STT_PROVIDER={selected.stt_provider!r}; expected auto, mlx_whisper, whisper or indic_conformer")
+    raise LocalProviderError(f"Unsupported STT_PROVIDER={selected.stt_provider!r}; expected auto, mlx_whisper or whisper")
 
 
 def build_extraction_provider(config: Settings | None = None) -> ClinicalExtractionProvider:
