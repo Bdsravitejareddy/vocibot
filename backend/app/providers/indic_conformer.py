@@ -117,14 +117,38 @@ def _lines(words: list[tuple[str, float, float, float]]) -> list[list[tuple[str,
     return lines
 
 
-class IndicRoutingProvider:
-    """Whisper for detection, English, translation and the live preview;
-    IndicConformer for the final transcript of languages it has a model for."""
+# Text is translated in groups of whole transcript lines up to this many
+# words: single lines are often half a sentence, very long groups lose detail.
+TRANSLATION_GROUP_WORDS = 20
 
-    def __init__(self, whisper, indic: IndicConformerProvider) -> None:
+
+class IndicRoutingProvider:
+    """Whisper for detection, English and the live preview; IndicConformer for
+    the final transcript of languages it has a model for; IndicTrans2 (when
+    installed and enabled for the language) to translate that text, else
+    Whisper translating from the audio."""
+
+    def __init__(self, whisper, indic: IndicConformerProvider, translator=None, text_translation_languages: set[str] | None = None) -> None:
         object.__setattr__(self, "whisper", whisper)
         object.__setattr__(self, "indic", indic)
+        object.__setattr__(self, "translator", translator)
+        object.__setattr__(self, "text_translation_languages", set(text_translation_languages or ()))
         object.__setattr__(self, "last_diagnostics", {})
+
+    def translates_text(self, language: str | None) -> bool:
+        return self.translator is not None and language in self.text_translation_languages and language in self.indic.languages and self.translator.supports(language)
+
+    def translate_text(self, drafts: list[TranscriptDraft], language: str) -> list[TranscriptDraft]:
+        """English for a piece's transcript lines, in groups of whole lines."""
+
+        groups: list[list[TranscriptDraft]] = []
+        for draft in drafts:
+            if groups and len(" ".join(item.text for item in groups[-1] + [draft]).split()) <= TRANSLATION_GROUP_WORDS:
+                groups[-1].append(draft)
+            else:
+                groups.append([draft])
+        english = self.translator.translate([" ".join(item.text for item in group) for group in groups], language)
+        return [TranscriptDraft(text=text, timestamp=group[0].timestamp, start_ms=group[0].start_ms, end_ms=group[-1].end_ms, language_code="en") for group, text in zip(groups, english) if text.strip()]
 
     # restrict_languages() sets these on the session's speech provider.
     @property
