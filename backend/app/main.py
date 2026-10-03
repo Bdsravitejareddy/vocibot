@@ -5,6 +5,7 @@ from .db import Base, engine, migrate_sqlite_schema
 from .api.consultations import router as consultations_router
 from .api.audio import router as audio_router
 from .api.settings import router as settings_router
+from .api.voice_profiles import router as voice_profiles_router
 from .services.runtime_status import runtime_status
 
 app = FastAPI(title="VociBot API")
@@ -12,6 +13,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["http://127.0.0.1:3000", "http
 app.include_router(consultations_router)
 app.include_router(audio_router)
 app.include_router(settings_router)
+app.include_router(voice_profiles_router)
 
 
 @app.on_event("startup")

@@ -78,6 +78,8 @@ class Settings(BaseSettings):
     indic_text_translation_languages: str = "hi"
     # Label transcript lines doctor/patient from their content before the note.
     speaker_roles_enabled: bool = True
+    # SpeechBrain ECAPA speaker model folder (embedding_model.ckpt): doctor voice profiles.
+    voice_model_dir: str = ""
     diarization_provider: str = "demo"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

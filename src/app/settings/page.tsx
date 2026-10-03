@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Languages, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { VoiceEnrolment } from "@/components/VoiceEnrolment";
 import { getLanguageSettings, saveEnabledLanguages, type LanguageSettings } from "@/lib/languages";
 
 export default function SettingsPage() {
@@ -35,5 +36,6 @@ export default function SettingsPage() {
       <div className="language-grid">{visible.map((language) => <label className="language-option" key={language.code}><input type="checkbox" checked={selected.includes(language.code)} onChange={() => toggle(language.code)} /> {language.name}</label>)}</div>
       <div className="settings-actions"><button className="primary-button" onClick={() => void save()} disabled={!changed || saving || selected.length === 0}>{saving ? "Saving…" : "Save languages"}</button>{changed && <button className="secondary-button" onClick={() => { setSelected(settings?.enabled ?? []); setPrimary(settings?.primary ?? null); }}>Undo changes</button>}</div>
     </section>
+    <VoiceEnrolment />
   </div></AppShell>;
 }
