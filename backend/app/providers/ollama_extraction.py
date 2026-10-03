@@ -30,6 +30,40 @@ def context_size(prompt: str) -> int:
     return max(2048, min(settings.ollama_max_context, rounded))
 
 
+# A recording without health vocabulary (a talk or travel video recorded by
+# mistake) gets an empty note instead of "Namaste" as the chief complaint.
+# Asking the note model "is this a consultation?" was unreliable: it answered
+# "No." and then listed the patient's headache and asthma.
+CLINICAL_WORDS = re.compile(
+    r"\b(doctor|dr|pain\w*|\w*aches?|aching|fever\w*|cough\w*|flu|sneez\w*|vomit\w*|nause\w*|dizz\w*|faint\w*|"
+    r"breathless\w*|wheez\w*|shortness of breath|symptom\w*|illness|infection\w*|swelling|swollen|rash\w*|itch\w*|"
+    r"bleed\w*|injur\w*|fractur\w*|diarr\w*|loose motions?|constipat\w*|urinat\w*|pregnan\w*|asthma|diabet\w*|bp|"
+    r"blood pressure|thyroid|cholesterol|allerg\w*|medicines?|medications?|tablets?|pills?|capsules?|syrup|injections?|"
+    r"prescri\w*|antibiotic\w*|hospital\w*|x-ray|dolo|paracetamol|crocin|pulse|spo2|oxygen|saturation)\b",
+    re.IGNORECASE,
+)
+# Also everyday words ("without getting tired", "cold morning"): they count
+# only when two different ones occur.
+EVERYDAY_HEALTH_WORDS = re.compile(
+    r"\b(tired|weak\w*|fatigue\w*|cold|sore|hurts?|hurting|sick|ill|throat|stomach|chest|blood|urine|periods?|sugar|"
+    r"pressure|temperature|problems?|tests?|reports?|scans?|clinic|surgery|operation|treatment|doses?|wound\w*)\b",
+    re.IGNORECASE,
+)
+
+
+def mentions_health(texts) -> bool:
+    """Health vocabulary in English, or a transcript not in English (no
+    translation to check against): only then is a note attempted."""
+
+    joined = " ".join(texts)
+    letters = [character for character in joined if character.isalpha()]
+    if letters and sum(character.isascii() for character in letters) / len(letters) < 0.8:
+        return True
+    if CLINICAL_WORDS.search(joined):
+        return True
+    return len({word.lower().rstrip("s") for word in EVERYDAY_HEALTH_WORDS.findall(joined)}) >= 2
+
+
 PLACEHOLDERS = {"none", "n/a", "na", "nil", "null", "unknown", "not mentioned", "not discussed", "not stated", "not provided", "not applicable", "no information", "-", ""}
 
 
@@ -56,28 +90,10 @@ class OllamaClinicalExtractionProvider:
             options["num_thread"] = settings.ollama_num_thread
         return options
 
-    def is_consultation(self, transcript: list[TranscriptSegmentInput], num_ctx: int | None = None) -> bool:
-        """A separate yes/no question, so a talk or travel video recorded by
-        mistake gets an empty note.  It is kept out of the note prompt: any
-        change there lowered the facts the 8B model captures (86% -> 79-83%)."""
-
-        prompt = (
-            "Does this transcript contain a health problem, symptom, medical history or treatment being discussed "
-            "(a doctor-patient consultation, even a short or badly transcribed one)? Answer yes or no.\n"
-            + "\n".join(segment.text for segment in transcript)
-        )
-        try:
-            response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "stream": False, "keep_alive": settings.ollama_keep_alive, "options": self._options(prompt, num_predict=3, **({"num_ctx": num_ctx} if num_ctx else {}))}, timeout=settings.ollama_timeout_seconds)
-            response.raise_for_status()
-        except httpx.HTTPError:
-            return True  # never lose a note because the check failed
-        return not str(response.json().get("response", "")).strip().lower().startswith("no")
-
     def extract(self, transcript: list[TranscriptSegmentInput], current_record: ClinicalRecord) -> ExtractionResult:
         prompt = self._prompt(transcript, current_record)
         options = self._options(prompt)
-        # Same context size as the note: a different one makes Ollama reload the model.
-        if transcript and not self.is_consultation(transcript, options["num_ctx"]):
+        if transcript and not mentions_health(segment.text for segment in transcript):
             self.last_stats = {"not_a_consultation": True}
             return ExtractionResult(proposed_record=ClinicalRecord(), candidates=[])
         response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "keep_alive": settings.ollama_keep_alive, "options": options}, timeout=settings.ollama_timeout_seconds)
