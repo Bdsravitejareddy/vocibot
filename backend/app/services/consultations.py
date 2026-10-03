@@ -268,8 +268,33 @@ def _recognise_speakers(session: Session, consultation: Consultation) -> bool:
             # The English line this one falls under (lines can start slightly early).
             earlier = [speaker for start, speaker in starts if start is not None and start <= at + 0.5]
             row.speaker = earlier[-1] if earlier else starts[0][1]
+    voiced = _apply_doctor_voice(session, consultation, [*translated, *rows] if translated else rows, translated)
     session.flush()
-    return any(label != Speaker.UNKNOWN.value for label in labels)
+    return voiced or any(label != Speaker.UNKNOWN.value for label in labels)
+
+
+def _apply_doctor_voice(session: Session, consultation: Consultation, lines: list, translated: list) -> bool:
+    """With an enrolled doctor voice, a line whose voice clearly is (or is
+    not) the doctor's takes that label; otherwise the content label stays."""
+
+    from .voice_profile import VoiceEncoder, load_recording, stored_profiles, voice_labels
+
+    profiles = stored_profiles(session)
+    recording = next((item for item in consultation.recordings if item.file_path and Path(item.file_path).is_file()), None)
+    encoder = VoiceEncoder(settings.voice_model_dir) if settings.voice_model_dir else None
+    if not profiles or recording is None or encoder is None or not encoder.available():
+        return False
+    audio = load_recording(recording.file_path)
+    if audio is None:
+        return False
+    changed = False
+    groups = [translated, [line for line in lines if line not in translated]] if translated else [lines]
+    for group in groups:
+        for line, label in zip(group, voice_labels(audio, [_seconds(line.timestamp) for line in group], profiles, encoder)):
+            if label is not None:
+                changed = changed or line.speaker != label
+                line.speaker = label
+    return True
 
 
 DOCTOR_FIELDS = {"assessment", "plan", "follow_up", "examination_findings", "vitals"}

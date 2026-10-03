@@ -86,3 +86,20 @@ button, input, textarea, select { font: inherit; }
 .field-label .said-by { font-style: normal; font-size: 9px; font-weight: 700; padding: 3px 5px; border-radius: 8px; }
 .field-label .said-by.patient { color: #8a5433; background: #f8ece3; }
 .field-label .said-by.doctor { color: #1f4a2c; background: #e3efe6; }
+.voice-card { display: grid; gap: 14px; margin-top: 18px; }
+.voice-heading h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 18px; color: var(--forest); }
+.voice-heading p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; max-width: 680px; }
+.voice-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.voice-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.voice-list span { display: grid; gap: 2px; }
+.voice-list small { color: var(--muted); font-size: 11px; }
+.enrolment { display: grid; gap: 12px; }
+.enrol-name { display: grid; gap: 6px; font-size: 12px; font-weight: 700; color: #344054; max-width: 320px; }
+.enrol-name input { border: 1px solid #d4ddd0; border-radius: 9px; padding: 9px 10px; font-size: 13px; background: #fdfdf9; }
+.sentence-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.sentence-list li { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.sentence-list li > * { vertical-align: middle; }
+.sentence-list li { display: list-item; }
+.sentence-list li span { display: inline-block; max-width: calc(100% - 120px); font-size: 14px; line-height: 1.5; }
+.sentence-list li button { float: right; }
+.sentence-list li.done { border-color: #a8ca8b; background: #fbfff6; }

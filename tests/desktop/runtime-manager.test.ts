@@ -27,6 +27,7 @@ test("runtime starts loopback children and stops only processes it owns", async 
   assert.equal((calls[0].options.env as NodeJS.ProcessEnv).RECORDINGS_DIR, "/tmp/vocibot-test/recordings");
   assert.equal((calls[0].options.env as NodeJS.ProcessEnv).INDIC_ASR_MODELS_DIR, "/tmp/vocibot-test/models/indicconformer");
   assert.equal((calls[0].options.env as NodeJS.ProcessEnv).INDIC_TRANSLATION_MODEL_DIR, "/tmp/vocibot-test/models/indictrans2");
+  assert.equal((calls[0].options.env as NodeJS.ProcessEnv).VOICE_MODEL_DIR, "/tmp/vocibot-test/models/ecapa");
   assert.equal((calls[0].options.env as NodeJS.ProcessEnv).OLLAMA_BASE_URL, "http://127.0.0.1:11434");
   await runtime.stop();
   if (previousOllamaUrl === undefined) delete process.env.OLLAMA_BASE_URL;

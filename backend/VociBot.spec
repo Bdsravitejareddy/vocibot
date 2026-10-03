@@ -3,8 +3,8 @@ import importlib.util
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 backend_dir = Path(SPECPATH)
-hidden = ["app.main", "app.providers.indic_conformer", "app.providers.indic_features", "app.providers.indic_translation"] + collect_submodules("onnxruntime") + collect_submodules("indicnlp") + collect_submodules("sacremoses") + collect_submodules("sentencepiece") + collect_submodules("ctranslate2") + collect_submodules("faster_whisper") + collect_submodules("silero_vad")
-datas = collect_data_files("silero_vad") + collect_data_files("faster_whisper") + collect_data_files("sacremoses") + collect_data_files("indicnlp")
+hidden = ["app.main", "app.providers.indic_conformer", "app.providers.indic_features", "app.providers.indic_translation"] + collect_submodules("onnxruntime") + collect_submodules("indicnlp") + collect_submodules("sacremoses") + collect_submodules("sentencepiece") + collect_submodules("ctranslate2") + collect_submodules("speechbrain") + ["app.services.voice_profile", "app.api.voice_profiles"] + collect_submodules("faster_whisper") + collect_submodules("silero_vad")
+datas = collect_data_files("silero_vad") + collect_data_files("faster_whisper") + collect_data_files("sacremoses") + collect_data_files("indicnlp") + collect_data_files("speechbrain", include_py_files=True)
 binaries = []
 if importlib.util.find_spec("mlx_whisper") is not None:
     # Whisper on the Apple Silicon GPU.  MLX loads its Metal kernels
