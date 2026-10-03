@@ -79,13 +79,15 @@ class FasterWhisperProvider:
         self.last_diagnostics: dict[str, object] = {}
         # Auto-detect chooses only among these (None: any language).
         self.allowed_languages: set[str] | None = None
+        # The clinic's usual language: wins near ties in detection.
+        self.primary_language: str | None = None
         self._language_memory = LanguageMemory()
 
     def _detect_allowed(self, model, audio) -> str:
         if len(self.allowed_languages) == 1:
             return next(iter(self.allowed_languages))
         _, _, probabilities = model.detect_language(audio)
-        return choose_language(dict(probabilities), self.allowed_languages) or next(iter(sorted(self.allowed_languages)))
+        return choose_language(dict(probabilities), self.allowed_languages, primary=self.primary_language) or self.primary_language or next(iter(sorted(self.allowed_languages)))
 
     def _load(self):
         if self._model is None:
@@ -139,7 +141,7 @@ class FasterWhisperProvider:
         if language and language != "auto":
             language_option["language"] = language
         elif self.allowed_languages:
-            language_option["language"] = self._language_memory.get(chunk) or self._language_memory.remember(chunk, self._detect_allowed(model, audio))
+            language_option["language"] = self._language_memory.choose(chunk, audio, lambda sample: self._detect_allowed(model, sample))
         segments, info = model.transcribe(
             audio,
             beam_size=self.beam_size,
@@ -270,6 +272,8 @@ class MlxWhisperProvider:
         self.last_diagnostics: dict[str, object] = {}
         # Auto-detect chooses only among these (None: any language).
         self.allowed_languages: set[str] | None = None
+        # The clinic's usual language: wins near ties in detection.
+        self.primary_language: str | None = None
         self._language_memory = LanguageMemory()
 
     def _load(self):
@@ -289,10 +293,19 @@ class MlxWhisperProvider:
             self.last_language_confidence = 1.0
             return next(iter(self.allowed_languages))
         probabilities = self.detect_language_probabilities(audio)
-        chosen = choose_language(probabilities, self.allowed_languages) or next(iter(sorted(self.allowed_languages)))
-        allowed_total = sum(probability for code, probability in probabilities.items() if code in self.allowed_languages) or 1.0
-        self.last_language_confidence = probabilities.get(chosen, 0.0) / allowed_total
+        weighted = language_weights(probabilities, self.allowed_languages, self.primary_language)
+        chosen = max(weighted, key=weighted.get) if weighted else self.primary_language or next(iter(sorted(self.allowed_languages)))
+        self.last_language_confidence = weighted.get(chosen, 0.0)
         return chosen
+
+    def detect_piece_language(self, audio) -> tuple[str | None, float]:
+        """(language, confidence) of a piece of the final pass; None lets
+        Whisper detect while transcribing (no restriction configured)."""
+
+        if not self.allowed_languages:
+            return None, 1.0
+        code = self._detect_allowed(audio)
+        return code, self.last_language_confidence
 
     def detect_language_probabilities(self, audio) -> dict[str, float]:
         """Whisper's language probabilities for the first 30 s (as transcribe does)."""
@@ -396,7 +409,7 @@ class MlxWhisperProvider:
         if language and language != "auto":
             options["language"] = language
         elif self.allowed_languages:
-            options["language"] = self._language_memory.get(chunk) or self._language_memory.remember(chunk, self._detect_allowed(audio))
+            options["language"] = self._language_memory.choose(chunk, audio, self._detect_allowed)
         if self.initial_prompt:
             options["initial_prompt"] = self.initial_prompt
         result = transcribe(audio, **options)
@@ -437,6 +450,8 @@ LIVE_LANGUAGE_RECHECK_MS = 10_000
 # A detection on less audio than this (a "Namaste", a "Hi doctor") is used for
 # that pass only: locking it in sent Hindi and Telugu speech to English.
 LIVE_LANGUAGE_MIN_MS = 3_000
+# Live detection hears this much of the most recent session audio.
+LIVE_LANGUAGE_WINDOW_MS = 8_000
 
 
 class LanguageMemory:
@@ -446,19 +461,51 @@ class LanguageMemory:
     passes reuse it; a switch (e.g. English to Telugu) is followed within 10 s.
     Time is measured to the end of each pass's audio, so a buffer that stays
     stuck (nothing accepted, start not advancing) is still re-checked.
+
+    Detection hears the last 8 s of the session, not just the pass's
+    unsettled buffer (often 1-2 s just after a line is committed): on the
+    language dataset Telugu is identified 75% of the time from 1.5 s,
+    93% from 3 s and 98% from 5 s.
     """
 
     def __init__(self) -> None:
         self.language: str | None = None
         self.detected_at_ms: int | None = None
+        self._recent = None
+        self._recent_end_ms = 0
+
+    def hear(self, chunk: "AudioChunk") -> None:
+        """Keep the newest audio of each live pass (passes overlap)."""
+
+        import numpy as np  # type: ignore[import-not-found]
+
+        if not chunk.live or chunk.waveform is None:
+            return
+        end_ms = _chunk_end_ms(chunk)
+        if end_ms <= self._recent_end_ms:
+            return
+        new_ms = min(end_ms - chunk.timestamp_ms, end_ms - self._recent_end_ms)
+        fresh = np.asarray(chunk.waveform, dtype=np.float32)[-int(new_ms * chunk.sample_rate / 1000):] if new_ms > 0 else np.empty(0, dtype=np.float32)
+        joined = fresh if self._recent is None or end_ms - len(fresh) * 1000 / chunk.sample_rate > self._recent_end_ms + 50 else np.concatenate((self._recent, fresh))
+        self._recent = joined[-int(LIVE_LANGUAGE_WINDOW_MS * chunk.sample_rate / 1000):]
+        self._recent_end_ms = end_ms
+
+    def sample(self, chunk: "AudioChunk", audio):
+        """What to detect the language on: recent session audio for a live
+        pass (when it is longer than the pass's own buffer)."""
+
+        if chunk.live and self._recent is not None and len(self._recent) > len(audio):
+            return self._recent
+        return audio
 
     def get(self, chunk: "AudioChunk") -> str | None:
         if not chunk.live or self.language is None or self.detected_at_ms is None:
             return None
         return self.language if 0 <= _chunk_end_ms(chunk) - self.detected_at_ms < LIVE_LANGUAGE_RECHECK_MS else None
 
-    def remember(self, chunk: "AudioChunk", language: str) -> str:
-        if chunk.live and _chunk_end_ms(chunk) - chunk.timestamp_ms >= LIVE_LANGUAGE_MIN_MS:
+    def remember(self, chunk: "AudioChunk", language: str, heard_samples: int | None = None) -> str:
+        heard_ms = (heard_samples * 1000 / chunk.sample_rate) if heard_samples is not None else _chunk_end_ms(chunk) - chunk.timestamp_ms
+        if chunk.live and heard_ms >= LIVE_LANGUAGE_MIN_MS:
             self.language, self.detected_at_ms = language, _chunk_end_ms(chunk)
         return language
 
@@ -466,6 +513,16 @@ class LanguageMemory:
         """Every line of a pass was rejected: the language may be wrong."""
 
         self.language = self.detected_at_ms = None
+
+    def choose(self, chunk: "AudioChunk", audio, detect) -> str:
+        """The language for this pass: remembered, or detected on recent audio."""
+
+        self.hear(chunk)
+        remembered = self.get(chunk)
+        if remembered:
+            return remembered
+        sample = self.sample(chunk, audio)
+        return self.remember(chunk, detect(sample), len(sample))
 
 
 def _chunk_end_ms(chunk: "AudioChunk") -> int:
@@ -500,12 +557,27 @@ def _keep_every_mlx_model_loaded() -> None:
     mlx_transcribe.ModelHolder.get_model = classmethod(get_model)
 
 
-def choose_language(probabilities: dict[str, float], allowed: set[str] | None) -> str | None:
-    """The most likely language among the enabled ones (None: no restriction)."""
+# The primary language's probability is multiplied by this before choosing:
+# it wins near ties (a short or noisy stretch of Telugu scoring Hindi 40%,
+# Telugu 35%) but not clear speech in another language.  Tuned on the
+# language dataset (backend/benchmarks/language_id.py).
+PRIMARY_LANGUAGE_WEIGHT = 3.0
+
+
+def language_weights(probabilities: dict[str, float], allowed: set[str] | None, primary: str | None = None, primary_weight: float = PRIMARY_LANGUAGE_WEIGHT) -> dict[str, float]:
+    """Enabled languages' probabilities, the primary one weighted, summing to 1."""
+
+    weighted = {code: probability * (primary_weight if code == primary else 1.0) for code, probability in probabilities.items() if not allowed or code in allowed}
+    total = sum(weighted.values()) or 1.0
+    return {code: value / total for code, value in weighted.items()}
+
+
+def choose_language(probabilities: dict[str, float], allowed: set[str] | None, *, primary: str | None = None, primary_weight: float = PRIMARY_LANGUAGE_WEIGHT) -> str | None:
+    """The most likely enabled language, leaning towards the primary one (None: no restriction)."""
 
     if not allowed:
         return None
-    candidates = {code: probability for code, probability in probabilities.items() if code in allowed}
+    candidates = language_weights(probabilities, allowed, primary, primary_weight)
     return max(candidates, key=candidates.get) if candidates else None
 
 

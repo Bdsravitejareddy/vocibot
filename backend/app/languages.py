@@ -122,6 +122,37 @@ def enabled_languages(session: Session) -> list[str]:
     return codes or list(DEFAULT_ENABLED)
 
 
+PRIMARY_KEY = "primary_language"
+
+
+def primary_language(session: Session) -> str | None:
+    """The clinic's usual language: detection leans towards it (it wins near
+    ties) without excluding the other enabled languages."""
+
+    from .models import AppSetting
+
+    stored = session.get(AppSetting, PRIMARY_KEY)
+    code = stored.value if stored else None
+    return code if isinstance(code, str) and code in enabled_languages(session) else None
+
+
+def set_primary_language(session: Session, code: str | None) -> str | None:
+    from .models import AppSetting
+
+    if code is not None and code not in enabled_languages(session):
+        raise ValueError("The primary language must be one of the enabled languages.")
+    stored = session.get(AppSetting, PRIMARY_KEY)
+    if code is None:
+        if stored is not None:
+            session.delete(stored)
+    elif stored is None:
+        session.add(AppSetting(key=PRIMARY_KEY, value=code))
+    else:
+        stored.value = code
+    session.commit()
+    return code
+
+
 def set_enabled_languages(session: Session, codes: list[str]) -> list[str]:
     from .models import AppSetting
 

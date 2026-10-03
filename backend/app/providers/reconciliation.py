@@ -9,6 +9,17 @@ from .speech import AudioChunk, SpeechToTextProvider, TranscriptDraft
 # each piece gets its own language (mixed Telugu/English consultations) and
 # Whisper's 30-second window is used as designed.
 FINAL_PIECE_SECONDS = 28.0
+# Whisper writes at most 224 tokens per window, and Indian scripts take
+# several tokens per letter: 28 s of Telugu speech overflowed it, so Whisper
+# stopped mid-letter and skipped the rest of the window (a 15 s gap with the
+# headache, fever and the doctor's first question in the reference
+# consultation).  Speech in these scripts is transcribed in shorter pieces.
+# Measured on the reference recordings (characters right, 28 s -> this):
+# Telugu 56% -> 73% at 10 s; Hindi 91% -> 97% at 14 s.
+DENSE_SCRIPT_PIECE_SECONDS = {
+    **dict.fromkeys(("te", "kn", "ta", "ml", "si"), 10.0),
+    **dict.fromkeys(("hi", "mr", "ne", "sa", "gu", "pa", "bn", "as", "or", "ur", "sd", "my", "km", "lo", "th", "am", "bo"), 14.0),
+}
 # Below this share of the enabled languages' probability a piece's language
 # counts as uncertain.
 UNCERTAIN_LANGUAGE = 0.6
@@ -35,18 +46,22 @@ class FinalReconciler:
         warnings: list[str] = []
         any_foreign = False
         spans = split_at_pauses(audio, sample_rate, FINAL_PIECE_SECONDS)
-        pieces = [self._transcribe_piece(stt, audio, sample_rate, start, end, language) for start, end in spans]
-        if language is None and len(pieces) > 1:
-            # A piece detected with low confidence (often a short or quiet
-            # tail) takes the consultation's main language instead.
-            weights: dict[str, float] = {}
-            for (start, end), (_, detected, confidence) in zip(spans, pieces):
-                if detected and confidence >= UNCERTAIN_LANGUAGE:
-                    weights[detected] = weights.get(detected, 0.0) + (end - start)
-            dominant = max(weights, key=weights.get) if weights else None
-            for index, ((start, end), (_, detected, confidence)) in enumerate(zip(spans, pieces)):
-                if dominant and detected != dominant and confidence < UNCERTAIN_LANGUAGE:
-                    pieces[index] = self._transcribe_piece(stt, audio, sample_rate, start, end, dominant)
+        detect = getattr(stt, "detect_piece_language", None)
+        if detect is not None:
+            # Language first (one encoder pass), then transcription at the
+            # piece length that language's script needs.
+            found = [(language, 1.0) if language else detect(audio[start:end]) for start, end in spans]
+            found = _with_dominant_language(spans, found) if language is None else found
+            pieces = [self._transcribe_in_language(stt, audio, sample_rate, start, end, code) for (start, end), (code, _) in zip(spans, found)]
+        else:
+            pieces = [self._transcribe_piece(stt, audio, sample_rate, start, end, language) for start, end in spans]
+            if language is None and len(pieces) > 1:
+                # A piece detected with low confidence (often a short or quiet
+                # tail) takes the consultation's main language instead.
+                found = _with_dominant_language(spans, [(detected, confidence) for _, detected, confidence in pieces])
+                for index, ((start, end), (code, _), (_, detected, _)) in enumerate(zip(spans, found, pieces)):
+                    if code != detected:
+                        pieces[index] = self._transcribe_piece(stt, audio, sample_rate, start, end, code)
         for (start, end), (drafts, detected, _) in zip(spans, pieces):
             offset_ms = int(start / sample_rate * 1000)
             piece_end_ms = int(end / sample_rate * 1000)
@@ -71,6 +86,16 @@ class FinalReconciler:
         return ReconciliationResult(transcripts=accepted, translations=translations if any_foreign else [], latency_ms=(perf_counter() - started) * 1000, warnings=warnings)
 
 
+    def _transcribe_in_language(self, stt, audio, sample_rate: int, start: int, end: int, language: str | None):
+        limit = DENSE_SCRIPT_PIECE_SECONDS.get(language or "")
+        if limit is None or end - start <= limit * sample_rate * 1.25:
+            return self._transcribe_piece(stt, audio, sample_rate, start, end, language)
+        drafts: list[TranscriptDraft] = []
+        for sub_start, sub_end in split_at_pauses(audio[start:end], sample_rate, limit):
+            sub_drafts, _, _ = self._transcribe_piece(stt, audio, sample_rate, start + sub_start, start + sub_end, language)
+            drafts += sub_drafts
+        return drafts, language, 1.0
+
     @staticmethod
     def _transcribe_piece(stt, audio, sample_rate: int, start: int, end: int, language: str | None):
         chunk = AudioChunk(audio=b"", sample_rate=sample_rate, timestamp_ms=int(start / sample_rate * 1000), encoding="pcm_f32le", channels=1, waveform=np.ascontiguousarray(audio[start:end]))
@@ -78,6 +103,20 @@ class FinalReconciler:
         detected = next((draft.language_code for draft in drafts if draft.language_code), language)
         confidence = 1.0 if language else float(getattr(stt, "last_language_confidence", 1.0))
         return drafts, detected, confidence
+
+
+def _with_dominant_language(spans: list[tuple[int, int]], found: list[tuple[str | None, float]]) -> list[tuple[str | None, float]]:
+    """A piece detected with low confidence (often a short or quiet tail)
+    takes the consultation's main language instead."""
+
+    weights: dict[str, float] = {}
+    for (start, end), (code, confidence) in zip(spans, found):
+        if code and confidence >= UNCERTAIN_LANGUAGE:
+            weights[code] = weights.get(code, 0.0) + (end - start)
+    dominant = max(weights, key=weights.get) if weights else None
+    if dominant is None or len(spans) < 2:
+        return found
+    return [(dominant, confidence) if code != dominant and confidence < UNCERTAIN_LANGUAGE else (code, confidence) for code, confidence in found]
 
 
 def split_at_pauses(waveform: np.ndarray, sample_rate: int, target_seconds: float) -> list[tuple[int, int]]:
