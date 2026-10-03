@@ -18,6 +18,7 @@ from app.config import settings
 from app.domain.types import ClinicalRecord, TranscriptSegmentInput
 from app.providers.ollama_extraction import OllamaClinicalExtractionProvider
 from app.services.consultations import _apply_validated_candidates
+from app.services.speaker_roles import SpeakerRoleLabeler
 
 CASES = json.loads((Path(__file__).parent / "clinical_note_cases.json").read_text())
 
@@ -53,6 +54,7 @@ def main() -> None:
     parser.add_argument("--cpu-only", action="store_true")
     parser.add_argument("--threads", type=int, default=0)
     parser.add_argument("--out")
+    parser.add_argument("--roles", action="store_true", help="label lines doctor/patient first, as the app does")
     args = parser.parse_args()
     settings.ollama_num_gpu = 0 if args.cpu_only else -1
     settings.ollama_num_thread = args.threads
@@ -69,8 +71,9 @@ def main() -> None:
     loaded = httpx.get(f"{settings.ollama_base_url}/api/ps").json().get("models", [])
     results = []
     for case in CASES:
-        transcript = [TranscriptSegmentInput(id=f"{case['id']}-final-{index}", speaker="UNKNOWN", text=text, timestamp="00:00:00", sequence_number=index) for index, text in enumerate(case["lines"])]
         started = time.perf_counter()
+        speakers = SpeakerRoleLabeler(model=args.model).label(case["lines"]) if args.roles else ["UNKNOWN"] * len(case["lines"])
+        transcript = [TranscriptSegmentInput(id=f"{case['id']}-final-{index}", speaker=speaker, text=text, timestamp="00:00:00", sequence_number=index) for index, (text, speaker) in enumerate(zip(case["lines"], speakers))]
         try:
             result = provider.extract(transcript, ClinicalRecord())
             record, _, _ = _apply_validated_candidates(result, ClinicalRecord(), transcript)

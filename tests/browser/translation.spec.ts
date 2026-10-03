@@ -21,8 +21,8 @@ test("a non-English consultation shows its English translation and marks transla
     const id = body.id as string;
     await route.fulfill({ response, json: {
       ...body,
-      transcript: [{ id: `${id}-final-0`, speaker: "UNKNOWN", text: "నిన్న రాత్రి నుంచి జ్వరం ఉంది", timestamp: "00:00:00", sequence_number: 0, language_code: "te" }],
-      translation: [{ id: `${id}-en-0`, text: "I have had a fever since last night.", timestamp: "00:00:00", sequence_number: 0 }],
+      transcript: [{ id: `${id}-final-0`, speaker: "PATIENT", text: "నిన్న రాత్రి నుంచి జ్వరం ఉంది", timestamp: "00:00:00", sequence_number: 0, language_code: "te" }],
+      translation: [{ id: `${id}-en-0`, text: "I have had a fever since last night.", timestamp: "00:00:00", sequence_number: 0, speaker: "PATIENT" }],
       record: { ...body.record, presenting_symptoms: ["fever"] },
       updates: [{ id: "u1", field_name: "presenting_symptoms", previous_value: [], new_value: ["fever"], source_segment_ids: [`${id}-en-0`], updated_at: new Date().toISOString(), update_type: "AI_EXTRACTED" }],
     } });
@@ -33,8 +33,11 @@ test("a non-English consultation shows its English translation and marks transla
   await expect(page.getByTestId("transcript-list")).toContainText("నిన్న రాత్రి నుంచి జ్వరం ఉంది");
   await page.getByRole("button", { name: "English" }).click();
   await expect(page.getByTestId("translation-list")).toContainText("I have had a fever since last night.");
-  await expect(page.getByText("English translation made from the audio")).toBeVisible();
+  await expect(page.getByText("The note is written from it")).toBeVisible();
   await expect(page.getByTestId("record-presenting_symptoms")).toContainText("Translated");
+  // Recognised roles: the symptom is the patient's account.
+  await expect(page.getByTestId("record-presenting_symptoms")).toContainText("Patient said");
+  await expect(page.getByTestId("translation-list")).toContainText("Patient");
   await page.getByRole("button", { name: "Original" }).click();
   await expect(page.getByTestId("transcript-list")).toBeVisible();
 });

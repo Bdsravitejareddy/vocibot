@@ -76,6 +76,8 @@ class Settings(BaseSettings):
     # IndicConformer text it translates (others: Whisper from the audio).
     indic_translation_model_dir: str = ""
     indic_text_translation_languages: str = "hi"
+    # Label transcript lines doctor/patient from their content before the note.
+    speaker_roles_enabled: bool = True
     diarization_provider: str = "demo"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

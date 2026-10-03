@@ -128,5 +128,7 @@ class TranslationSegment(Base):
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
     consultation_id: Mapped[str] = mapped_column(ForeignKey("consultations.id", ondelete="CASCADE"), index=True)
     text: Mapped[str] = mapped_column(Text)
+    # DOCTOR / PATIENT recognised from the content (services/speaker_roles.py).
+    speaker: Mapped[str] = mapped_column(String(30), default="UNKNOWN", server_default="UNKNOWN")
     timestamp: Mapped[str] = mapped_column(String(40))
     sequence_number: Mapped[int] = mapped_column(Integer)

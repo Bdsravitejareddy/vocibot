@@ -83,3 +83,6 @@ button, input, textarea, select { font: inherit; }
 .primary-language small { color: var(--muted); font-size: 11px; line-height: 1.45; max-width: 520px; }
 .primary-language select { min-width: 190px; border: 1px solid #d4ddd0; border-radius: 9px; background: #fdfdf9; padding: 9px 10px; font-size: 13px; }
 @media (max-width: 640px) { .primary-language { flex-direction: column; align-items: stretch; } }
+.field-label .said-by { font-style: normal; font-size: 9px; font-weight: 700; padding: 3px 5px; border-radius: 8px; }
+.field-label .said-by.patient { color: #8a5433; background: #f8ece3; }
+.field-label .said-by.doctor { color: #1f4a2c; background: #e3efe6; }

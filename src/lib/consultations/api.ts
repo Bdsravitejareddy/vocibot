@@ -8,7 +8,7 @@ export type ConsultationState = {
   session_code: string;
   recordings: Recording[];
   /** English translation (from the audio) of a non-English consultation; the note is written from it. */
-  translation?: Array<{ id: string; text: string; timestamp: string; sequence_number: number }>;
+  translation?: Array<{ id: string; text: string; timestamp: string; sequence_number: number; speaker?: string }>;
   status: "IN_PROGRESS" | "READY_FOR_REVIEW" | "APPROVED";
   started_at: string;
   ended_at: string | null;
