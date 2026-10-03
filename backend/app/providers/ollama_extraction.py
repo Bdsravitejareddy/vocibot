@@ -35,7 +35,7 @@ def context_size(prompt: str) -> int:
 # Asking the note model "is this a consultation?" was unreliable: it answered
 # "No." and then listed the patient's headache and asthma.
 CLINICAL_WORDS = re.compile(
-    r"\b(doctor|dr|pain\w*|\w*aches?|aching|fever\w*|cough\w*|flu|sneez\w*|vomit\w*|nause\w*|dizz\w*|faint\w*|"
+    r"\b(doctor|dr|pain\w*|(?:head|stomach|back|body|tooth|ear|belly)aches?|aches|aching|fever\w*|cough\w*|flu|sneez\w*|vomit\w*|nause\w*|dizz\w*|faint\w*|"
     r"breathless\w*|wheez\w*|shortness of breath|symptom\w*|illness|infection\w*|swelling|swollen|rash\w*|itch\w*|"
     r"bleed\w*|injur\w*|fractur\w*|diarr\w*|loose motions?|constipat\w*|urinat\w*|pregnan\w*|asthma|diabet\w*|bp|"
     r"blood pressure|thyroid|cholesterol|allerg\w*|medicines?|medications?|tablets?|pills?|capsules?|syrup|injections?|"
@@ -53,15 +53,19 @@ EVERYDAY_HEALTH_WORDS = re.compile(
 
 def mentions_health(texts) -> bool:
     """Health vocabulary in English, or a transcript not in English (no
-    translation to check against): only then is a note attempted."""
+    translation to check against): only then is a note attempted.
+
+    One word is not enough ("bleeding money" in a business talk): it takes
+    two different clinical words, or one plus two everyday health words.
+    """
 
     joined = " ".join(texts)
     letters = [character for character in joined if character.isalpha()]
     if letters and sum(character.isascii() for character in letters) / len(letters) < 0.8:
         return True
-    if CLINICAL_WORDS.search(joined):
-        return True
-    return len({word.lower().rstrip("s") for word in EVERYDAY_HEALTH_WORDS.findall(joined)}) >= 2
+    clinical = {word.lower() for word in CLINICAL_WORDS.findall(joined)}
+    everyday = {word.lower().rstrip("s") for word in EVERYDAY_HEALTH_WORDS.findall(joined)}
+    return len(clinical) + len(everyday) / 2 >= 2
 
 
 PLACEHOLDERS = {"none", "n/a", "na", "nil", "null", "unknown", "not mentioned", "not discussed", "not stated", "not provided", "not applicable", "no information", "-", ""}

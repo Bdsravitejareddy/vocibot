@@ -128,3 +128,65 @@ def test_a_stuck_buffer_is_rechecked_and_rejected_passes_forget_the_language() -
     provider.transcribe_chunk(_live(0, 16))  # every line rejected: forget
     provider.transcribe_chunk(_live(0, 17))
     assert len(detections) == 3
+
+
+TELUGU_NEAR_HINDI = {"hi": 0.40, "te": 0.30, "en": 0.20, "ta": 0.10}
+CLEAR_HINDI = {"hi": 0.85, "te": 0.05, "en": 0.05, "ur": 0.05}
+
+
+def test_the_primary_language_wins_near_ties_but_not_clear_speech() -> None:
+    enabled = {"en", "te", "hi"}
+    assert choose_language(TELUGU_NEAR_HINDI, enabled) == "hi"
+    assert choose_language(TELUGU_NEAR_HINDI, enabled, primary="te") == "te"
+    assert choose_language(CLEAR_HINDI, enabled, primary="te") == "hi"
+    assert choose_language({"en": 0.9, "te": 0.1}, enabled, primary="te") == "en"
+
+
+def test_the_engine_uses_the_primary_language_and_reports_weighted_confidence() -> None:
+    calls = []
+    provider = MlxWhisperProvider(model="local", transcribe=lambda audio, **options: calls.append(options) or {"segments": [], "language": options.get("language")})
+    provider.detect_language_probabilities = lambda audio: TELUGU_NEAR_HINDI
+    provider.allowed_languages = {"en", "te", "hi"}
+    provider.primary_language = "te"
+    provider.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=0, waveform=np.zeros(16_000, dtype=np.float32)))
+    assert calls[0]["language"] == "te"
+    assert abs(provider.last_language_confidence - 0.6) < 1e-6  # 0.3x3 / (0.9 + 0.4 + 0.2)
+
+
+def test_primary_language_setting() -> None:
+    with TestClient(app) as client:
+        before = client.get("/api/settings/languages").json()
+        try:
+            saved = client.put("/api/settings/languages", json={"enabled": ["en", "te", "hi"], "primary": "te"}).json()
+            assert saved["primary"] == "te"
+            # Omitted: unchanged.
+            assert client.put("/api/settings/languages", json={"enabled": ["en", "te", "hi"]}).json()["primary"] == "te"
+            # Must be enabled.
+            assert client.put("/api/settings/languages", json={"enabled": ["en", "te", "hi"], "primary": "ta"}).status_code == 422
+            # Disabling it clears it.
+            assert client.put("/api/settings/languages", json={"enabled": ["en", "hi"]}).json()["primary"] is None
+            client.put("/api/settings/languages", json={"enabled": ["en", "te", "hi"], "primary": "te"})
+            assert client.put("/api/settings/languages", json={"enabled": ["en", "te", "hi"], "primary": None}).json()["primary"] is None
+        finally:
+            client.put("/api/settings/languages", json={"enabled": before["enabled"], "primary": before.get("primary")})
+
+
+def test_live_detection_hears_recent_session_audio_not_just_the_short_buffer() -> None:
+    heard = []
+    provider = MlxWhisperProvider(model="local", transcribe=lambda audio, **options: {"segments": [], "language": options["language"]})
+    provider.detect_language_probabilities = lambda audio: heard.append(len(audio) / 16_000) or TELUGU_NEAR_HINDI
+    provider.allowed_languages = {"en", "te", "hi"}
+    # 0-2 s (too short to keep), then the same buffer grown to 2.5 s.
+    provider.transcribe_chunk(_live(0, 2))
+    provider.transcribe_chunk(_live(0, 2.5))
+    # A line was committed: the next buffer starts at 2.5 s and is 1 s long,
+    # but detection hears all 3.5 s of the session so far.
+    provider.transcribe_chunk(_live(2_500, 1))
+    assert heard == [2.0, 2.5, 3.5]
+    # 3.5 s heard: remembered, no detection for the next passes.
+    provider.transcribe_chunk(_live(2_500, 2))
+    assert len(heard) == 3
+    # Recent audio is capped at 8 s.
+    provider._language_memory.forget()
+    provider.transcribe_chunk(_live(4_500, 8))
+    assert heard[-1] == 8.0

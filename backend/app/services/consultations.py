@@ -14,6 +14,8 @@ from ..providers.factory import build_extraction_provider
 from ..providers.speech import TranscriptDraft
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
 from .evidence import EvidenceValidator
+from .native_terms import add_terms_lost_in_translation
+from ..providers.ollama_extraction import mentions_health
 from .record_diff import diff_clinical_record
 
 
@@ -228,6 +230,19 @@ def _note_source(session: Session, consultation: Consultation) -> list[Transcrip
     return [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in rows]
 
 
+def _with_original_language_terms(session: Session, consultation: Consultation, transcript_inputs: list[TranscriptSegmentInput], record: ClinicalRecord, evidence: dict[str, list[str]], needs_review: set[str]) -> ClinicalRecord:
+    """For a note written from the English translation: add symptoms said in
+    the original language that the translation lost (flagged for review)."""
+
+    if not transcript_inputs or not all("-en-" in item.id for item in transcript_inputs):
+        return record
+    if not mentions_health(item.text for item in transcript_inputs):
+        return record  # not a consultation: the note stays empty
+    rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
+    original = [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in rows]
+    return add_terms_lost_in_translation(record, evidence, needs_review, original)
+
+
 def extract_reconciled_clinical_record(
     session: Session,
     consultation_id: str,
@@ -247,6 +262,8 @@ def extract_reconciled_clinical_record(
     current = ClinicalRecord()
     result = _extract_or_leave_reviewable(transcript_inputs, current, warnings)
     validated_record, evidence, needs_review = _apply_validated_candidates(result, current, transcript_inputs)
+    if result is not None:
+        validated_record = _with_original_language_terms(session, consultation, transcript_inputs, validated_record, evidence, needs_review)
     changes = diff_clinical_record(current, validated_record, evidence, set())
     for change in changes:
         session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=_ai_update_type(change.field_name, needs_review)))
@@ -276,6 +293,7 @@ def reanalyse_consultation(session: Session, consultation_id: str, *, warnings: 
         # Extraction failed: leave the existing note exactly as it was.
         return get_consultation(session, consultation_id)
     analysed, evidence, needs_review = _apply_validated_candidates(result, ClinicalRecord(), transcript_inputs)
+    analysed = _with_original_language_terms(session, consultation, transcript_inputs, analysed, evidence, needs_review)
     current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
     doctor_edited_fields = {update.field_name for update in consultation.updates if update.update_type == RecordUpdateType.DOCTOR_EDITED.value}
     refreshed = analysed.model_dump()

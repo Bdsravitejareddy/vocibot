@@ -107,3 +107,32 @@ def test_pieces_cover_the_whole_recording() -> None:
     audio = speech_with_pauses(95)
     spans = split_at_pauses(audio, 16_000, 28)
     assert spans[0][0] == 0 and spans[-1][1] == len(audio) and all(a < b for a, b in spans)
+
+
+def test_dense_scripts_are_transcribed_in_short_pieces_so_whisper_does_not_overflow() -> None:
+    """28 s of Telugu overflowed Whisper's 224-token window: it stopped
+    mid-letter and skipped the rest (a 15 s gap)."""
+
+    class DetectingSTT:
+        def __init__(self, language):
+            self.language, self.chunks, self.detections = language, [], 0
+
+        def detect_piece_language(self, audio):
+            self.detections += 1
+            return self.language, 0.95
+
+        def transcribe_chunk(self, chunk, language=None):
+            self.chunks.append((len(chunk.waveform) / 16_000, language))
+            return [TranscriptDraft(text="పదం" if language == "te" else "word", timestamp="", start_ms=chunk.timestamp_ms, end_ms=chunk.timestamp_ms + 1_000, language_code=language)]
+
+        def translate_chunk(self, chunk, language):
+            return []
+
+    telugu = DetectingSTT("te")
+    FinalReconciler().run(speech_with_pauses(28), telugu, sample_rate=16_000)
+    assert telugu.detections == 1
+    assert len(telugu.chunks) == 3 and all(seconds <= 12.5 and language == "te" for seconds, language in telugu.chunks)
+
+    english = DetectingSTT("en")
+    FinalReconciler().run(speech_with_pauses(28), english, sample_rate=16_000)
+    assert english.chunks == [(28.0, "en")]

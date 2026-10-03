@@ -59,7 +59,7 @@ def test_ollama_malformed_candidate_metadata_is_sanitized(monkeypatch) -> None:
             return {"response": '{"proposed_record":{"presenting_symptoms":"patient"},"candidates":[{"field_name":"chief_complaint","value":"Fever","source_segment_ids":["s1"],"speaker":"","status":"SUPPORTED"}]}' }
 
     monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", lambda *args, **kwargs: Response())
-    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.PATIENT, "I have fever.")), ClinicalRecord())
+    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.PATIENT, "Doctor, I have fever.")), ClinicalRecord())
 
     assert result.proposed_record.presenting_symptoms == []
     assert result.candidates[0].speaker == Speaker.UNKNOWN
@@ -84,7 +84,7 @@ def test_ollama_numeric_vitals_are_kept_as_text(monkeypatch) -> None:
             return {"response": '{"proposed_record":{"vitals":{"temperature":38.6,"pulse":96}},"candidates":[{"field_name":"vitals","value":{"temperature":38.6,"pulse":96},"source_segment_ids":["s1"],"speaker":"DOCTOR","status":"SUPPORTED"}]}'}
 
     monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", lambda *args, **kwargs: Response())
-    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.DOCTOR, "Temperature 38.6, pulse 96.")), ClinicalRecord())
+    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.DOCTOR, "Temperature 38.6, pulse 96, oxygen saturation normal.")), ClinicalRecord())
 
     assert result.proposed_record.vitals == {"temperature": "38.6", "pulse": "96"}
     assert result.candidates[0].value == {"temperature": "38.6", "pulse": "96"}
@@ -99,7 +99,7 @@ def test_ollama_odd_candidate_shapes_do_not_sink_the_note(monkeypatch) -> None:
             return {"response": '{"candidates":[{"field_name":"chief_complaint","value":"Fever","source_segment_ids":[["s0"]],"speaker":["PATIENT","DOCTOR"],"status":"SUPPORTED"},{"field_name":"duration","value":"three days","source_segment_ids":"s0","speaker":"PATIENT","status":"SUPPORTED"}]}'}
 
     monkeypatch.setattr("app.providers.ollama_extraction.httpx.post", lambda *args, **kwargs: Response())
-    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.PATIENT, "I have had a fever for three days.")), ClinicalRecord())
+    result = OllamaClinicalExtractionProvider().extract(segments(("s1", Speaker.PATIENT, "Doctor, I have had a fever for three days.")), ClinicalRecord())
 
     assert [(c.field_name, c.source_segment_ids, c.speaker) for c in result.candidates] == [("chief_complaint", ["s1"], Speaker.PATIENT), ("duration", ["s1"], Speaker.PATIENT)]
 
@@ -125,8 +125,10 @@ def test_health_vocabulary_decides_whether_a_note_is_attempted() -> None:
 
     # Test17: the note model, asked "is this a consultation?", answered "No."
     assert mentions_health(["Hi Doctor, how are you?", "My name is Ravi.", "I have a severe headache.", "It has been going on for about 10 days."])
-    assert mentions_health(["I have fever."])
-    assert mentions_health(["I feel tired and weak"])  # two everyday words
+    assert mentions_health(["Hi doctor, I have fever."])
+    assert mentions_health(["I have a fever", "and I feel tired and weak"])  # one clinical, two everyday
+    assert not mentions_health(["we keep bleeding money on idle clusters", "load tests"])  # one clinical, one everyday
+    assert not mentions_health(["this sacred city teaches us patience"])
     assert mentions_health(["నాకు బాగా జ్వరంగా ఉంది"])  # not translated: cannot tell, so try
     assert not mentions_health(["Good morning everyone and a warm welcome to the annual Cloud Engineering Summit."])
     assert not mentions_health(["Can you hear me? Hello? Hello?"])

@@ -18,7 +18,7 @@ from ..providers.reconciliation import FinalReconciler
 from ..providers.speech import AudioChunk, TranscriptDraft
 from ..providers.streaming import TranscriptCommitter, select_live_commits
 from ..db import SessionLocal
-from ..languages import enabled_languages
+from ..languages import enabled_languages, primary_language
 from ..services.consultations import replace_with_reconciled_transcript
 from ..services.live_cpu import LocalPipelineExecutor
 from ..services.recordings import SessionRecorder, compress_soon, recording_path
@@ -27,9 +27,10 @@ from ..providers.vad import SileroVoiceActivityDetector
 
 router = APIRouter(tags=["audio"])
 logger = logging.getLogger(__name__)
-def restrict_languages(stt, allowed: set[str]) -> None:
+def restrict_languages(stt, allowed: set[str], primary: str | None = None) -> None:
     if stt is not None and hasattr(stt, "allowed_languages"):
         stt.allowed_languages = set(allowed)
+        stt.primary_language = primary if primary in allowed else None
 
 
 def session_languages() -> set[str]:
@@ -37,6 +38,11 @@ def session_languages() -> set[str]:
 
     with SessionLocal() as session:
         return set(enabled_languages(session))
+
+
+def session_primary_language() -> str | None:
+    with SessionLocal() as session:
+        return primary_language(session)
 
 
 def build_local_pipeline() -> LocalAudioPipeline:
@@ -83,7 +89,7 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
             await websocket.close(code=1008)
             return
         pipeline = build_local_pipeline()
-        restrict_languages(getattr(pipeline, "stt", None), allowed)
+        restrict_languages(getattr(pipeline, "stt", None), allowed, session_primary_language())
         warmup = getattr(pipeline, "warmup", None)
         if callable(warmup):
             await pipeline_executor.run(warmup)

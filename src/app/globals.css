@@ -77,3 +77,9 @@ button, input, textarea, select { font: inherit; }
 .review-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .review-queue-link { color: var(--forest); background: var(--lime-soft); border-radius: 999px; padding: 8px 12px; font-size: 11px; font-weight: 750; text-decoration: none; }
 .review-queue-link:hover { text-decoration: underline; }
+.primary-language { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 14px 16px; margin-bottom: 14px; border: 1px solid #cce0ad; border-radius: 14px; background: #f3fae6; }
+.primary-language span { display: grid; gap: 4px; }
+.primary-language strong { color: var(--forest); font-size: 13px; }
+.primary-language small { color: var(--muted); font-size: 11px; line-height: 1.45; max-width: 520px; }
+.primary-language select { min-width: 190px; border: 1px solid #d4ddd0; border-radius: 9px; background: #fdfdf9; padding: 9px 10px; font-size: 13px; }
+@media (max-width: 640px) { .primary-language { flex-direction: column; align-items: stretch; } }

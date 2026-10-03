@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_session
-from ..languages import enabled_languages
+from ..languages import enabled_languages, primary_language
 from .audio import restrict_languages
 from ..config import settings
 from ..models import Consultation, Recording
@@ -85,7 +85,7 @@ def reanalyse(consultation_id: str, session: Session = Depends(get_session)) -> 
 @router.post("/{consultation_id}/retranscribe")
 def retranscribe(consultation_id: str, session: Session = Depends(get_session)) -> dict:
     stt = build_speech_provider(settings)
-    restrict_languages(stt, set(enabled_languages(session)))
+    restrict_languages(stt, set(enabled_languages(session)), primary_language(session))
 
     def transcribe(waveform, sample_rate: int, language: str | None):
         result = FinalReconciler().run(waveform, stt, sample_rate=sample_rate, language=language)
