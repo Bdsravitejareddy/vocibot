@@ -15,6 +15,7 @@ from ..providers.speech import TranscriptDraft
 from ..schemas import ApproveRequest, ConsultationCreate, SegmentCreate
 from .evidence import EvidenceValidator
 from .native_terms import add_terms_lost_in_translation
+from ..providers.ollama_extraction import mentions_health
 from .record_diff import diff_clinical_record
 
 
@@ -235,6 +236,8 @@ def _with_original_language_terms(session: Session, consultation: Consultation, 
 
     if not transcript_inputs or not all("-en-" in item.id for item in transcript_inputs):
         return record
+    if not mentions_health(item.text for item in transcript_inputs):
+        return record  # not a consultation: the note stays empty
     rows = session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id).order_by(TranscriptSegment.sequence_number)).all()
     original = [TranscriptSegmentInput(id=item.id, speaker=item.speaker, text=item.text, timestamp=item.timestamp, sequence_number=item.sequence_number, language_code=item.language_code) for item in rows]
     return add_terms_lost_in_translation(record, evidence, needs_review, original)

@@ -62,3 +62,13 @@ def test_recognition_misspellings_and_a_question_split_over_two_lines() -> None:
 def test_short_words_are_matched_exactly_only() -> None:
     # చాలా ("very") has the consonants of చలి ("chills").
     assert found("నాకు చాలా బాగుంది") == []
+
+
+def test_hindi_is_matched_exactly_and_translated_contradictions_are_dropped() -> None:
+    # मतलब ("meaning") has the consonants of मतली ("nausea").
+    assert found("इसका मतलब यह है कि काशी समय की धारा है") == []
+    record = ClinicalRecord(presenting_symptoms=["fever"], relevant_negatives=["no fever", "no cough"])
+    needs_review: set[str] = set()
+    updated = add_terms_lost_in_translation(record, {}, needs_review, lines("నిన్న రాత్రి నుంచి జ్వరం కూడా ఎక్కువగానే ఉంది", "దగ్గు అయితే లేదు"))
+    assert updated.relevant_negatives == ["no cough"]
+    assert "relevant_negatives" in needs_review

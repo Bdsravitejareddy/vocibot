@@ -215,7 +215,7 @@ def write_note(final: dict, item: dict) -> dict:
     from note_quality import score
 
     from app.domain.types import ClinicalRecord, Speaker, TranscriptSegmentInput
-    from app.providers.ollama_extraction import OllamaClinicalExtractionProvider
+    from app.providers.ollama_extraction import OllamaClinicalExtractionProvider, mentions_health
     from app.services.consultations import _apply_validated_candidates
     from app.services.native_terms import add_terms_lost_in_translation
 
@@ -227,7 +227,7 @@ def write_note(final: dict, item: dict) -> dict:
     started = time.perf_counter()
     result = OllamaClinicalExtractionProvider().extract(source, ClinicalRecord())
     record, evidence, needs_review = _apply_validated_candidates(result, ClinicalRecord(), source)
-    if final["translation_drafts"]:
+    if final["translation_drafts"] and mentions_health(item.text for item in source):
         record = add_terms_lost_in_translation(record, evidence, needs_review, original)
     filled = {key: value for key, value in record.model_dump().items() if value not in (None, "", [], {})}
     note = {"seconds": round(time.perf_counter() - started, 1), "fields_filled": len(filled), "record": filled}

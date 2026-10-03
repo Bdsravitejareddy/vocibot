@@ -114,10 +114,18 @@ def _find(clause: str, term: Term) -> int:
         return min(exact)
     skeleton, positions = _skeleton(clause)
     for stem in term.stems:
+        if not _is_telugu(stem):
+            # Hindi recognition is far more accurate, and consonant matching
+            # there misreads common words (मतलब "meaning" as मतली "nausea").
+            continue
         stem_skeleton, _ = _skeleton(stem)
         if len(stem_skeleton) >= MIN_SKELETON and (at := skeleton.find(stem_skeleton)) >= 0:
             return positions[at]
     return -1
+
+
+def _is_telugu(text: str) -> bool:
+    return any(0x0C00 <= ord(character) <= 0x0C7F for character in text)
 
 
 # A line ending like this continues on the next ("any stomach pain, or" |
@@ -190,7 +198,16 @@ def add_terms_lost_in_translation(record: ClinicalRecord, evidence: dict[str, li
 
     terms = {term.english: term for term in TERMS}
     data = record.model_dump()
-    for finding in find_native_terms(original):
+    findings = find_native_terms(original)
+    # The translation sometimes inverts a line ("If you do not have a fever,
+    # will you be able to sleep?"): when the original clearly reports a
+    # symptom, a translated "no <symptom>" is dropped.
+    reported = {finding.english for finding in findings if not finding.negative}
+    kept = [item for item in data["relevant_negatives"] if not any(item.lower().startswith("no ") and any(word in item.lower() for word in terms[name].covered_by) for name in reported)]
+    if kept != data["relevant_negatives"]:
+        data["relevant_negatives"] = kept
+        needs_review.add("relevant_negatives")
+    for finding in findings:
         if _covered(ClinicalRecord.model_validate(data), terms[finding.english]):
             continue
         field_name = "relevant_negatives" if finding.negative else "presenting_symptoms"
