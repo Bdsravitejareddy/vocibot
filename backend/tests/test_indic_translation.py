@@ -13,3 +13,12 @@ def test_punctuation_is_normalised_like_indictrans2() -> None:
 
 def test_language_codes() -> None:
     assert FLORES["te"] == "tel_Telu" and FLORES["hi"] == "hin_Deva" and "en" not in FLORES
+
+
+def test_transliteration_to_devanagari_matches_indic_nlp() -> None:
+    from indicnlp.transliterate.unicode_transliterate import UnicodeIndicTransliterator
+
+    from app.providers.indic_translation import to_devanagari
+
+    for text, language in (("నాకు బాగా జ్వరంగా ఉంది, డోలో 650.", "te"), ("ಜ್ವರ ಇದೆ", "kn"), ("તાવ છે", "gu"), ("बुखार है", "hi")):
+        assert to_devanagari(text, language) == UnicodeIndicTransliterator.transliterate(text, language, "hi")

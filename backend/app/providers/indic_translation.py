@@ -69,6 +69,25 @@ def _protect(text: str) -> tuple[str, dict[str, str]]:
     return regex.sub(r"\s+", " ", text).replace(">/", ">"), entities
 
 
+def to_devanagari(text: str, language: str) -> str:
+    """indic-nlp's UnicodeIndicTransliterator for Brahmic scripts: the
+    Unicode blocks are laid out alike, so a letter moves by a fixed offset.
+    (That module imports pandas, which the app does not bundle.)"""
+
+    from indicnlp import langinfo  # type: ignore[import-not-found]
+
+    if language not in langinfo.SCRIPT_RANGES or language == "hi":
+        return text
+    source, target = langinfo.SCRIPT_RANGES[language][0], langinfo.SCRIPT_RANGES["hi"][0]
+    out = []
+    for character in text:
+        offset = ord(character) - source
+        if langinfo.COORDINATED_RANGE_START_INCLUSIVE <= offset <= langinfo.COORDINATED_RANGE_END_INCLUSIVE and character not in "\u0964\u0965":
+            character = chr(target + offset)
+        out.append(character)
+    return "".join(out)
+
+
 class IndicTranslator:
     """Indian languages -> English, sentence by sentence."""
 
@@ -92,12 +111,11 @@ class IndicTranslator:
                 import sentencepiece  # type: ignore[import-not-found]
                 from indicnlp.normalize.indic_normalize import IndicNormalizerFactory  # type: ignore[import-not-found]
                 from indicnlp.tokenize import indic_tokenize  # type: ignore[import-not-found]
-                from indicnlp.transliterate.unicode_transliterate import UnicodeIndicTransliterator  # type: ignore[import-not-found]
                 from sacremoses import MosesDetokenizer  # type: ignore[import-not-found]
 
                 translator = ctranslate2.Translator(str(self.model_dir), device="cpu", compute_type="int8", intra_threads=self.threads)
                 pieces = sentencepiece.SentencePieceProcessor(model_file=str(self.model_dir / "vocab" / "model.SRC"))
-                self._loaded = (translator, pieces, IndicNormalizerFactory(), indic_tokenize, UnicodeIndicTransliterator, MosesDetokenizer(lang="en"))
+                self._loaded = (translator, pieces, IndicNormalizerFactory(), indic_tokenize, MosesDetokenizer(lang="en"))
             return self._loaded
 
     def translate(self, sentences: list[str], language: str) -> list[str]:
@@ -105,7 +123,7 @@ class IndicTranslator:
 
         if not sentences:
             return []
-        translator, pieces, normalizers, tokenize, transliterator, detokenizer = self._load()
+        translator, pieces, normalizers, tokenize, detokenizer = self._load()
         source = FLORES[language]
         normalizer = normalizers.get_normalizer(language)
         batch, entities = [], []
@@ -113,7 +131,7 @@ class IndicTranslator:
             text, protected = _protect(_punctuation(sentence))
             text = " ".join(tokenize.trivial_tokenize(normalizer.normalize(text.strip()), language))
             if source.split("_")[1] not in NOT_TRANSLITERATED:
-                text = transliterator.transliterate(text, language, "hi").replace(" ् ", "्")
+                text = to_devanagari(text, language).replace(" ् ", "्")
             tokens = pieces.encode(text, out_type=str)[:MAX_TOKENS]
             batch.append([source, "eng_Latn", *tokens])
             entities.append(protected)
