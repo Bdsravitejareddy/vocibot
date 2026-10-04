@@ -6,6 +6,7 @@ from .api.consultations import router as consultations_router
 from .api.audio import router as audio_router
 from .api.settings import router as settings_router
 from .api.voice_profiles import router as voice_profiles_router
+from .api.learning import router as learning_router
 from .services.runtime_status import runtime_status
 
 app = FastAPI(title="VociBot API")
@@ -14,6 +15,7 @@ app.include_router(consultations_router)
 app.include_router(audio_router)
 app.include_router(settings_router)
 app.include_router(voice_profiles_router)
+app.include_router(learning_router)
 
 
 @app.on_event("startup")
@@ -23,6 +25,9 @@ def startup() -> None:
     from .services.recordings import start_recording_maintenance
 
     start_recording_maintenance()
+    from .learning.scheduler import start_scheduler
+
+    start_scheduler()
 
 
 @app.get("/health")

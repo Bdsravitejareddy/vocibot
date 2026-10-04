@@ -1,0 +1,6428 @@
+{
+ "medicines": [
+  {
+   "brand": "Telma",
+   "generic": "Telmisartan",
+   "strengths": [
+    "20 mg",
+    "40 mg",
+    "80 mg"
+   ],
+   "spoken": [
+    "Thelma",
+    "Telma",
+    "Tel-maa",
+    "टेलमा",
+    "టెల్మా",
+    "டெல்மா"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Telmikind",
+   "generic": "Telmisartan",
+   "strengths": [
+    "20 mg",
+    "40 mg"
+   ],
+   "spoken": [
+    "Telmi kind",
+    "Telmikind",
+    "टेलमीकाइन्ड",
+    "టెల్మికిండ్",
+    "டெல்மிகிண்ட்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Telvas",
+   "generic": "Telmisartan",
+   "strengths": [
+    "20 mg",
+    "40 mg",
+    "80 mg"
+   ],
+   "spoken": [
+    "Telvas",
+    "Telwas",
+    "टेलवास",
+    "టెల్వాస్",
+    "டெல்வாஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Cilacar",
+   "generic": "Cilnidipine",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg"
+   ],
+   "spoken": [
+    "Silacar",
+    "Cilacar",
+    "Silicar",
+    "सिलाकार",
+    "సిలాకార్",
+    "சிலாகார்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Amlong",
+   "generic": "Amlodipine",
+   "strengths": [
+    "2.5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Amlong",
+    "Amlon",
+    "Amalong",
+    "एमलोंग",
+    "ఆమ్లాంగ్",
+    "அம்லாங்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Stamlo",
+   "generic": "Amlodipine",
+   "strengths": [
+    "2.5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Stamlo",
+    "Stemlo",
+    "स्टैमलो",
+    "స్టామ్లో",
+    "ஸ்டாம்லோ"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Amlopres",
+   "generic": "Amlodipine",
+   "strengths": [
+    "2.5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Amlopress",
+    "Amlopres",
+    "एमलोप्रेस",
+    "ఆమ్లోప్రెస్",
+    "அம்லோப்ரெஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Telma H",
+   "generic": "Telmisartan + Hydrochlorothiazide",
+   "strengths": [
+    "40 mg/12.5 mg",
+    "80 mg/12.5 mg"
+   ],
+   "spoken": [
+    "Telma H",
+    "Telma-H",
+    "टेलमा एच",
+    "టెల్మా హెచ్",
+    "டெல்மா எச்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Telma AM",
+   "generic": "Telmisartan + Amlodipine",
+   "strengths": [
+    "40 mg/5 mg",
+    "80 mg/5 mg"
+   ],
+   "spoken": [
+    "Telma AM",
+    "Telma-AM",
+    "टेलमा एएम",
+    "టెల్మా ఏఎం",
+    "டெல்மா ஏஎம்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Cilacar T",
+   "generic": "Cilnidipine + Telmisartan",
+   "strengths": [
+    "10 mg/40 mg"
+   ],
+   "spoken": [
+    "Silacar T",
+    "Cilacar-T",
+    "सिलाकार टी",
+    "సిలాకార్ టి",
+    "சிலாகார் டி"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Atorva",
+   "generic": "Atorvastatin",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg",
+    "40 mg",
+    "80 mg"
+   ],
+   "spoken": [
+    "Atorva",
+    "Attorva",
+    "अटोर्वा",
+    "అటోర్వా",
+    "அடோர்வா"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Lipivas",
+   "generic": "Atorvastatin",
+   "strengths": [
+    "10 mg",
+    "20 mg",
+    "40 mg"
+   ],
+   "spoken": [
+    "Lipivas",
+    "Lipiwash",
+    "लिपिवास",
+    "లిపివాస్",
+    "லிபிவாஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Storvas",
+   "generic": "Atorvastatin",
+   "strengths": [
+    "10 mg",
+    "20 mg",
+    "40 mg",
+    "80 mg"
+   ],
+   "spoken": [
+    "Storvas",
+    "Starvas",
+    "स्टोरवास",
+    "స్టోర్వాస్",
+    "ஸ்டோர்வாஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Rosuvas",
+   "generic": "Rosuvastatin",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg",
+    "40 mg"
+   ],
+   "spoken": [
+    "Rosuvas",
+    "Rojuvash",
+    "रोसुवास",
+    "రోసువాస్",
+    "ரோசுவாஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Rozavel",
+   "generic": "Rosuvastatin",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg",
+    "40 mg"
+   ],
+   "spoken": [
+    "Rozavel",
+    "Rosavel",
+    "रोज़ावेल",
+    "రోజావెల్",
+    "ரோசாவெல்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Rosave",
+   "generic": "Rosuvastatin",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg"
+   ],
+   "spoken": [
+    "Rosave",
+    "Rozave",
+    "रोसेव",
+    "రోసేవ్",
+    "ரோசேவ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Ecosprin",
+   "generic": "Aspirin",
+   "strengths": [
+    "75 mg",
+    "150 mg"
+   ],
+   "spoken": [
+    "Eco sprin",
+    "Ecosprin",
+    "Ekosprin",
+    "इकोस्प्रिन",
+    "ఎకోస్ప్రిన్",
+    "எகோஸ்ப்ரின்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Ecosprin AV",
+   "generic": "Aspirin + Atorvastatin",
+   "strengths": [
+    "75 mg/10 mg",
+    "75 mg/20 mg",
+    "150 mg/10 mg",
+    "150 mg/20 mg"
+   ],
+   "spoken": [
+    "Ecosprin AV",
+    "Ecosprin A V",
+    "इकोस्प्रिन एवी",
+    "ఎకోస్ప్రిన్ ఏవి",
+    "எகோஸ்ப்ரின் ஏவி"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Rozucor",
+   "generic": "Rosuvastatin",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg",
+    "40 mg"
+   ],
+   "spoken": [
+    "Rozucor",
+    "Rosucor",
+    "रोज़ुकोर",
+    "రోజుకోర్",
+    "ரோசுகோர்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Deplatt",
+   "generic": "Clopidogrel",
+   "strengths": [
+    "75 mg",
+    "150 mg"
+   ],
+   "spoken": [
+    "Deplat",
+    "Deplatt",
+    "डीप्लैट",
+    "డిప్లాట్",
+    "டிப்ளாட்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Clopilet",
+   "generic": "Clopidogrel",
+   "strengths": [
+    "75 mg",
+    "150 mg"
+   ],
+   "spoken": [
+    "Clopilet",
+    "Klopilet",
+    "क्लोपिलेट",
+    "క్లోపిలెట్",
+    "க்ளோபிலெட்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Betaloc",
+   "generic": "Metoprolol Succinate",
+   "strengths": [
+    "25 mg",
+    "50 mg",
+    "100 mg"
+   ],
+   "spoken": [
+    "Betaloc",
+    "Bitaloc",
+    "बीटालॉक",
+    "బీటాలాక్",
+    "பீட்டாலாக்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Metosartan",
+   "generic": "Metoprolol Succinate + Telmisartan",
+   "strengths": [
+    "25 mg/40 mg",
+    "50 mg/40 mg"
+   ],
+   "spoken": [
+    "Meto sartan",
+    "Metosartan",
+    "मेटोसार्टन",
+    "మెటోసార్టన్",
+    "மெட்டோசார்டன்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Metolar",
+   "generic": "Metoprolol Tartrate",
+   "strengths": [
+    "25 mg",
+    "50 mg",
+    "100 mg"
+   ],
+   "spoken": [
+    "Metolar",
+    "Matolar",
+    "मेटोलार",
+    "మెటోలార్",
+    "மெட்டோலார்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Starpress XL",
+   "generic": "Metoprolol Succinate",
+   "strengths": [
+    "25 mg",
+    "50 mg",
+    "100 mg"
+   ],
+   "spoken": [
+    "Starpress XL",
+    "Starpress",
+    "स्टारप्रेस एक्सेल",
+    "స్టార్ప్రెస్ ఎక్సెల్",
+    "ஸ்டார்ப்ரெஸ் எக்ஸ்எல்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Prolomet XL",
+   "generic": "Metoprolol Succinate",
+   "strengths": [
+    "12.5 mg",
+    "25 mg",
+    "50 mg"
+   ],
+   "spoken": [
+    "Prolomet",
+    "Prolomet XL",
+    "प्रॉलोमेट एक्सेल",
+    "ప్రోలోమెట్ ఎక్సెల్",
+    "ப்ரோலோமெட் எக்ஸ்எல்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Cardivas",
+   "generic": "Carvedilol",
+   "strengths": [
+    "3.125 mg",
+    "6.25 mg",
+    "12.5 mg",
+    "25 mg"
+   ],
+   "spoken": [
+    "Cardivas",
+    "Kardivas",
+    "कार्डिवास",
+    "కార్డివాస్",
+    "கார்டிவாஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Carca",
+   "generic": "Carvedilol",
+   "strengths": [
+    "3.125 mg",
+    "6.25 mg",
+    "12.5 mg",
+    "25 mg"
+   ],
+   "spoken": [
+    "Carca",
+    "Karka",
+    "कारका",
+    "కార్కా",
+    "கார்கா"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Nebicard",
+   "generic": "Nebivolol",
+   "strengths": [
+    "2.5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Nebicard",
+    "Nebikard",
+    "नेबीकार्ड",
+    "నెబికార్డ్",
+    "நெபிகார்ட்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Nebistar",
+   "generic": "Nebivolol",
+   "strengths": [
+    "2.5 mg",
+    "5 mg"
+   ],
+   "spoken": [
+    "Nebistar",
+    "Nebystar",
+    "नेबीस्टार",
+    "నెబిస్టార్",
+    "நெபிஸ்டார்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Concor",
+   "generic": "Bisoprolol Fumarate",
+   "strengths": [
+    "2.5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Concor",
+    "Konkor",
+    "कॉनकोर",
+    "కాంకోర్",
+    "கான்கோர்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Bisoheart",
+   "generic": "Bisoprolol Fumarate",
+   "strengths": [
+    "2.5 mg",
+    "5 mg"
+   ],
+   "spoken": [
+    "Bisoheart",
+    "Biso heart",
+    "बिसोहाट",
+    "బిసోహార్ట్",
+    "பிசோஹார்ட்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Losar",
+   "generic": "Losartan Potassium",
+   "strengths": [
+    "25 mg",
+    "50 mg"
+   ],
+   "spoken": [
+    "Losar",
+    "Lozar",
+    "लोसार",
+    "లోసార్",
+    "லோசார்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Repace",
+   "generic": "Losartan Potassium",
+   "strengths": [
+    "25 mg",
+    "50 mg"
+   ],
+   "spoken": [
+    "Repace",
+    "Reepace",
+    "रीपेस",
+    "రీపేస్",
+    "ரீபேஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Envas",
+   "generic": "Enalapril Maleate",
+   "strengths": [
+    "2.5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Envas",
+    "Anvas",
+    "एनवास",
+    "ఎన్వాస్",
+    "என்வாஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Dytor",
+   "generic": "Torsemide",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg",
+    "40 mg",
+    "100 mg"
+   ],
+   "spoken": [
+    "Dytor",
+    "Ditor",
+    "डायटॉर",
+    "డైటార్",
+    "டைடார்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Lasix",
+   "generic": "Furosemide",
+   "strengths": [
+    "40 mg"
+   ],
+   "spoken": [
+    "Lasix",
+    "Lesix",
+    "लेसिक्स",
+    "లాసిక్స్",
+    "லாசிக்ஸ்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Arkamin",
+   "generic": "Clonidine",
+   "strengths": [
+    "100 mcg"
+   ],
+   "spoken": [
+    "Arkamin",
+    "Arcamin",
+    "अर्कामिन",
+    "అర్కామిన్",
+    "அர்காமின்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Sorbitrate",
+   "generic": "Isosorbide Dinitrate",
+   "strengths": [
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Sorbitrate",
+    "Sorbi trate",
+    "सॉर्बिट्रेट",
+    "సార్బిట్రేట్",
+    "சார்பிட்ரேட்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Monotrate",
+   "generic": "Isosorbide Mononitrate",
+   "strengths": [
+    "10 mg",
+    "20 mg",
+    "40 mg"
+   ],
+   "spoken": [
+    "Monotrate",
+    "Mono trate",
+    "मोनोट्रेट",
+    "మోనోట్రేట్",
+    "மோனோட்ரேட்"
+   ],
+   "category": "blood pressure, heart and cholesterol"
+  },
+  {
+   "brand": "Augmentin",
+   "generic": "Amoxicillin and Potassium Clavulanate",
+   "strengths": [
+    "625 mg",
+    "375 mg",
+    "1000 mg Duo",
+    "DDS Syrup"
+   ],
+   "spoken": [
+    "Augmentin",
+    "Ogmentin",
+    "Augmentin 625",
+    "Augmentin Duo",
+    "ऑगमेंटिन",
+    "आगमेंटिन",
+    "ఆగ్మెంటిన్",
+    "ஆக்மென்டின்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Clavam",
+   "generic": "Amoxicillin and Potassium Clavulanate",
+   "strengths": [
+    "625 mg",
+    "375 mg",
+    "DT",
+    "Dry Syrup"
+   ],
+   "spoken": [
+    "Clavam",
+    "Klavam",
+    "Clavam 625",
+    "क्लावम",
+    "క్లావామ్",
+    "கிளவாம்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Moxikind-CV",
+   "generic": "Amoxicillin and Potassium Clavulanate",
+   "strengths": [
+    "625 mg",
+    "375 mg",
+    "Dry Syrup"
+   ],
+   "spoken": [
+    "Moxikind CV",
+    "Moxikind",
+    "Moxykind CV",
+    "मोक्सिकाइंड सीवी",
+    "మోక్సికైండ్ సివి",
+    "மோக்சிகின்ட் சிவி"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Azithral",
+   "generic": "Azithromycin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "Liquid 200 mg/5ml"
+   ],
+   "spoken": [
+    "Azithral",
+    "Ajithral",
+    "Azithral 500",
+    "Azithro",
+    "एजिथ्रल",
+    "अज़ीथ्रल",
+    "అజిత్రాల్",
+    "அசித்ரால்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Azee",
+   "generic": "Azithromycin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "1000 mg",
+    "Liquid 200 mg/5ml"
+   ],
+   "spoken": [
+    "Azee",
+    "Azee 500",
+    "Aji",
+    "Ezee",
+    "एज़ी",
+    "एजी",
+    "అజీ",
+    "அசீ"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Zithrox",
+   "generic": "Azithromycin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "XL 200 Suspension"
+   ],
+   "spoken": [
+    "Zithrox",
+    "Jithrox",
+    "Zithrox 500",
+    "जिथ्रोक्स",
+    "జిథ్రాక్స్",
+    "சித்ராக்ஸ்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Taxim-O",
+   "generic": "Cefixime",
+   "strengths": [
+    "200 mg",
+    "100 mg",
+    "DT",
+    "Drops"
+   ],
+   "spoken": [
+    "Taxim O",
+    "Taxim",
+    "Taxim O 200",
+    "टैक्सिम ओ",
+    "టాక్సిమ్ ఓ",
+    "டாக்ஸிம் ஓ"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Mahacef",
+   "generic": "Cefixime",
+   "strengths": [
+    "200 mg",
+    "100 mg",
+    "Plus",
+    "Dry Syrup"
+   ],
+   "spoken": [
+    "Mahacef",
+    "Mahacef 200",
+    "Maha Cef",
+    "महासेफ",
+    "మహాసెఫ్",
+    "மஹாசெஃப்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Zifi",
+   "generic": "Cefixime",
+   "strengths": [
+    "200 mg",
+    "100 mg",
+    "DT",
+    "Oral Suspension"
+   ],
+   "spoken": [
+    "Zifi",
+    "Zifi 200",
+    "Jifi",
+    "ज़िफ़ी",
+    "జిఫీ",
+    "ஜிஃபி"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Monocef-O",
+   "generic": "Cefpodoxime Proxetil",
+   "strengths": [
+    "200 mg",
+    "100 mg",
+    "50 mg DT",
+    "Suspension"
+   ],
+   "spoken": [
+    "Monocef O",
+    "Monocef 200",
+    "Monocef O tablet",
+    "मोनोसेफ ओ",
+    "మోనోసెఫ్ ఓ",
+    "மோனோசெப் ஓ"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Gudcef",
+   "generic": "Cefpodoxime Proxetil",
+   "strengths": [
+    "200 mg",
+    "100 mg",
+    "50 mg DT",
+    "Dry Syrup"
+   ],
+   "spoken": [
+    "Gudcef",
+    "Goodcef",
+    "Gudcef 200",
+    "गुडसेफ",
+    "గుడ్‌సెఫ్",
+    "குட்செஃப்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Cifran",
+   "generic": "Ciprofloxacin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "OZ"
+   ],
+   "spoken": [
+    "Cifran",
+    "Sifran",
+    "Cifran 500",
+    "सिफ्रान",
+    "సిఫ్రాన్",
+    "சிஃப்ரான்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Ciplox",
+   "generic": "Ciprofloxacin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "Eye/Ear Drops"
+   ],
+   "spoken": [
+    "Ciplox",
+    "Siplox",
+    "Ciplox 500",
+    "सिप्लोक्स",
+    "సిప్లాక్స్",
+    "சிப்லாக்ஸ்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Cefakind",
+   "generic": "Cefuroxime Axetil",
+   "strengths": [
+    "500 mg",
+    "250 mg"
+   ],
+   "spoken": [
+    "Cefakind",
+    "Cefakind 500",
+    "Sefakind",
+    "सेफाकाइंड",
+    "సెఫాకైండ్",
+    "செஃபாகின்ட்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Cetil",
+   "generic": "Cefuroxime Axetil",
+   "strengths": [
+    "500 mg",
+    "250 mg"
+   ],
+   "spoken": [
+    "Cetil",
+    "Setil",
+    "Cetil 500",
+    "सेटिल",
+    "సెటిల్",
+    "செடில்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Doxicip",
+   "generic": "Doxycycline",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Doxicip",
+    "Doxicip 100",
+    "Doxycip",
+    "डॉक्सीसिप",
+    "డాక్సిసిప్",
+    "டாக்ஸிசிப்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Novamox",
+   "generic": "Amoxicillin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "125 mg DT",
+    "Rediuse Syrup"
+   ],
+   "spoken": [
+    "Novamox",
+    "Novamox 500",
+    "Nobamox",
+    "नोवामोक्स",
+    "నోవామాక్స్",
+    "நோவாமக்ஸ்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Oflox",
+   "generic": "Ofloxacin",
+   "strengths": [
+    "200 mg",
+    "400 mg",
+    "Eye/Ear Drops"
+   ],
+   "spoken": [
+    "Oflox",
+    "Oflox 200",
+    "O flock",
+    "ओफ्लॉक्स",
+    "ఆఫ్లాక్స్",
+    "ஓஃப்லாக்ஸ்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Zenflox",
+   "generic": "Ofloxacin",
+   "strengths": [
+    "200 mg",
+    "400 mg",
+    "OZ"
+   ],
+   "spoken": [
+    "Zenflox",
+    "Jenflox",
+    "Zenflox 200",
+    "ज़ेनफ्लॉक्स",
+    "జెన్‌ఫ్లాక్స్",
+    "ஜென்ஃப்லாக்ஸ்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "O2",
+   "generic": "Ofloxacin and Ornidazole",
+   "strengths": [
+    "Ofloxacin 200 mg + Ornidazole 500 mg"
+   ],
+   "spoken": [
+    "O2",
+    "O Two",
+    "O-Two tablet",
+    "ओ टू",
+    "ఓ టు",
+    "ஓ டூ"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Zenflox-OZ",
+   "generic": "Ofloxacin and Ornidazole",
+   "strengths": [
+    "Ofloxacin 200 mg + Ornidazole 500 mg",
+    "Suspension"
+   ],
+   "spoken": [
+    "Zenflox OZ",
+    "Jenflox OZ",
+    "Zenflox O Z",
+    "ज़ेनफ्लॉक्स ओजेड",
+    "జెన్‌ఫ్లాక్స్ ఓజెడ్",
+    "ஜென்ஃப்லாக்ஸ் ஓஸெட்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Norflox-TZ",
+   "generic": "Norfloxacin and Tinidazole",
+   "strengths": [
+    "Norfloxacin 400 mg + Tinidazole 600 mg"
+   ],
+   "spoken": [
+    "Norflox TZ",
+    "Norflox",
+    "Norflox T Z",
+    "नॉरफ्लॉक्स टीजेड",
+    "నార్‌ఫ్లాక్స్ టిజెడ్",
+    "நார்ஃப்லாக்ஸ் டிஸெட்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Metrogyl",
+   "generic": "Metronidazole",
+   "strengths": [
+    "400 mg",
+    "200 mg",
+    "Gel 2%"
+   ],
+   "spoken": [
+    "Metrogyl",
+    "Metrogyl 400",
+    "Metrogil",
+    "मेट्रोजिल",
+    "మెట్రోజిల్",
+    "மெட்ரோஜில்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Flagyl",
+   "generic": "Metronidazole",
+   "strengths": [
+    "400 mg",
+    "200 mg"
+   ],
+   "spoken": [
+    "Flagyl",
+    "Flajil",
+    "Flagyl 400",
+    "फ्लैजिल",
+    "ఫ్లాజిల్",
+    "ஃபிளாஜில்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Levomac",
+   "generic": "Levofloxacin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "750 mg"
+   ],
+   "spoken": [
+    "Levomac",
+    "Levomac 500",
+    "Livomac",
+    "लेवोमैक",
+    "లెవోమాక్",
+    "லெவோமேக்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Glevo",
+   "generic": "Levofloxacin",
+   "strengths": [
+    "500 mg",
+    "250 mg",
+    "750 mg"
+   ],
+   "spoken": [
+    "Glevo",
+    "Glevo 500",
+    "G levo",
+    "ग्लेवो",
+    "గ్లెవో",
+    "க்ளெவோ"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Rifagut",
+   "generic": "Rifaximin",
+   "strengths": [
+    "400 mg",
+    "550 mg",
+    "200 mg"
+   ],
+   "spoken": [
+    "Rifagut",
+    "Rifagut 550",
+    "Rifagut 400",
+    "रिफागट",
+    "రిఫాగట్",
+    "ரிஃபாகட்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Bactrim",
+   "generic": "Sulfamethoxazole and Trimethoprim",
+   "strengths": [
+    "DS (800 mg + 160 mg)",
+    "SS (400 mg + 80 mg)"
+   ],
+   "spoken": [
+    "Bactrim",
+    "Bactrim DS",
+    "Bactrem",
+    "बैक्ट्रिम",
+    "బాక్ట్రిమ్",
+    "பாக்ட்ரிம்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Septran",
+   "generic": "Sulfamethoxazole and Trimethoprim",
+   "strengths": [
+    "DS",
+    "Pediatric Tablet",
+    "Suspension"
+   ],
+   "spoken": [
+    "Septran",
+    "Septran DS",
+    "Septrin",
+    "सेप्ट्रान",
+    "సెప్ట్రాన్",
+    "செப்ட்ரான்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Roscillin",
+   "generic": "Ampicillin",
+   "strengths": [
+    "500 mg",
+    "250 mg"
+   ],
+   "spoken": [
+    "Roscillin",
+    "Roscillin 500",
+    "Rosilin",
+    "रोसिलिन",
+    "రోసిల్లిన్",
+    "ரோஸிலின்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Forcan",
+   "generic": "Fluconazole",
+   "strengths": [
+    "150 mg",
+    "200 mg",
+    "50 mg"
+   ],
+   "spoken": [
+    "Forcan",
+    "Forcan 150",
+    "Forkaan",
+    "फोरकैन",
+    "ఫోర్కాన్",
+    "ஃபோர்கான்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Zocon",
+   "generic": "Fluconazole",
+   "strengths": [
+    "150 mg",
+    "200 mg",
+    "50 mg",
+    "Dusting Powder 1%"
+   ],
+   "spoken": [
+    "Zocon",
+    "Zocon 150",
+    "Jocon",
+    "जोकॉन",
+    "జోకాన్",
+    "ஸோகான்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Fluka",
+   "generic": "Fluconazole",
+   "strengths": [
+    "150 mg"
+   ],
+   "spoken": [
+    "Fluka",
+    "Fluka 150",
+    "Fluca",
+    "फ्लूका",
+    "ఫ్లూకా",
+    "ஃப்ளூகா"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Candiforce",
+   "generic": "Itraconazole",
+   "strengths": [
+    "100 mg",
+    "200 mg",
+    "SB 130 mg"
+   ],
+   "spoken": [
+    "Candiforce",
+    "Candiforce 200",
+    "Candy force",
+    "कैंडीफोर्स",
+    "కాండిఫోర్స్",
+    "கேண்டிஃபோர்ஸ்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "IT-Mac",
+   "generic": "Itraconazole",
+   "strengths": [
+    "100 mg",
+    "200 mg"
+   ],
+   "spoken": [
+    "IT Mac",
+    "IT Mac 200",
+    "Itmac",
+    "आई टी मैक",
+    "ఐటి మాక్",
+    "ஐடி மேக்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Canditral",
+   "generic": "Itraconazole",
+   "strengths": [
+    "100 mg",
+    "200 mg",
+    "SB 65 mg",
+    "SB 130 mg"
+   ],
+   "spoken": [
+    "Canditral",
+    "Canditral 200",
+    "Candytrail",
+    "कैंडिट्राल",
+    "కాండిట్రాల్",
+    "கேண்டிட்ரால்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Candid",
+   "generic": "Clotrimazole",
+   "strengths": [
+    "Dusting Powder 1%",
+    "Lotion",
+    "Mouth Paint",
+    "V6 Vaginal Tablet"
+   ],
+   "spoken": [
+    "Candid",
+    "Candid Powder",
+    "Candid B",
+    "कैंडिड",
+    "కాండిడ్",
+    "கேண்டிட்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Canesten",
+   "generic": "Clotrimazole",
+   "strengths": [
+    "Cream 1%",
+    "Vaginal Tablet 100 mg",
+    "Vaginal Tablet 500 mg"
+   ],
+   "spoken": [
+    "Canesten",
+    "Kanesten",
+    "Canestine",
+    "कैनेस्टेन",
+    "కానెస్టెన్",
+    "கேனஸ்டென்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Terbicip",
+   "generic": "Terbinafine",
+   "strengths": [
+    "250 mg",
+    "500 mg",
+    "Cream 1%"
+   ],
+   "spoken": [
+    "Terbicip",
+    "Terbicip 250",
+    "Turbicip",
+    "टरबिसिप",
+    "టెర్బిసిప్",
+    "டெர்பிசிப்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Lulifin",
+   "generic": "Luliconazole",
+   "strengths": [
+    "Cream 1% 10g",
+    "Cream 1% 20g",
+    "Lotion 1%"
+   ],
+   "spoken": [
+    "Lulifin",
+    "Lulifin cream",
+    "Lulyfin",
+    "लुलिफिन",
+    "లులిఫిన్",
+    "லுலிஃபின்"
+   ],
+   "category": "antibiotics and antifungals"
+  },
+  {
+   "brand": "Calpol",
+   "generic": "Paracetamol",
+   "strengths": [
+    "650 mg",
+    "500 mg",
+    "250 mg/5ml"
+   ],
+   "spoken": [
+    "Calpol",
+    "Calpal",
+    "Kelpol",
+    "Кальпол",
+    "калпол",
+    "కాల్పాల్",
+    "கால்பால்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Dolo",
+   "generic": "Paracetamol",
+   "strengths": [
+    "650 mg",
+    "500 mg"
+   ],
+   "spoken": [
+    "Dolo",
+    "Dolo 650",
+    "Dullo",
+    "Dolo tablet",
+    "डोलो",
+    "డోలో",
+    "டோலோ"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Crocin",
+   "generic": "Paracetamol",
+   "strengths": [
+    "650 mg",
+    "500 mg",
+    "Advance"
+   ],
+   "spoken": [
+    "Crocin",
+    "Crocine",
+    "Krocin",
+    "कrocin",
+    "क्रोसिन",
+    "క్రోసిన్",
+    "க்ரோசின்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Combiflam",
+   "generic": "Ibuprofen + Paracetamol",
+   "strengths": [
+    "400 mg + 325 mg"
+   ],
+   "spoken": [
+    "Combiflam",
+    "Combi",
+    "Kombiflam",
+    "컴비플람",
+    "कॉम्बीflam",
+    "कॉम्बीफ्लैम",
+    "కాంబిఫ్లామ్",
+    "காம்பிப்லாம்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Zerodol-P",
+   "generic": "Aceclofenac + Paracetamol",
+   "strengths": [
+    "100 mg + 325 mg"
+   ],
+   "spoken": [
+    "Zerodol P",
+    "Zerodol",
+    "Zero dol",
+    "ज़ेरोडोल पी",
+    "జెరోడోల్ పి",
+    "செரோடோல் பி"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Voveran",
+   "generic": "Diclofenac Sodium",
+   "strengths": [
+    "50 mg",
+    "75 mg",
+    "100 mg SR"
+   ],
+   "spoken": [
+    "Voveran",
+    "Vovran",
+    "Voberan",
+    "वोवेरन",
+    "వోవెరాన్",
+    "வோவெரான்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Meftal-Spas",
+   "generic": "Mefenamic Acid + Dicyclomine",
+   "strengths": [
+    "250 mg + 10 mg",
+    "500 mg + 20 mg"
+   ],
+   "spoken": [
+    "Meftal Spas",
+    "Meftal",
+    "Mefthal",
+    "मेफ्टाल स्पास",
+    "మెఫ్టాల్ స్పాస్",
+    "மெப்டால் ஸ்பாஸ்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Ibugesic Plus",
+   "generic": "Ibuprofen + Paracetamol",
+   "strengths": [
+    "400 mg + 325 mg",
+    "100 mg/162.5 mg/5ml"
+   ],
+   "spoken": [
+    "Ibugesic Plus",
+    "Ibugesic",
+    "Ibu",
+    "इबुजेसिक प्लस",
+    "ఇబుజెసిక్ ప్లస్",
+    "இபுஜெசிக் பிளஸ்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Sumo",
+   "generic": "Nimesulide + Paracetamol",
+   "strengths": [
+    "100 mg + 325 mg"
+   ],
+   "spoken": [
+    "Sumo",
+    "Sumo tablet",
+    "सुमो",
+    "సుమో",
+    "சுமோ"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Nizer",
+   "generic": "Nimesulide",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Nizer",
+    "Nisaar",
+    "ナイザー",
+    "निज़र",
+    "నిజర్",
+    "நைசர்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Pacimol",
+   "generic": "Paracetamol",
+   "strengths": [
+    "650 mg",
+    "500 mg",
+    "125 mg"
+   ],
+   "spoken": [
+    "Pacimol",
+    "Passimol",
+    "पएसिमोल",
+    "पासीमोल",
+    "పాసిమోల్",
+    "பாசிமோல்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Aceclo-P",
+   "generic": "Aceclofenac + Paracetamol",
+   "strengths": [
+    "100 mg + 325 mg"
+   ],
+   "spoken": [
+    "Aceclo P",
+    "Aceclo",
+    "असेक्लो पी",
+    "అసెక్లో పి",
+    "அசெக்ளோ பி"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Dolonex",
+   "generic": "Piroxicam",
+   "strengths": [
+    "20 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Dolonex",
+    "Dolonex DT",
+    "डोनेक्स",
+    "डोलॉनेक्स",
+    "డోలొనెక్స్",
+    "டொலோனெக்ஸ்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Ketorol",
+   "generic": "Ketorolac Tromethamine",
+   "strengths": [
+    "10 mg"
+   ],
+   "spoken": [
+    "Ketorol",
+    "Ketrol",
+    "केिटरोल",
+    "केटोरोल",
+    "కెటోరోల్",
+    "கெட்டோரால்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Diclogesic",
+   "generic": "Diclofenac + Paracetamol",
+   "strengths": [
+    "50 mg + 325 mg"
+   ],
+   "spoken": [
+    "Diclogesic",
+    "Diclo gesic",
+    "डिक्लो जेसिक",
+    "డక్లోజెసిక్",
+    "டிக்ளோஜெசிக்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Zerodol",
+   "generic": "Aceclofenac",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Zerodol",
+    "Zero dol",
+    "ज़ेरोडोल",
+    "జెరోడోల్",
+    "செரோடோல்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Nimulid",
+   "generic": "Nimesulide",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Nimulid",
+    "Nimolid",
+    "निमुलाइड",
+    "निमुलाइड",
+    "నిములాయిడ్",
+    "நிமுலைடு"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Pyricontin",
+   "generic": "Paracetamol (Controlled Release)",
+   "strengths": [
+    "650 mg"
+   ],
+   "spoken": [
+    "Pyricontin",
+    "Pyri contin",
+    "पाइरीकोंटिन",
+    "పైరికాంటిన్",
+    "பைரிகான்டின்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Painil",
+   "generic": "Aceclofenac + Paracetamol + Serratiopeptidase",
+   "strengths": [
+    "100 mg + 325 mg + 15 mg"
+   ],
+   "spoken": [
+    "Painil",
+    "Painil plus",
+    "पेनिल",
+    "పెనిల్",
+    "பெனில்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Flamar",
+   "generic": "Diclofenac Potassium",
+   "strengths": [
+    "50 mg"
+   ],
+   "spoken": [
+    "Flamar",
+    "Flammar",
+    "फ्लामार",
+    "ఫ్లామార్",
+    "பிளாமர்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Xalofac",
+   "generic": "Aceclofenac",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Xalofac",
+    "Zalofac",
+    "क्सलोफेक",
+    "క్సలోఫాక్",
+    "க்ஸலோபாக்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Brufen",
+   "generic": "Ibuprofen",
+   "strengths": [
+    "400 mg",
+    "600 mg",
+    "200 mg"
+   ],
+   "spoken": [
+    "Brufen",
+    "Bruffin",
+    "Brufren",
+    "ब्रुफेन",
+    "బ్రుఫెన్",
+    "ப்ரூபென்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Zupar",
+   "generic": "Paracetamol",
+   "strengths": [
+    "650 mg",
+    "500 mg"
+   ],
+   "spoken": [
+    "Zupar",
+    "Zuparr",
+    "ज़ुपर",
+    "జుపార్",
+    "ஜுபார்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Nimesul",
+   "generic": "Nimesulide",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Nimesul",
+    "Nime sul",
+    "निमेसुल",
+    "నిమేసుల్",
+    "நிமெசுல்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Aldigesic-P",
+   "generic": "Aceclofenac + Paracetamol",
+   "strengths": [
+    "100 mg + 325 mg"
+   ],
+   "spoken": [
+    "Aldigesic P",
+    "Aldigesic",
+    "अल्जिजेसिक पी",
+    "అల్డిజెసిక్ పి",
+    "அல்டிஜெசிக் பி"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Signoflam",
+   "generic": "Aceclofenac + Paracetamol + Serratiopeptidase",
+   "strengths": [
+    "100 mg + 325 mg + 15 mg"
+   ],
+   "spoken": [
+    "Signoflam",
+    "Signo flam",
+    "सिग्नोफ्लैम",
+    "सिग्नोflam",
+    "సిగ్నోఫ్లామ్",
+    "சிக்னோபிளாம்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Diclomax",
+   "generic": "Diclofenac Sodium",
+   "strengths": [
+    "100 mg SR",
+    "50 mg"
+   ],
+   "spoken": [
+    "Diclomax",
+    "Diclo max",
+    "डिक्लोमैक्स",
+    "డక్లోమాక్స్",
+    "டிக்ளோமேக்ஸ்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Paracip",
+   "generic": "Paracetamol",
+   "strengths": [
+    "650 mg",
+    "500 mg",
+    "250 mg"
+   ],
+   "spoken": [
+    "Paracip",
+    "Parasip",
+    "पारसिप",
+    "पैरासिप",
+    "పరాసిప్",
+    "பாராசிப்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Nimgesic",
+   "generic": "Nimesulide",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Nimgesic",
+    "Nim gesic",
+    "निम्जेसिक",
+    "నిమ్జెసిక్",
+    "நிம்ஜெசிக்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Actimus",
+   "generic": "Flurbiprofen",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Actimus",
+    "Actimuss",
+    "ऐक्टिमस",
+    "ఆక్టిమస్",
+    "ஆக்டிமஸ்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Ketorol-DT",
+   "generic": "Ketorolac Tromethamine (Dispersible)",
+   "strengths": [
+    "10 mg"
+   ],
+   "spoken": [
+    "Ketorol DT",
+    "Ketrol DT",
+    "केटोरोल डीटी",
+    "కెటోరోల్ డిటి",
+    "கெட்டோரால் டிடி"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Aceclo",
+   "generic": "Aceclofenac",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Aceclo",
+    "Aseklo",
+    "असेक्लो",
+    "అసెక్లో",
+    "அசெக்ளோ"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Fenak",
+   "generic": "Diclofenac Sodium",
+   "strengths": [
+    "50 mg"
+   ],
+   "spoken": [
+    "Fenak",
+    "Phenak",
+    "फेनाक",
+    "ఫెనాక్",
+    "பெனாக்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Mobizox",
+   "generic": "Diclofenac + Paracetamol + Chlorzoxazone",
+   "strengths": [
+    "50 mg + 325 mg + 250 mg"
+   ],
+   "spoken": [
+    "Mobizox",
+    "Mobizox tablet",
+    "मोबिजॉक्स",
+    "మొబిజోక్స్",
+    "மொபிஜாக்ஸ்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Thio-Spas",
+   "generic": "Thiocolchicoside + Aceclofenac + Paracetamol",
+   "strengths": [
+    "4 mg + 100 mg + 325 mg"
+   ],
+   "spoken": [
+    "Thio Spas",
+    "Thiospas",
+    "थियो स्पास",
+    "థియో స్పాஸ்",
+    "தியோ ஸ்பாஸ்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Nicip",
+   "generic": "Nimesulide",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Nicip",
+    "Nisip",
+    "निसिप",
+    "निसीप",
+    "నిసిప్",
+    "நிசிப்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Diclogesic-DT",
+   "generic": "Diclofenac (Dispersible)",
+   "strengths": [
+    "50 mg"
+   ],
+   "spoken": [
+    "Diclogesic DT",
+    "डिक्लोजेसिक डीटी",
+    "డక్లోజెసిక్ డిటి",
+    "டிக்ளோஜெசிக் டிடி"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Pyigesic",
+   "generic": "Paracetamol + Ibuprofen",
+   "strengths": [
+    "325 mg + 400 mg"
+   ],
+   "spoken": [
+    "Pyigesic",
+    "Pai gesic",
+    "पाइजेसिक",
+    "పైజెసిక్",
+    "பைஜெசிக்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Nimopen",
+   "generic": "Nimesulide",
+   "strengths": [
+    "100 mg"
+   ],
+   "spoken": [
+    "Nimopen",
+    "Nimo pen",
+    "निमोपेन",
+    "నిమోపెన్",
+    "நிமோபென்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Serrat",
+   "generic": "Serratiopeptidase",
+   "strengths": [
+    "10 mg",
+    "20 mg"
+   ],
+   "spoken": [
+    "Serrat",
+    "Serat",
+    "सेराट",
+    "సెరాట్",
+    "செராட்"
+   ],
+   "category": "fever and pain relief (analgesics, antipyretics, NSAIDs)"
+  },
+  {
+   "brand": "Pan 40",
+   "generic": "Pantoprazole",
+   "strengths": [
+    "40 mg"
+   ],
+   "spoken": [
+    "Pan forty",
+    "Paan 40",
+    "पैन चाळीस",
+    "పాన్ నలభై",
+    "பான் நாற்பது"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Pantocid 40",
+   "generic": "Pantoprazole",
+   "strengths": [
+    "40 mg",
+    "20 mg"
+   ],
+   "spoken": [
+    "Pantocide",
+    "Panto set",
+    "पेंटोसिड",
+    "పంటోసిడ్",
+    "பான்டோசிட்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Razo 20",
+   "generic": "Rabeprazole",
+   "strengths": [
+    "20 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Razo",
+    "Razo tab",
+    "राजो",
+    "రాజో",
+    "ராஜோ"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Rantac 150",
+   "generic": "Ranitidine",
+   "strengths": [
+    "150 mg",
+    "300 mg"
+   ],
+   "spoken": [
+    "Rantac",
+    "Ranitak",
+    "रेंटॅक",
+    "రాంటాక్",
+    "ரான்டாக்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Omez 20",
+   "generic": "Omeprazole",
+   "strengths": [
+    "20 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Omez",
+    "Oms",
+    "ओमेझ",
+    "ఓమెజ్",
+    "ஓமெஸ்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Nexpro 40",
+   "generic": "Esomeprazole",
+   "strengths": [
+    "40 mg",
+    "20 mg"
+   ],
+   "spoken": [
+    "Nextpro",
+    "Nexpro",
+    "नेक्सप्रो",
+    "నెక్స్‌ప్రో",
+    "நெக்ஸ்ப்ரோ"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Aciloc 150",
+   "generic": "Ranitidine",
+   "strengths": [
+    "150 mg",
+    "300 mg"
+   ],
+   "spoken": [
+    "Assylok",
+    "Aciloc",
+    "असिलॉक",
+    "అసిలాక్",
+    "அசிலாக்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Rabepure 20",
+   "generic": "Rabeprazole",
+   "strengths": [
+    "20 mg"
+   ],
+   "spoken": [
+    "Rabe pure",
+    "Rabipur",
+    "रॅबेप्युअर",
+    "రాబెప్యూర్",
+    "ராபேபூர்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Pan-D",
+   "generic": "Pantoprazole + Domperidone",
+   "strengths": [
+    "40 mg / 30 mg"
+   ],
+   "spoken": [
+    "Pan D",
+    "Paan D",
+    "पैन डी",
+    "పాన్ డి",
+    "பான் டி"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Razo-D",
+   "generic": "Rabeprazole + Domperidone",
+   "strengths": [
+    "20 mg / 30 mg"
+   ],
+   "spoken": [
+    "Razo D",
+    "Rajod",
+    "राजो डी",
+    "రాజో డి",
+    "ராஜோ டி"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Rantac-DOM",
+   "generic": "Ranitidine + Domperidone",
+   "strengths": [
+    "150 mg / 10 mg"
+   ],
+   "spoken": [
+    "Rantac dom",
+    "Rantak dom",
+    "रेंटॅक डोम",
+    "రాంటాక్ డోమ్",
+    "ரான்டாக் டோம்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Omez-D",
+   "generic": "Omeprazole + Domperidone",
+   "strengths": [
+    "20 mg / 10 mg"
+   ],
+   "spoken": [
+    "Omez D",
+    "Omis D",
+    "ओमेझ डी",
+    "ఓమెజ్ డి",
+    "ஓமெஸ் டி"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Gelusil MPS",
+   "generic": "Magnesium Hydroxide + Aluminium Hydroxide + Simethicone",
+   "strengths": [
+    "200ml Syrup"
+   ],
+   "spoken": [
+    "Gelusil",
+    "Jelusil",
+    "गेल्युसिल",
+    "జెలుసిల్",
+    "கெலுசில்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Mucaine Gel",
+   "generic": "Oxethazaine + Aluminium Hydroxide + Magnesium Hydroxide",
+   "strengths": [
+    "200ml Syrup"
+   ],
+   "spoken": [
+    "Mucaine",
+    "Mukaane",
+    "म्युकेन जेल",
+    "ముకైన్ జెల్",
+    "மூகைன் ஜெல்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Digene",
+   "generic": "Magnesium Hydroxide + Aluminium Hydroxide + Simethicone + Sodium Carboxymethyl Cellulose",
+   "strengths": [
+    "Syrup & Tablets"
+   ],
+   "spoken": [
+    "Dijene",
+    "Digin",
+    "डायजीन",
+    "డైజీన్",
+    "டைஜீன்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Cremaffin",
+   "generic": "Milk of Magnesia + Liquid Paraffin",
+   "strengths": [
+    "225ml Syrup"
+   ],
+   "spoken": [
+    "Cremafin",
+    "Cremaffin plus",
+    "क्रेमाफिन",
+    "క్రెమాఫిన్",
+    "கிரெமாஃபின்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Eno",
+   "generic": "Sodium Bicarbonate + Citric Acid + Anhydrous Sodium Carbonate",
+   "strengths": [
+    "5g Sachet"
+   ],
+   "spoken": [
+    "Eno powder",
+    "Eno sachet",
+    "इनेनो",
+    "ఈనో",
+    "ஈனோ"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Supradyn",
+   "generic": "Multivitamin (often used with GI meds)",
+   "strengths": [
+    "1 tablet"
+   ],
+   "spoken": [
+    "Supradin",
+    "Supradyn",
+    "सुप्राडीन",
+    "సుప్రాడిన్",
+    "சுப்ரடின்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Pudin Hara",
+   "generic": "Mint Oil (Mentha Piperita)",
+   "strengths": [
+    "Liquid & Pearls"
+   ],
+   "spoken": [
+    "Pudinhara",
+    "Pudin hara",
+    "पुदिना हरा",
+    "పుదినా హరా",
+    "புதினா ஹரா"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Zofer MD 4",
+   "generic": "Ondansetron",
+   "strengths": [
+    "4 mg",
+    "2 mg"
+   ],
+   "spoken": [
+    "Zofer",
+    "Zofer MD",
+    "झोफर",
+    "జోఫర్",
+    "ஜோஃபர்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Emeset 4",
+   "generic": "Ondansetron",
+   "strengths": [
+    "4 mg",
+    "8 mg"
+   ],
+   "spoken": [
+    "Emset",
+    "Emeset",
+    "इमसेत",
+    "ఎమెసెట్",
+    "எமெசெட்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Perinorm",
+   "generic": "Metoclopramide",
+   "strengths": [
+    "10 mg"
+   ],
+   "spoken": [
+    "Peri norm",
+    "Perinorm syrup",
+    "पेरीनॉर्म",
+    "పెరినార్మ్",
+    "பெரினாம்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Stemetil",
+   "generic": "Prochlorperazine",
+   "strengths": [
+    "5 mg"
+   ],
+   "spoken": [
+    "Stemeti",
+    "Stemetil MD",
+    "स्टेमेटिल",
+    "స్టెమెటిల్",
+    "ஸ்டெமெடில்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Domstal",
+   "generic": "Domperidone",
+   "strengths": [
+    "10 mg"
+   ],
+   "spoken": [
+    "Domstal DT",
+    "Domastel",
+    "डोमस्टाल",
+    "డొమ్‌స్టాల్",
+    "டோம்ஸ்டால்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Vomikind",
+   "generic": "Ondansetron",
+   "strengths": [
+    "4 mg"
+   ],
+   "spoken": [
+    "Vomi kind",
+    "Vomikind MD",
+    "वोमीकाइंड",
+    "వామికైండ్",
+    "வாமிகைண்ட்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Ondem",
+   "generic": "Ondansetron",
+   "strengths": [
+    "4 mg",
+    "8 mg"
+   ],
+   "spoken": [
+    "Ondam",
+    "Ondem MD",
+    "ऑन्डेम",
+    "ఒండెమ్",
+    "ஒன்டெம்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Imodium",
+   "generic": "Loperamide",
+   "strengths": [
+    "2 mg"
+   ],
+   "spoken": [
+    "Imodium",
+    "Imodum",
+    "इमोडियम",
+    "ఇమోడియం",
+    "இமோடியம்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Lomotil",
+   "generic": "Diphenoxylate + Atropine",
+   "strengths": [
+    "2.5 mg"
+   ],
+   "spoken": [
+    "Lomotel",
+    "Lomotil",
+    "लोमोटिल",
+    "లోమోటిల్",
+    "லோமோடில்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Enterogermina",
+   "generic": "Bacillus Clausii",
+   "strengths": [
+    "2 Billion spores/5ml"
+   ],
+   "spoken": [
+    "Entero germina",
+    "Entrogermina",
+    "एंटरोगर्मिना",
+    "ఎంటరోగెర్మినా",
+    "என்டரோஜெர்மினா"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Rifaximin 550",
+   "generic": "Rifaximin",
+   "strengths": [
+    "550 mg",
+    "200 mg"
+   ],
+   "spoken": [
+    "Rifaximin",
+    "Refaximin",
+    "रिफॅक्सिमीन",
+    "రిఫాక్సిమిన్",
+    "ரிபாக்சிமின்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Normaxin",
+   "generic": "Chlordiazepoxide + Clidinium Bromide",
+   "strengths": [
+    "5 mg / 2.5 mg"
+   ],
+   "spoken": [
+    "Normaxen",
+    "Normaxin",
+    "नॉर्मॅक्सिन",
+    "నార్మాక్సిన్",
+    "நார்மாக்சின்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Sporilac",
+   "generic": "Lactobacillus Sporogenes + Strep Faecalis + Clostridium Butyricum + Bacillus Mesentericus",
+   "strengths": [
+    "1 tablet"
+   ],
+   "spoken": [
+    "Sporilak",
+    "Sporelac",
+    "स्पोरिलॅक",
+    "స్పోరిలాక్",
+    "ஸ்போரிலாக்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Darolac",
+   "generic": "Lactobacillus Blend",
+   "strengths": [
+    "1 capsule/sachet"
+   ],
+   "spoken": [
+    "Darolak",
+    "Daralac",
+    "डारोलाॅक",
+    "డారోలాక్",
+    "தாரோலாக்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Dulcolax",
+   "generic": "Bisacodyl",
+   "strengths": [
+    "5 mg"
+   ],
+   "spoken": [
+    "Dulkolax",
+    "Dulcolax",
+    "डुलकोलाक्स",
+    "డల్కొలాక్స్",
+    "டல்கோலாக்ஸ்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Cremaffin Plus",
+   "generic": "Liquid Paraffin + Milk of Magnesia + Picosodium Sulphate",
+   "strengths": [
+    "225ml Syrup"
+   ],
+   "spoken": [
+    "Cremaffin plus",
+    "Cremafin syrup",
+    "क्रेमाफिन प्लस",
+    "క్రెమాఫిన్ ప్లస్",
+    "கிரெமாஃபின் பிளஸ்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Laxopeptil",
+   "generic": "Fungal Diastase + Pepsin",
+   "strengths": [
+    "Syrup"
+   ],
+   "spoken": [
+    "Laxopeptyl",
+    "Laxopeptil",
+    "लॅक्सोपेप्टिल",
+    "లాక్సోపెప్టిల్",
+    "லாக்சோபெப்டில்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Gutclear",
+   "generic": "Polyethylene Glycol (Macrogol) + Electrolytes",
+   "strengths": [
+    "Sachet"
+   ],
+   "spoken": [
+    "Gut clear",
+    "Gutkler",
+    "गटक्लिअर",
+    "గట్‌క్లియర్",
+    "கட்கியர்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Smecta",
+   "generic": "Diosmectite",
+   "strengths": [
+    "3g Sachet"
+   ],
+   "spoken": [
+    "Smikta",
+    "Smecta powder",
+    "स्मेक्टा",
+    "స్మెక్టా",
+    "ஸ்மெக்டா"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Zofran",
+   "generic": "Ondansetron",
+   "strengths": [
+    "4 mg",
+    "8 mg"
+   ],
+   "spoken": [
+    "Zofran",
+    "Zovran",
+    "झोफ्रान",
+    "జోఫ్రాన్",
+    "ஜோஃப்ராண்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Colimex",
+   "generic": "Dicyclomine + Simethicone",
+   "strengths": [
+    "10 mg / 40 mg"
+   ],
+   "spoken": [
+    "Colimex",
+    "Kolimex",
+    "कोलिमेक्स",
+    "కొలిమెక్స్",
+    "கோலிமெக்ஸ்"
+   ],
+   "category": "stomach and digestion (antacids, PPIs, antiemetics, antidiarrhoeals, laxatives)"
+  },
+  {
+   "brand": "Ascoril LS",
+   "generic": "Ambroxol + Guaifenesin + Levosalbutamol",
+   "strengths": [
+    "100ml syrup (30mg+50mg+1mg/5ml)"
+   ],
+   "spoken": [
+    "Ascoril",
+    "Askoril",
+    "असकॉril",
+    "అస్కరిల్",
+    "அஸ்கரில்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Corex DX",
+   "generic": "Dextromethorphan + Chlorpheniramine",
+   "strengths": [
+    "100ml syrup (10mg+2mg/5ml)"
+   ],
+   "spoken": [
+    "Corex",
+    "Korex",
+    "कोरex",
+    "కోరెక్స్",
+    "கொரெக்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Benadryl",
+   "generic": "Diphenhydramine + Ammonium Chloride + Sodium Citrate",
+   "strengths": [
+    "50ml/100ml syrup"
+   ],
+   "spoken": [
+    "Benadryl",
+    "Bandryl",
+    "बेनाड्रिल",
+    "బెనాడ్రిల్",
+    "பெனாடரில்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Montair LC",
+   "generic": "Montelukast + Levocetirizine",
+   "strengths": [
+    "10mg + 5mg tablet"
+   ],
+   "spoken": [
+    "Montair LC",
+    "Montek LC",
+    "मोंटैयर एलसी",
+    "ಮಾಂಟೈರ್ ಎಲ್ ಸಿ",
+    "மாண்டெய்ர் எல்சி"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Montek LC",
+   "generic": "Montelukast + Levocetirizine",
+   "strengths": [
+    "10mg + 5mg tablet"
+   ],
+   "spoken": [
+    "Montek",
+    "Montek LC",
+    "मोंटेक एलसी",
+    "ಮಾಂಟೆಕ್ ಎಲ್ ಸಿ",
+    "மான்டெக் எல்சி"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Allegra",
+   "generic": "Fexofenadine",
+   "strengths": [
+    "120mg tablet",
+    "180mg tablet",
+    "30mg/5ml suspension"
+   ],
+   "spoken": [
+    "Allegra",
+    "Alegra",
+    "एलेग्रा",
+    "ಅಲೆಗ್ರಾ",
+    "அலெக்ரா"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Alerid",
+   "generic": "Cetirizine",
+   "strengths": [
+    "10mg tablet"
+   ],
+   "spoken": [
+    "Alerid",
+    "Allerid",
+    "एलेरिड",
+    "ಅಲೆರಿಡ್",
+    "அலெரிட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Cetrizet",
+   "generic": "Cetirizine",
+   "strengths": [
+    "10mg tablet"
+   ],
+   "spoken": [
+    "Cetrizet",
+    "Cetset",
+    "सेट्रीज़ेट",
+    "ಸೆಟ್ರಿಜೆಟ್",
+    "செட்ரிசெட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Zeet",
+   "generic": "Chlorpheniramine + Dextromethorphan + Guaifenesin",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Zeet syrup",
+    "Zit",
+    "ज़ीट",
+    "ಜೀಟ್",
+    "ஜீட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Alex",
+   "generic": "Chlorpheniramine + Dextromethorphan + Phenylephrine",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Alex",
+    "Aleks",
+    "アレックス",
+    "ಅಲೆಕ್ಸ್",
+    "அலெக்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Grilinctus",
+   "generic": "Dextromethorphan + Chlorpheniramine + Guaifenesin + Ammonium Chloride",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Grilinctus",
+    "Grilinctus syrup",
+    "ग्रिलिंक्टस",
+    "গ্রিলিন্টাস",
+    "கிரிளின்க்டஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Torex",
+   "generic": "Chlorpheniramine + Dextromethorphan + Menthol",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Torex",
+    "Torex syrup",
+    "टोरेक्स",
+    "ಟೋರೆಕ್ಸ್",
+    "டொரெக்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Cheston Total",
+   "generic": "Cetirizine + Ambroxol + Guaifenesin + Phenylephrine + Paracetamol",
+   "strengths": [
+    "Tablet"
+   ],
+   "spoken": [
+    "Cheston",
+    "Cheston Total",
+    "चेस्टन टोटल",
+    "ಚೆಸ್ಟನ್ ಟೋಟಲ್",
+    "செஸ்டன் டோட்டல்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Solvin",
+   "generic": "Bromhexine + Dextromethorphan + Ammonium Chloride + Menthol",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Solvin",
+    "Solvin syrup",
+    "सॉल्वीन",
+    "ಸಾಲ್ವಿನ್",
+    "சால்வின்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Phensedyl",
+   "generic": "Codeine Phosphate + Chlorpheniramine Maleate",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Phensedyl",
+    "Phensedyl syrup",
+    "फेनसेडिल",
+    "ಫೆನ್ಸೆಡಿಲ್",
+    "பென்செடில்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Asthalin",
+   "generic": "Salbutamol",
+   "strengths": [
+    "2mg tablet",
+    "4mg tablet",
+    "Inhaler 100mcg"
+   ],
+   "spoken": [
+    "Asthalin",
+    "Asthalin inhaler",
+    "अस्थालिन",
+    "ಅಸ್ಥಾಲಿನ್",
+    "அஸ்தாலின்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Foracort",
+   "generic": "Formoterol + Budesonide",
+   "strengths": [
+    "Inhaler (100/200/400mcg)",
+    "Respicaps"
+   ],
+   "spoken": [
+    "Foracort",
+    "Foracort inhaler",
+    "फोराकोर्ट",
+    "ಫೊರಾಕೋರ್ಟ್",
+    "பொரகார்ட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Budecort",
+   "generic": "Budesonide",
+   "strengths": [
+    "Inhaler 100mcg/200mcg",
+    "Resules 0.5mg/1mg"
+   ],
+   "spoken": [
+    "Budecort",
+    "Budecort respules",
+    "बुडेकोर्ट",
+    "ಬುಡೆಕೋರ್ಟ್",
+    "புடெகார்ட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Levocet",
+   "generic": "Levocetirizine",
+   "strengths": [
+    "5mg tablet"
+   ],
+   "spoken": [
+    "Levocet",
+    "Levoset",
+    "लेवोसेट",
+    "ಲೆವೊಸೆಟ್",
+    "லெவோசெட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Xyzal",
+   "generic": "Levocetirizine",
+   "strengths": [
+    "5mg tablet"
+   ],
+   "spoken": [
+    "Xyzal",
+    "Zyzal",
+    "ज़िजal",
+    "ಝೈಸಲ್",
+    "சைசால்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Atarax",
+   "generic": "Hydroxyzine",
+   "strengths": [
+    "10mg tablet",
+    "25mg tablet"
+   ],
+   "spoken": [
+    "Atarax",
+    "Atrax",
+    "अटारックス",
+    "ಅಟರಾಕ್ಸ್",
+    "அடராக்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Avil",
+   "generic": "Pheniramine Maleate",
+   "strengths": [
+    "25mg tablet",
+    "10ml injection"
+   ],
+   "spoken": [
+    "Avil",
+    "Avil injection",
+    "एविल",
+    "ಅವಿಲ್",
+    "அவில்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Otrivin",
+   "generic": "Xylometazoline",
+   "strengths": [
+    "Nasal Drops 0.05%",
+    "0.1%"
+   ],
+   "spoken": [
+    "Otrivin",
+    "Otrivin drops",
+    "ओटrivin",
+    "ಒಟ್ರಿವಿನ್",
+    "ஒட்ரிவின்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Nasivion",
+   "generic": "Oxymetazoline",
+   "strengths": [
+    "Nasal drops (Adult/Child)"
+   ],
+   "spoken": [
+    "Nasivion",
+    "Nasivion drops",
+    "नासिवियन",
+    "ನಾಸಿವಿಯನ್",
+    "நாசிவியன்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Flomist",
+   "generic": "Fluticasone Furoate",
+   "strengths": [
+    "Nasal Spray 27.5mcg"
+   ],
+   "spoken": [
+    "Flomist",
+    "Flomist spray",
+    "फ्लोमिस्ट",
+    "ಫ್ಲೋಮಿಸ್ಟ್",
+    "ஃப்ளோமிஸ்ட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Metaspray",
+   "generic": "Mometasone Furoate",
+   "strengths": [
+    "Nasal Spray 50mcg"
+   ],
+   "spoken": [
+    "Metaspray",
+    "Meta spray",
+    "मेटास्प्रे",
+    "ಮೆಟಾಸ್ಪ್ರೇ",
+    "மெடாஸ்பிரே"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Sinarest",
+   "generic": "Paracetamol + Chlorpheniramine + Phenylephrine",
+   "strengths": [
+    "Tablet"
+   ],
+   "spoken": [
+    "Sinarest",
+    "Synerest",
+    "सिनारेस्ट",
+    "ಸಿನಾರೆಸ್ಟ್",
+    "சினாரெஸ்ட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Cofsils",
+   "generic": "Amylmetacresol + Dichlorobenzyl Alcohol",
+   "strengths": [
+    "Lozenges"
+   ],
+   "spoken": [
+    "Cofsils",
+    "Cofsils lozenges",
+    "कॉफसिल्स",
+    "ಕಾಫ್ಸಿಲ್ಸ್",
+    "காப்ஸில்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Vicks Action 500 Extra",
+   "generic": "Paracetamol + Phenylephrine + Caffeine",
+   "strengths": [
+    "Tablet"
+   ],
+   "spoken": [
+    "Vicks",
+    "Vicks Action 500",
+    "विक्स",
+    "ವಿಕ್ಸ್",
+    "விக்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Zedex",
+   "generic": "Bromhexine + Dextromethorphan + Ammonium Chloride",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Zedex",
+    "Zedex syrup",
+    "जेडेक्स",
+    "ಜೆಡೆಕ್ಸ್",
+    "ஜெடெக்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Bro-ZEDEX",
+   "generic": "Terbutaline + Bromhexine + Guaifenesin + Menthol",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Bro Zedex",
+    "Brozedex",
+    "ब्रो जेडेक्स",
+    "ಬ್ರೋ ಜೆಡೆಕ್ಸ್",
+    "ப்ரோ ஜெடெக்ஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Ascoril D",
+   "generic": "Dextromethorphan + Phenylephrine + Chlorpheniramine",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Ascoril D",
+    "Ascoril cough syrup",
+    "अस्कॉरिल डी",
+    "ಅಸ್ಕರಿಲ್ ಡಿ",
+    "அஸ்கரில் டி"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Ascoril C",
+   "generic": "Codeine + Chlorpheniramine",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Ascoril C",
+    "Ascoril syrup",
+    "अस्कॉरिल सी",
+    "ಅಸ್ಕರಿಲ್ ಸಿ",
+    "அஸ்கரில் சி"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Koflet",
+   "generic": "Herbal formulation (Ayurvedic)",
+   "strengths": [
+    "Syrup",
+    "Lozenges"
+   ],
+   "spoken": [
+    "Koflet",
+    "Koflet syrup",
+    "कोफलेट",
+    "ಕೋಫ್ಲೆಟ್",
+    "கோப்லெட்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Honitus",
+   "generic": "Herbal formulation (Ayurvedic)",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Honitus",
+    "Dabur Honitus",
+    "होनिटस",
+    "ಹೋನಿಟಸ್",
+    "ஹோனிடஸ்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Glycodin",
+   "generic": "Terpin Hydrate + Dextromethorphan + Menthol",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Glycodin",
+    "Glycodin syrup",
+    "ग्लायकोडिन",
+    "ಗ್ಲೈಕೋಡಿನ್",
+    "கிளைகோடின்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Kuka",
+   "generic": "Herbal cough syrup",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "Kuka",
+    "Kuka syrup",
+    "कुका",
+    "ಕುಕಾ",
+    "குகா"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "TusQ X",
+   "generic": "Dextromethorphan + Chlorpheniramine + Phenylephrine",
+   "strengths": [
+    "100ml syrup"
+   ],
+   "spoken": [
+    "TusQ",
+    "Tusk",
+    "टस्क",
+    "ಟಸ್ಕೂ",
+    "டஸ்க்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Ambhydril",
+   "generic": "Diphenhydramine + Ammonium Chloride + Sodium Citrate + Menthol",
+   "strengths": [
+    "Syrup"
+   ],
+   "spoken": [
+    "Ambhydril",
+    "Amhydril",
+    "एम्हाइड्रिल",
+    "ಆಂಬ್ಹೈಡ್ರಿಲ್",
+    "அம்பைட்ரில்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Duolin",
+   "generic": "Levosalbutamol + Ipratropium",
+   "strengths": [
+    "Inhaler",
+    "Respules"
+   ],
+   "spoken": [
+    "Duolin",
+    "Duolin respules",
+    "डुओलिन",
+    "ಡ್ಯುಯೊಲಿನ್",
+    "டுயோலின்"
+   ],
+   "category": "cough, cold and allergy (antihistamines, cough syrups, montelukast combinations, nasal sprays)"
+  },
+  {
+   "brand": "Glycomet GP 1",
+   "generic": "Metformin + Glimepiride",
+   "strengths": [
+    "500mg/1mg",
+    "500mg/2mg",
+    "850mg/2mg"
+   ],
+   "spoken": [
+    "Glycomet",
+    "Glikomet",
+    "Glyco met",
+    "গ্লাইকোমেট",
+    "గ్లైకోమెట్",
+    "கிளைகோமெட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glycomet GP 2",
+   "generic": "Metformin + Glimepiride",
+   "strengths": [
+    "500mg/2mg",
+    "1000mg/2mg"
+   ],
+   "spoken": [
+    "Glycomet GP",
+    "Galkomet",
+    "Гликомет",
+    "গ্লাইকোমেট জি পি",
+    "గ్లైకోమెట్ జిపి",
+    "கிளைகோமெட் ஜிபி"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glycomet 500 SR",
+   "generic": "Metformin Hydrochloride",
+   "strengths": [
+    "500mg",
+    "850mg",
+    "1000mg"
+   ],
+   "spoken": [
+    "Glycomet SR",
+    "Glycomet 500",
+    "Glikomet SR",
+    "গ্লাইকোমেট এস আর",
+    "గ్లైకోమెట్ ఎస్ఆర్",
+    "கிளைகோமெட் எஸ்ஆர்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Amaryl 1mg",
+   "generic": "Glimepiride",
+   "strengths": [
+    "1mg",
+    "2mg",
+    "3mg",
+    "4mg"
+   ],
+   "spoken": [
+    "Amaryl",
+    "Amaril",
+    "Ameril",
+    "अमारिल",
+    "আমেরিল",
+    "అమరిల్",
+    "அமரில்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Januvia 50mg",
+   "generic": "Sitagliptin",
+   "strengths": [
+    "25mg",
+    "50mg",
+    "100mg"
+   ],
+   "spoken": [
+    "Januvia",
+    "Janvia",
+    "Zenovia",
+    "जानुविया",
+    "জানুভিয়া",
+    "జనువియా",
+    "ஜனுவியா"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Galvus 50mg",
+   "generic": "Vildagliptin",
+   "strengths": [
+    "50mg"
+   ],
+   "spoken": [
+    "Galvus",
+    "Galus",
+    "Garvus",
+    "गल्वुस",
+    "গালভাস",
+    "గాల్వుస్",
+    "கால்வஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Galvus Met 50/500",
+   "generic": "Vildagliptin + Metformin",
+   "strengths": [
+    "50mg/500mg",
+    "50mg/850mg",
+    "50mg/1000mg"
+   ],
+   "spoken": [
+    "Galvusmet",
+    "Galvus Met",
+    "गलवुस मेट",
+    "গালভাস মেট",
+    "గాల్వుస్ మెట్",
+    "கால்வஸ் மெட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glucored Forte",
+   "generic": "Metformin + Gliclazide",
+   "strengths": [
+    "500mg/80mg"
+   ],
+   "spoken": [
+    "Glucored",
+    "Gluco red",
+    "Glukored",
+    "ग्लूकोरेड",
+    "গ্লুকোরেড",
+    "గ్లూకోరెడ్",
+    "குளுக்கோரெட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glimy 2",
+   "generic": "Glimepiride",
+   "strengths": [
+    "1mg",
+    "2mg",
+    "3mg",
+    "4mg"
+   ],
+   "spoken": [
+    "Glimy",
+    "Glime",
+    "Gleemy",
+    "ग्लिमी",
+    "গ্লিমী",
+    "గ్లిమి",
+    "கிளிமி"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Tzield",
+   "generic": "Teplizumab",
+   "strengths": [
+    "2mg/2mL"
+   ],
+   "spoken": [
+    "Tzield",
+    "Tzeeld",
+    "टीजील्ड",
+    "টিজিল্ড",
+    "టీజీల్డ్",
+    "டிஜில்ட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Diamicron XR 60",
+   "generic": "Gliclazide",
+   "strengths": [
+    "30mg",
+    "60mg"
+   ],
+   "spoken": [
+    "Diamicron",
+    "Diamicron 60",
+    "Dyamicron",
+    "डायमिक्रोन",
+    "ডায়ামিক্রন",
+    "డయామిక్రాన్",
+    "டையாமிகிரான்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Duetact 2",
+   "generic": "Glimepiride + Pioglitazone",
+   "strengths": [
+    "1mg/15mg",
+    "2mg/15mg"
+   ],
+   "spoken": [
+    "Duetact",
+    "Duetakt",
+    "डيوटैक्ट",
+    "ডুয়েট্যাক্ট",
+    "డ్యూట్యాక్ట్",
+    "டூயாக்ட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glynase MF",
+   "generic": "Glipizide + Metformin",
+   "strengths": [
+    "2.5mg/500mg",
+    "5mg/500mg"
+   ],
+   "spoken": [
+    "Glynase",
+    "Glinase",
+    "ग्लिनास",
+    "গ্লিনেস",
+    "గ్లినేస్",
+    "கிளைநேஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Mixtard 30 HM",
+   "generic": "Biphasic Isophane Insulin",
+   "strengths": [
+    "40 IU/mL",
+    "100 IU/mL"
+   ],
+   "spoken": [
+    "Mixtard",
+    "Mix tard",
+    "मिक्सटर्ड",
+    "মিক্সটার্ড",
+    "మిక్స్టార్డ్",
+    "மிக்ஸ்டார்ட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Lantus Solostar",
+   "generic": "Insulin Glargine",
+   "strengths": [
+    "100 IU/mL"
+   ],
+   "spoken": [
+    "Lantus",
+    "Lantus pen",
+    "लान्टूस",
+    "ল্যান্টুস",
+    "లాన్టస్",
+    "லான்டஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Novorapid FlexPen",
+   "generic": "Insulin Aspart",
+   "strengths": [
+    "100 IU/mL"
+   ],
+   "spoken": [
+    "Novorapid",
+    "Novo rapid",
+    "नोवोरेपिड",
+    "নোভোরেপিড",
+    "నోవోరాపిడ్",
+    "நோவோராபிட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Jardiance 10mg",
+   "generic": "Empagliflozin",
+   "strengths": [
+    "10mg",
+    "25mg"
+   ],
+   "spoken": [
+    "Jardiance",
+    "Jardians",
+    "जार्डियंस",
+    "জার্ডিয়েন্স",
+    "జార్డియన్స్",
+    "ஜார்டியன்ஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Forxiga 10mg",
+   "generic": "Dapagliflozin",
+   "strengths": [
+    "5mg",
+    "10mg"
+   ],
+   "spoken": [
+    "Forxiga",
+    "Forsiga",
+    "फोरक्सीगा",
+    "ফোরক্সিগা",
+    "ఫోర్క్సిగా",
+    "போர்சிகா"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Trajenta 5mg",
+   "generic": "Linagliptin",
+   "strengths": [
+    "5mg"
+   ],
+   "spoken": [
+    "Trajenta",
+    "Trazenta",
+    "ट्रायजेंटा",
+    "ট্রাজেন্টা",
+    "ట్రాజెంటా",
+    "டிராஜென்டா"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Teneligliptin 20mg",
+   "generic": "Teneligliptin",
+   "strengths": [
+    "20mg"
+   ],
+   "spoken": [
+    "Teneligliptin",
+    "Tene",
+    "टेनेलग्रिप्टिन",
+    "টেনেলাগ্লিপটিন",
+    "టెనెలిగ్లిప్టిన్",
+    "டெனெலிப்ளிப்டின்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Zomelis 50mg",
+   "generic": "Vildagliptin",
+   "strengths": [
+    "50mg"
+   ],
+   "spoken": [
+    "Zomelis",
+    "Zomelys",
+    "जोमेलिस",
+    "জোমেলিস",
+    "జోమెలిస్",
+    "ஸோமெலிஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Ondero 5mg",
+   "generic": "Linagliptin",
+   "strengths": [
+    "5mg"
+   ],
+   "spoken": [
+    "Ondero",
+    "Ondiro",
+    "ओन्डेरो",
+    "ওন্ডেরো",
+    "ఒండెరో",
+    "ஒன்டெரோ"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glyciphage 500",
+   "generic": "Metformin Hydrochloride",
+   "strengths": [
+    "500mg",
+    "850mg",
+    "1000mg"
+   ],
+   "spoken": [
+    "Glyciphage",
+    "Glycifage",
+    "ग्लाइसीफेज",
+    "গ্লাইসিফেজ",
+    "గ్లైసిఫేజ్",
+    "கிளைசிபேஜ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Volix 0.2",
+   "generic": "Voglibose",
+   "strengths": [
+    "0.2mg",
+    "0.3mg"
+   ],
+   "spoken": [
+    "Volix",
+    "Voliks",
+    "वोलिक्स",
+    "ভোলিক্স",
+    "వొలిక్స్",
+    "வாலிக்ஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Gluconorm G 1",
+   "generic": "Gliclazide + Metformin",
+   "strengths": [
+    "80mg/500mg",
+    "60mg/500mg"
+   ],
+   "spoken": [
+    "Gluconorm",
+    "Gluconorm G",
+    "ग्लूकोनॉर्म",
+    "গ্লুকোনর্ম",
+    "గ్లూకోనార్మ్",
+    "குளுக்கோநார்ம்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Istamet 50/500",
+   "generic": "Sitagliptin + Metformin",
+   "strengths": [
+    "50mg/500mg",
+    "50mg/1000mg"
+   ],
+   "spoken": [
+    "Istamet",
+    "Ista met",
+    "इस्टामेट",
+    "ইস্টামেট",
+    "ఇస్టామెట్",
+    "இஸ்டாமெட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Xigduo XR 10/1000",
+   "generic": "Dapagliflozin + Metformin",
+   "strengths": [
+    "10mg/500mg",
+    "10mg/1000mg"
+   ],
+   "spoken": [
+    "Xigduo",
+    "Zigduo",
+    "क्सिगड्यूओ",
+    "জিগডুও",
+    "జిగ్డుయో",
+    "சிக்டியோ"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glypride M 2",
+   "generic": "Glimepiride + Metformin",
+   "strengths": [
+    "2mg/500mg"
+   ],
+   "spoken": [
+    "Glypride",
+    "Glypride M",
+    "ग्लाईप्राइड",
+    "গ্লাইপ্রাইড",
+    "గ్లైప్రైడ్",
+    "கிளைப்ரைடு"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Obimet 500",
+   "generic": "Metformin Hydrochloride",
+   "strengths": [
+    "500mg",
+    "1000mg"
+   ],
+   "spoken": [
+    "Obimet",
+    "Obimet SR",
+    "ओबिमेट",
+    "ওবিমেট",
+    "ఒబిమెట్",
+    "ஒபிமெட்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Vinglyn 50",
+   "generic": "Vildagliptin",
+   "strengths": [
+    "50mg"
+   ],
+   "spoken": [
+    "Vinglyn",
+    "Vinglin",
+    "विन्ग्लिन",
+    "ভিংলিন",
+    "వింగ్లిన్",
+    "விங்லின்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glucophage 500",
+   "generic": "Metformin Hydrochloride",
+   "strengths": [
+    "500mg",
+    "850mg",
+    "1000mg"
+   ],
+   "spoken": [
+    "Glucophage",
+    "Gluko phage",
+    "ग्लूकोफेज",
+    "গ্লুকোফেজ",
+    "గ్లూకోఫేజ్",
+    "குளுக்கோபேஜ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Actos 15mg",
+   "generic": "Pioglitazone",
+   "strengths": [
+    "15mg",
+    "30mg",
+    "45mg"
+   ],
+   "spoken": [
+    "Actos",
+    "Aktos",
+    "एक्टोस",
+    "অ্যাক্টোস",
+    "ఆక్టోస్",
+    "க்டோஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Rybelsus 3mg",
+   "generic": "Semaglutide (Oral)",
+   "strengths": [
+    "3mg",
+    "7mg",
+    "14mg"
+   ],
+   "spoken": [
+    "Rybelsus",
+    "Ribelsus",
+    "राइबेल्सूस",
+    "রাইবেলসুস",
+    "రైబెల్సస్",
+    "ரிபெல்சஸ்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Trulicity 0.75mg",
+   "generic": "Dulaglutide",
+   "strengths": [
+    "0.75mg",
+    "1.5mg"
+   ],
+   "spoken": [
+    "Trulicity",
+    "Trulisity",
+    "ट्रुलिसिटी",
+    "ট্রুলিসিটি",
+    "ట్రూలిసిటీ",
+    "ட்ருலிசிட்டி"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Basaglar",
+   "generic": "Insulin Glargine",
+   "strengths": [
+    "100 IU/mL"
+   ],
+   "spoken": [
+    "Basaglar",
+    "Basaglar pen",
+    "बासाग्लार",
+    "বাসাগলার",
+    "బాసాగ్లార్",
+    "பாசக்ளர்"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Tiptra 5",
+   "generic": "Linagliptin",
+   "strengths": [
+    "5mg"
+   ],
+   "spoken": [
+    "Tiptra",
+    "टिप्ट्रा",
+    "টিপট্রা",
+    "టిప్ట్రా",
+    "டிப்ட்ரா"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glimepiride 2mg",
+   "generic": "Glimepiride",
+   "strengths": [
+    "1mg",
+    "2mg",
+    "3mg"
+   ],
+   "spoken": [
+    "Glimepiride",
+    "Glimeparid",
+    "ग्लिमपिरide",
+    "গ্লিমিপিরিড",
+    "గ్లిెమిపిరైడ్",
+    "கிளிமிபிரைடு"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Gliclazide 80mg",
+   "generic": "Gliclazide",
+   "strengths": [
+    "80mg"
+   ],
+   "spoken": [
+    "Gliclazide",
+    "Gliklazid",
+    "ग्लीक्लाजाइड",
+    "গ্লিক্লাজাইড",
+    "గ్లిక్లాజైడ్",
+    "கிளிஸ்லாசைடு"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Tenepride 20",
+   "generic": "Teneligliptin",
+   "strengths": [
+    "20mg"
+   ],
+   "spoken": [
+    "Tenepride",
+    "टेनेप्राइड",
+    "টেনেপ্রাইড",
+    "టెనెప్రైడ్",
+    "டெனெபிரைடு"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Glycomet-Tri 1",
+   "generic": "Metformin + Glimepiride + Voglibose",
+   "strengths": [
+    "500mg/1mg/0.2mg",
+    "500mg/2mg/0.3mg"
+   ],
+   "spoken": [
+    "Glycomet Tri",
+    "Glycomet Trio",
+    "ग्लिकोमेट ट्राय",
+    "গ্লাইকোমেট ট্রাই",
+    "గ్లైకోమెట్ ట్రి",
+    "கிளைகோமெட் ட்ரை"
+   ],
+   "category": "diabetes"
+  },
+  {
+   "brand": "Thyronorm",
+   "generic": "Levothyroxine",
+   "strengths": [
+    "12.5 mcg",
+    "25 mcg",
+    "50 mcg",
+    "75 mcg",
+    "88 mcg",
+    "100 mcg",
+    "112 mcg",
+    "125 mcg",
+    "150 mcg"
+   ],
+   "spoken": [
+    "Thyro norm",
+    "Taironorm",
+    "थायronorm",
+    "थायरोनॉर्म",
+    "థైరోనార్మ్",
+    "தைரோநார்ம்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Eltroxin",
+   "generic": "Levothyroxine",
+   "strengths": [
+    "25 mcg",
+    "50 mcg",
+    "100 mcg"
+   ],
+   "spoken": [
+    "El troxin",
+    "Altroxin",
+    "एल्ट्रॉक्सिन",
+    "एल्ट्रोक्सिन",
+    "ఎల్‌ట్రాక్సిన్",
+    "எல்டராக்சின்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Thyrox",
+   "generic": "Levothyroxine",
+   "strengths": [
+    "12.5 mcg",
+    "25 mcg",
+    "50 mcg",
+    "88 mcg",
+    "100 mcg",
+    "125 mcg"
+   ],
+   "spoken": [
+    "Tirox",
+    "Thirox",
+    "थायराक्स",
+    "थायरोक्स",
+    "థైరాక్స్",
+    "தைராக்ஸ்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "L-Thyroxine",
+   "generic": "Levothyroxine",
+   "strengths": [
+    "50 mcg",
+    "100 mcg"
+   ],
+   "spoken": [
+    "El thyroxine",
+    "L tiro",
+    "एल थायराक्सीन",
+    "एल-थायरोक्सिन",
+    "ఎల్-థైరాక్సిన్",
+    "எல்-தைராக்சின்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Duoluton L",
+   "generic": "Ethinyl Estradiol + Levonorgestrel",
+   "strengths": [
+    "0.03 mg + 0.15 mg"
+   ],
+   "spoken": [
+    "Duolutan",
+    "Duluton",
+    "ड्यूोलूटन",
+    "ड्यूोलूटन एल",
+    "డ్యులూటన్",
+    "டுயூலுடன்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Deviry",
+   "generic": "Medroxyprogesterone Acetate",
+   "strengths": [
+    "2.5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Devery",
+    "Diviry",
+    "डेविरी",
+    "डेवरी",
+    "డెవిరి",
+    "டெவிரி"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Primolut N",
+   "generic": "Norethisterone",
+   "strengths": [
+    "5 mg"
+   ],
+   "spoken": [
+    "Primalut",
+    "Primoloot",
+    "प्रिमोलूट एन",
+    "प्रिमोल्यूट",
+    "ప్రిమోలుట్ ఎన్",
+    "பிரிமோலுட் என்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Regestrone",
+   "generic": "Norethisterone",
+   "strengths": [
+    "5 mg"
+   ],
+   "spoken": [
+    "Rajestron",
+    "Regestron",
+    "रेजेस्ट्रोन",
+    "रजेस्ट्रोन",
+    "రిజెస్ట్రోన్",
+    "ரெஜெஸ்ட்ரோன்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Susten",
+   "generic": "Progesterone (Micronized)",
+   "strengths": [
+    "100 mg",
+    "200 mg",
+    "300 mg",
+    "400 mg"
+   ],
+   "spoken": [
+    "Sostin",
+    "Susun",
+    "सुस्टन",
+    "सस्टेन",
+    "సస్టెన్",
+    "சஸ்டென்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Endogest",
+   "generic": "Progesterone (Micronized)",
+   "strengths": [
+    "100 mg",
+    "200 mg",
+    "300 mg"
+   ],
+   "spoken": [
+    "Indogest",
+    "Endojest",
+    "एंडोजेस्ट",
+    "इंडोजेस्ट",
+    "ఎండోజెஸ்ட்",
+    "எண்டோஜெஸ்ட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Utrogestan",
+   "generic": "Progesterone (Micronized)",
+   "strengths": [
+    "100 mg",
+    "200 mg"
+   ],
+   "spoken": [
+    "Utorgestan",
+    "Utrogest",
+    "यूट्रोजेस्टन",
+    "उस्ट्रोजेस्तान",
+    "ఉట్రోజెస్టన్",
+    "உட்ரோஜெஸ்டான்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Dubagest",
+   "generic": "Dydrogesterone",
+   "strengths": [
+    "10 mg"
+   ],
+   "spoken": [
+    "Duphaston",
+    "Dubgest",
+    "डुबागेस्ट",
+    "डुफास्टन",
+    "డ్యుబాజెஸ்ட்",
+    "டுபாஜெஸ்ட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Duphaston",
+   "generic": "Dydrogesterone",
+   "strengths": [
+    "10 mg"
+   ],
+   "spoken": [
+    "Dufaston",
+    "Duphastun",
+    "डुफास्टन",
+    "डुफस्टन",
+    "డ్యుఫాస్టన్",
+    "டுபாஸ்டன்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Methergin",
+   "generic": "Methylergometrine",
+   "strengths": [
+    "0.125 mg"
+   ],
+   "spoken": [
+    "Methergine",
+    "Metherz",
+    "मेथरजीन",
+    "मेथर्जेन",
+    "మెథెర్జిన్",
+    "மெதெர்ஜின்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Mifepristone + Misoprostol",
+   "generic": "Mifepristone + Misoprostol",
+   "strengths": [
+    "200 mg + 200 mcg"
+   ],
+   "spoken": [
+    "Mifepride",
+    "Mtp kit",
+    "एमटीपी किट",
+    "मिफेप्रिस्टोन",
+    "ఎమ్‌టిపి కిట్",
+    "எம்டிபி கிட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "MTP Kit",
+   "generic": "Mifepristone + Misoprostol",
+   "strengths": [
+    "200 mg + 200 mcg"
+   ],
+   "spoken": [
+    "Emteepee kit",
+    "Mtp",
+    "एमटीपी किट",
+    "एम टी पी",
+    "ఎమ్‌టిపి కిట్",
+    "எம்டிபி கிட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Unwanted Kit",
+   "generic": "Mifepristone + Misoprostol",
+   "strengths": [
+    "200 mg + 200 mcg"
+   ],
+   "spoken": [
+    "Unwanted",
+    "Anwanted kit",
+    "अनवांटेड किट",
+    "अनवान्टेड",
+    "అన్‌వాంటెడ్ కిట్",
+    "அன்வான்டெட் கிட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Yasmin",
+   "generic": "Drospirenone + Ethinyl Estradiol",
+   "strengths": [
+    "3 mg + 0.03 mg"
+   ],
+   "spoken": [
+    "Yasmin",
+    "Jasmin",
+    "यास्मीन",
+    "यस्मिन",
+    "యాస్మిన్",
+    "யாஸ்மின்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Yaz",
+   "generic": "Drospirenone + Ethinyl Estradiol",
+   "strengths": [
+    "3 mg + 0.02 mg"
+   ],
+   "spoken": [
+    "Yaz pill",
+    "Yas",
+    "याज़",
+    "याज",
+    "యాజ్",
+    "யாஸ்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Ovral G",
+   "generic": "Norgestrel + Ethinyl Estradiol",
+   "strengths": [
+    "0.5 mg + 0.05 mg"
+   ],
+   "spoken": [
+    "Oral g",
+    "Ovral",
+    "ओव्रल जी",
+    "ओवराल",
+    "ఓవ్రాల్ జి",
+    "ஓவ்ரல் ஜி"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Femilon",
+   "generic": "Desogestrel + Ethinyl Estradiol",
+   "strengths": [
+    "0.15 mg + 0.03 mg"
+   ],
+   "spoken": [
+    "Femlon",
+    "Pamilon",
+    "फेमिलोन",
+    "फेमilon",
+    "ఫెమిలాన్",
+    "பெமிலான்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "i-Pill",
+   "generic": "Levonorgestrel",
+   "strengths": [
+    "1.5 mg"
+   ],
+   "spoken": [
+    "Ay pill",
+    "I pill",
+    "आई पिल",
+    "आईपिल",
+    "ఐ పిల్",
+    "ஐ பில்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Unwanted 72",
+   "generic": "Levonorgestrel",
+   "strengths": [
+    "1.5 mg"
+   ],
+   "spoken": [
+    "Unwanted seventy two",
+    "72 pill",
+    "अनवांटेड बहत्तर",
+    "अनवान्टेड 72",
+    "అన్‌వాంటెడ్ 72",
+    "அன்வான்டெட் 72"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Progynova",
+   "generic": "Estradiol Valerate",
+   "strengths": [
+    "1 mg",
+    "2 mg"
+   ],
+   "spoken": [
+    "Pragynova",
+    "Progynova",
+    "प्रोजिनोवा",
+    "प्रोजायनोवा",
+    "ప్రొజినోవా",
+    "ப்ரோஜினோவா"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Premarin",
+   "generic": "Conjugated Estrogens",
+   "strengths": [
+    "0.3 mg",
+    "0.625 mg",
+    "1.25 mg"
+   ],
+   "spoken": [
+    "Premrine",
+    "Premarin",
+    "प्रेमारिन",
+    "प्रेमरिन",
+    "ప్రెమరిన్",
+    "பிரெமாரின்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Cyclo-Progynova",
+   "generic": "Estradiol Valerate + Norgestrel",
+   "strengths": [
+    "2 mg + 0.5 mg"
+   ],
+   "spoken": [
+    "Cyclo progynova",
+    "Siklo progynova",
+    "साइक्लो प्रोजिनोवा",
+    "साइक्लो-प्रोजिनोवा",
+    "సైక్లో ప్రోజినోవా",
+    "சைக்கிளோ ப்ரோஜினோவா"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Gynaecosid",
+   "generic": "Norethisterone + Ethinyl Estradiol",
+   "strengths": [
+    "2 mg + 0.01 mg"
+   ],
+   "spoken": [
+    "Gynecocide",
+    "Gynecosid",
+    "गाइनेकोसाइड",
+    "गायनेकोसाइड",
+    "గైనెకోసిడ్",
+    "கைனெகோசிட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Carbimazole",
+   "generic": "Carbimazole",
+   "strengths": [
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Carbimazol",
+    "Cabimazole",
+    "कार्बिमाजोले",
+    "कार्बिमैजोल",
+    "కార్బిమజోల్",
+    "கார்பிமசோல்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Neomercazole",
+   "generic": "Carbimazole",
+   "strengths": [
+    "5 mg",
+    "10 mg",
+    "20 mg"
+   ],
+   "spoken": [
+    "Neomerkazole",
+    "Neo mercazole",
+    "नियोमर्काजोल",
+    "नियो मर्कैजोल",
+    "నియోమెర్కాజోల్",
+    "நியோமெர்காசோல்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Thyrocit",
+   "generic": "Carbimazole",
+   "strengths": [
+    "5 mg",
+    "10 mg"
+   ],
+   "spoken": [
+    "Thirocit",
+    "Tyrocit",
+    "थायरोसिट",
+    "थायरोसिट",
+    "థైరోసిట్",
+    "தைரோசிட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Propylthiouracil",
+   "generic": "Propylthiouracil",
+   "strengths": [
+    "50 mg"
+   ],
+   "spoken": [
+    "Ptu",
+    "Propyl thio",
+    "प्रोप्राइल्थियोयूरसिल",
+    "पीटीयू",
+    "ప్రొపైల్థియోయూరాసిల్",
+    "ப்ரோபில்தியூராசில்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Sustanon",
+   "generic": "Testosterone Isocaproate + Testosterone Decanoate + Testosterone Phenylpropionate + Testosterone Propionate",
+   "strengths": [
+    "250 mg/ml"
+   ],
+   "spoken": [
+    "Sustonon",
+    "Sustan",
+    "सुस्टनॉन",
+    "सस्टेनन",
+    "సస్టనాన్",
+    "சஸ்டனான்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Androderm",
+   "generic": "Testosterone",
+   "strengths": [
+    "2.5 mg/day",
+    "5 mg/day"
+   ],
+   "spoken": [
+    "Androdarm",
+    "Androderm",
+    "एंड्रोडर्म",
+    "एन्ड्रोडर्म",
+    "ఆండ్రోడెర్మ్",
+    "ஆன்ட்ரோடெர்ம்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Testoviron",
+   "generic": "Testosterone Enanthate",
+   "strengths": [
+    "250 mg/ml"
+   ],
+   "spoken": [
+    "Testoviron depot",
+    "Testowiron",
+    "टेस्टोविरॉन",
+    "टेस्टोवायरन",
+    "టెస్టోవిరాన్",
+    "டெஸ்டோவிரான்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Ovral L",
+   "generic": "Ethinyl Estradiol + Levonorgestrel",
+   "strengths": [
+    "0.03 mg + 0.15 mg"
+   ],
+   "spoken": [
+    "Oral el",
+    "Ovral l",
+    "ओव्रल एल",
+    "ओवराल एल",
+    "ఓవ్రాల్ ఎల్",
+    "ஓவ்ரல் எல்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Meprate",
+   "generic": "Medroxyprogesterone Acetate",
+   "strengths": [
+    "10 mg"
+   ],
+   "spoken": [
+    "Maprate",
+    "Meptrate",
+    "मेप्राटे",
+    "मेप्रेट",
+    "మెప్రేట్",
+    "மெபிரேட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Ovabless",
+   "generic": "Myo-Inositol + D-Chiro-Inositol + Vitamins",
+   "strengths": [
+    "Various"
+   ],
+   "spoken": [
+    "Ovabless",
+    "Obless",
+    "ओवाब्लेस",
+    "ओवाब्लेस",
+    "ఓవాబ్లెస్",
+    "ஓவாப்லெஸ்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Mio-Inofolic",
+   "generic": "Myo-Inositol + Folic Acid",
+   "strengths": [
+    "1000 mg + 100 mcg"
+   ],
+   "spoken": [
+    "Inofolic",
+    "Mio inofolic",
+    "मायो इनोफोलिक",
+    "मियो इनोलिक",
+    "మయో ఇనోఫోలిక్",
+    "மையோ இனோபோலிக்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Chirofertil",
+   "generic": "D-Chiro-Inositol + Melatonin + Metformin",
+   "strengths": [
+    "Various"
+   ],
+   "spoken": [
+    "Chirofertil",
+    "Kairophertil",
+    "चाइरोफर्टिल",
+    "चाइरो फर्टी",
+    "చైరోఫెర్టిల్",
+    "கைரோபெர்ட்டில்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Gestofit",
+   "generic": "Progesterone",
+   "strengths": [
+    "100 mg",
+    "200 mg",
+    "300 mg",
+    "400 mg"
+   ],
+   "spoken": [
+    "Gestofit",
+    "Jestofit",
+    "गेस्टोफिट",
+    "जेस्टोफिट",
+    "గెస్టోఫిట్",
+    "ஜெஸ்டோபிட்"
+   ],
+   "category": "thyroid and hormones"
+  },
+  {
+   "brand": "Calpol 250 Suspension",
+   "generic": "Paracetamol",
+   "strengths": [
+    "250 mg/5 ml"
+   ],
+   "spoken": [
+    "Calpol syrup",
+    "Kalpol",
+    "Calpol drop",
+    "ਕੈਲਪੋਲ",
+    "కాల్పాల్",
+    "கால்பால்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Crocin 120 Drops",
+   "generic": "Paracetamol",
+   "strengths": [
+    "120 mg/ml",
+    "100 mg/ml"
+   ],
+   "spoken": [
+    "Crocin drops",
+    "Krokin",
+    "Crocin syrup",
+    "ਕ੍ਰੋਸਿਨ",
+    "క్రోసిన్",
+    "க்ரோசின்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Meftal-P Suspension",
+   "generic": "Mefenamic Acid",
+   "strengths": [
+    "100 mg/5 ml"
+   ],
+   "spoken": [
+    "Meftal",
+    "Meftal P",
+    "Meptal",
+    "ਮੈਫਟਲ",
+    "మెఫ్టల్",
+    "மெப்டல்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Combiflam Suspension",
+   "generic": "Ibuprofen + Paracetamol",
+   "strengths": [
+    "100 mg + 162.5 mg/5 ml"
+   ],
+   "spoken": [
+    "Combiflam syrup",
+    "Kombiflam",
+    "Combi",
+    "ਕੰਬੀਫਲੇਮ",
+    "కొంబిఫ్లామ్",
+    "கombiப்ளம்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Ibugesic Plus Suspension",
+   "generic": "Ibuprofen + Paracetamol",
+   "strengths": [
+    "100 mg + 162.5 mg/5 ml"
+   ],
+   "spoken": [
+    "Ibugesic",
+    "Ibuplus",
+    "Ibugesic syrup",
+    "ਇਬੂਜੈਸਿਕ",
+    "ఇబుజెసిక్",
+    "இபுஜெசிக்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Duolin Respules",
+   "generic": "Levosalbutamol + Ipratropium Bromide",
+   "strengths": [
+    "1.25 mg + 500 mcg/2 ml"
+   ],
+   "spoken": [
+    "Duolin",
+    "Duolin drops",
+    "Dwolin",
+    "ਡੁਓਲਿਨ",
+    "డ్యుయోలిన్",
+    "டூயோலின்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Budecort 0.5 Respules",
+   "generic": "Budesonide",
+   "strengths": [
+    "0.5 mg/2 ml",
+    "0.25 mg/2 ml"
+   ],
+   "spoken": [
+    "Budecort",
+    "Bude",
+    "Budicort",
+    "ਬੂਡਕੋਰਟ",
+    "బ్యుడెకార్ట్",
+    "புடெகார்ட்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Asthalin Respules",
+   "generic": "Salbutamol",
+   "strengths": [
+    "2.5 mg/2.5 ml",
+    "1.25 mg/2.5 ml"
+   ],
+   "spoken": [
+    "Asthalin",
+    "Asthalin drops",
+    "Asthalin liquid",
+    "ਅਸਥਾਲਿਨ",
+    "అస్థాలిన్",
+    "அஸ்தாலின்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Montair LC Kid Syrup",
+   "generic": "Montelukast + Levocetirizine",
+   "strengths": [
+    "4 mg + 2.5 mg/5 ml"
+   ],
+   "spoken": [
+    "Montair LC",
+    "Montair syrup",
+    "Montair kid",
+    "ਮੋਂਟੇਅਰ",
+    "మొంటైర్",
+    "மொன்டைர்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Allegra 30mg Suspension",
+   "generic": "Fexofenadine",
+   "strengths": [
+    "30 mg/5 ml"
+   ],
+   "spoken": [
+    "Allegra syrup",
+    "Alegra",
+    "Allegra kid",
+    "ਅਲੇਗ੍ਰਾ",
+    "అల్లెగ్రా",
+    "அலெக்ரா"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Okacet Kid Syrup",
+   "generic": "Cetirizine",
+   "strengths": [
+    "5 mg/5 ml"
+   ],
+   "spoken": [
+    "Okacet",
+    "Okeset",
+    "Okacet syrup",
+    "ਓਕਾਸੇਟ",
+    "ఒకాసెట్",
+    "ஒகாசெட்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Zyrtec Drops",
+   "generic": "Cetirizine",
+   "strengths": [
+    "10 mg/ml"
+   ],
+   "spoken": [
+    "Zyrtec drops",
+    "Zirteck",
+    "Zurtec",
+    "ਜ਼ਾਇਰਟੈਕ",
+    "జైర్టెక్",
+    "ஜைர்டெக்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Ascoril LS Junior Syrup",
+   "generic": "Levosalbutamol + Ambroxol + Guaifenesin",
+   "strengths": [
+    "1 mg + 30 mg + 50 mg/5 ml"
+   ],
+   "spoken": [
+    "Ascoril",
+    "Ascoril LS",
+    "Askoryl",
+    "ਅਸਕੋril",
+    "అస్కోరిల్",
+    "அஸ்கோரில"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Ambrodil-S Syrup",
+   "generic": "Ambroxol + Salbutamol",
+   "strengths": [
+    "15 mg + 1 mg/5 ml"
+   ],
+   "spoken": [
+    "Ambrodil",
+    "Ambrodil S",
+    "Ambrodil syrup",
+    "ਅੰਬਰੋਡਿਲ",
+    "అంబ్రోడిల్",
+    "அம்பரோடில்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Alex Junior Syrup",
+   "generic": "Phenylephrine + Chlorpheniramine + Dextromethorphan",
+   "strengths": [
+    "2.5 mg + 1 mg + 5 mg/5 ml"
+   ],
+   "spoken": [
+    "Alex junior",
+    "Alex syrup",
+    "Aleks",
+    "ਅਲੈਕਸ",
+    "అలెక్స్",
+    "அலெக்ஸ்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Tusq-X Drops",
+   "generic": "Chlorpheniramine + Phenylephrine + Dextromethorphan",
+   "strengths": [
+    "1.5 mg + 2.5 mg + 5 mg/ml"
+   ],
+   "spoken": [
+    "Tusq drops",
+    "Tusk drops",
+    "Tusq X",
+    "ਟਸਕ",
+    "టస్క్",
+    "டஸ்க்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Grilinctus-BM Paediatric Syrup",
+   "generic": "Terbutaline + Bromhexine + Guaifenesin",
+   "strengths": [
+    "1.25 mg + 4 mg + 50 mg/5 ml"
+   ],
+   "spoken": [
+    "Grilinctus",
+    "Grilinctus BM",
+    "Grilin",
+    "ਗ੍ਰਿਲਿੰਕਟਸ",
+    "గ్రిలింక్టస్",
+    "கிரிளின்க்டஸ்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Zeet Syrup",
+   "generic": "Diphenhydramine + Ammonium Chloride + Sodium Citrate",
+   "strengths": [
+    "14.08 mg + 138 mg + 57.03 mg/5 ml"
+   ],
+   "spoken": [
+    "Zeet",
+    "Zeet syrup",
+    "Zit",
+    "ਜ਼ੀਤ",
+    "జీత్",
+    "ஜீத்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "O2 M Suspension",
+   "generic": "Ofloxacin + Metronidazole",
+   "strengths": [
+    "50 mg + 120 mg/5 ml"
+   ],
+   "spoken": [
+    "O2 suspension",
+    "O2 syrup",
+    "O two",
+    "ਓ2",
+    "ఓ2",
+    "ஓ2"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Taxim-O 50 Dry Syrup",
+   "generic": "Cefixime",
+   "strengths": [
+    "50 mg/5 ml"
+   ],
+   "spoken": [
+    "Taxim O",
+    "Taxim syrup",
+    "Taxim 50",
+    "ਟੈਕਸਿਮ",
+    "టాక్సిమ్",
+    "டாக்சிம்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Cefspan 50 Dry Syrup",
+   "generic": "Cefixime",
+   "strengths": [
+    "50 mg/5 ml"
+   ],
+   "spoken": [
+    "Cefspan",
+    "Chefspan",
+    "Cefspan syrup",
+    "ਸੈਫਸਪੈਨ",
+    "సెఫ్స్పన్",
+    "செஃப்சபன்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Zifi 50 Dry Syrup",
+   "generic": "Cefixime",
+   "strengths": [
+    "50 mg/5 ml"
+   ],
+   "spoken": [
+    "Zifi",
+    "Zifi 50",
+    "Zifi syrup",
+    "ਜ਼ਿਫੀ",
+    "జిఫి",
+    "ஜிஃபி"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Zenflox-OZ Kid Suspension",
+   "generic": "Ofloxacin + Ornidazole",
+   "strengths": [
+    "50 mg + 125 mg/5 ml"
+   ],
+   "spoken": [
+    "Zenflox OZ",
+    "Zenflox syrup",
+    "Zenflox kid",
+    "ਜ਼ੈਨਫਲੋਕਸ",
+    "జెన్‌ఫ్లాక్స్",
+    "ஜென்ப்ளாக்ஸ்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Augmentin Duo 457 Suspension",
+   "generic": "Amoxycillin + Potassium Clavulanate",
+   "strengths": [
+    "400 mg + 57 mg/5 ml"
+   ],
+   "spoken": [
+    "Augmentin",
+    "Augmentin syrup",
+    "Agumentin",
+    "ਆਗਮੈਂਟਿਨ",
+    "అగ్మెంటిన్",
+    "அக்மென்டின்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Clavam 457 Dry Syrup",
+   "generic": "Amoxycillin + Potassium Clavulanate",
+   "strengths": [
+    "400 mg + 57 mg/5 ml"
+   ],
+   "spoken": [
+    "Clavam",
+    "Clavam syrup",
+    "Klavam",
+    "ਕਲਾਵਮ",
+    "క్లావం",
+    "கிளாவம்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Moxikind-CV Kid Syrup",
+   "generic": "Amoxycillin + Potassium Clavulanate",
+   "strengths": [
+    "200 mg + 28.5 mg/5 ml"
+   ],
+   "spoken": [
+    "Moxikind CV",
+    "Moxikind syrup",
+    "Moxi CV",
+    "ਮੌਕਸੀਕਿੰਡ",
+    "మొక్సికిండ్",
+    "மொக்சிகிண்ட்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Azilide 200 Syrup",
+   "generic": "Azithromycin",
+   "strengths": [
+    "200 mg/5 ml"
+   ],
+   "spoken": [
+    "Azilide",
+    "Azilide syrup",
+    "Azylide",
+    "ਅਜ਼ਿਲਾਈਡ",
+    "అజిలైడ్",
+    "அசிலைடு"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Azee 200 Suspension",
+   "generic": "Azithromycin",
+   "strengths": [
+    "200 mg/5 ml"
+   ],
+   "spoken": [
+    "Azee syrup",
+    "Azee 200",
+    "Azi",
+    "ਅਜ਼ੀ",
+    "అజీ",
+    "அஜீ"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Enteroogermina Suspension",
+   "generic": "Bacillus Clausii",
+   "strengths": [
+    "2 Billion spores/5 ml"
+   ],
+   "spoken": [
+    "Enterogermina",
+    "Entero",
+    "Entero germina",
+    "ਐਂਟਰੋਜਰਮਿਨਾ",
+    "ఎంటెరోజెర్మినా",
+    "என்டிரோஜெர்மினா"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Zincovit Syrup",
+   "generic": "Multivitamins + Multiminerals + Zinc",
+   "strengths": [
+    "Multivitamin with Zinc"
+   ],
+   "spoken": [
+    "Zincovit",
+    "Zinkovit",
+    "Zincovit syrup",
+    "ਜ਼ਿੰਕੋਵਿਟ",
+    "జింకోవిట్",
+    "ஜிங்கோவிட்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Polybion Drops",
+   "generic": "Vitamin B-Complex",
+   "strengths": [
+    "B-Complex drops"
+   ],
+   "spoken": [
+    "Polybion",
+    "Polybion drops",
+    "Polibion",
+    "ਪੌਲੀਬਿਓਨ",
+    "పాలిబియాన్",
+    "பாலிபியான்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Aristozyme Liquid",
+   "generic": "Fungal Diastase + Pepsin",
+   "strengths": [
+    "50 mg + 10 mg/15 ml"
+   ],
+   "spoken": [
+    "Aristozyme",
+    "Aristozyme syrup",
+    "Aristozim",
+    "ਅਰਿਸਟੋਜਾਈਮ",
+    "అరిస్టోజైమ్",
+    "அரிஸ்டோசைம்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Colikids Drops",
+   "generic": "Dicyclomine + Simethicone",
+   "strengths": [
+    "10 mg + 40 mg/ml"
+   ],
+   "spoken": [
+    "Colikids",
+    "Colikids drops",
+    "Colichild",
+    "ਕੋਲਿਕਿਡਜ਼",
+    "కొలికిడ్స్",
+    "கோலிகிட்ஸ்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Colicaid Drops",
+   "generic": "Dill Oil + Simethicone + Fennel Oil",
+   "strengths": [
+    "Dill oil + Simethicone"
+   ],
+   "spoken": [
+    "Colicaid",
+    "Colicaid drops",
+    "Kolicaid",
+    "ਕੋਲਿਕੋਡ",
+    "కొలికెయిడ్",
+    "கோலிகெயிட்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Neopeptine Drops",
+   "generic": "Alpha-Amylase + Papain",
+   "strengths": [
+    "Enzyme drops"
+   ],
+   "spoken": [
+    "Neopeptine",
+    "Neo peptine",
+    "Neopeptin",
+    "ਨੀਓਪੈਪਟਿਨ",
+    "నియోపెప్టిన్",
+    "நியோபெப்டின்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Ondem Syrup",
+   "generic": "Ondansetron",
+   "strengths": [
+    "2 mg/5 ml"
+   ],
+   "spoken": [
+    "Ondem",
+    "Ondem syrup",
+    "Ondem drops",
+    "ਓਨਡੈਮ",
+    "ఒండెమ్",
+    "ஒன்டெம்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Emeset Syrup",
+   "generic": "Ondansetron",
+   "strengths": [
+    "2 mg/5 ml"
+   ],
+   "spoken": [
+    "Emeset",
+    "Emeset syrup",
+    "Emset",
+    "ਈਮੇਸੈਟ",
+    "ఇమెసెట్",
+    "இமெசெட்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Buscopan Drops",
+   "generic": "Hyoscine Butylbromide",
+   "strengths": [
+    "5 mg/ml"
+   ],
+   "spoken": [
+    "Buscopan",
+    "Buskopan",
+    "Buscopan drops",
+    "ਬਸਕੋਪਾਨ",
+    "బస్కোপాన్",
+    "பஸ்கோபான்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Urimax Kid Syrup",
+   "generic": "Potassium Citrate + Magnesium Citrate",
+   "strengths": [
+    "Citrate syrup"
+   ],
+   "spoken": [
+    "Urimax kid",
+    "Urimax syrup",
+    "Urimax",
+    "ਯੂਰਿਮੈਕਸ",
+    "యురిమాక్స్",
+    "யுரிமாக்ஸ்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Alkasol Syrup",
+   "generic": "Disodium Hydrogen Citrate",
+   "strengths": [
+    "1.38 g/5 ml"
+   ],
+   "spoken": [
+    "Alkasol",
+    "Alkasol syrup",
+    "Alkazol",
+    "ਅਲਕਾਸੋਲ",
+    "అల్కాసోల్",
+    "அல்காசோல்"
+   ],
+   "category": "children's syrups and drops"
+  },
+  {
+   "brand": "Shelcal 500",
+   "generic": "Calcium Carbonate + Vitamin D3",
+   "strengths": [
+    "500 mg + 250 IU"
+   ],
+   "spoken": [
+    "Shelcal",
+    "Shell cal",
+    "Shelcal 500",
+    "शेलकल",
+    "షెల్కాల్",
+    "ஷெல்கல்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Becadexamin",
+   "generic": "Multivitamin + Multimineral",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Becadex",
+    "Becadexamin capsule",
+    "Beck dexamin",
+    "बेकाडेक्सामिन",
+    "బెకాడెక్సామిన్",
+    "பெகடெக்சாமின்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Evion 400",
+   "generic": "Vitamin E (Tocopheryl Acetate)",
+   "strengths": [
+    "400 mg"
+   ],
+   "spoken": [
+    "Evion",
+    "Evion 400",
+    "Evon",
+    "एव्हियन",
+    "ఎవియన్",
+    "எவியான்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Neurobion Forte",
+   "generic": "Vitamin B-Complex + B12",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "Neurobion",
+    "Nurobion",
+    "Neurobion forte",
+    "न्युरोबियन",
+    "న్యూరోబియన్",
+    "நியூரோபியன்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Zincovit",
+   "generic": "Multivitamin + Multimineral + Grape Seed Extract",
+   "strengths": [
+    "Standard Tablet / Syrup"
+   ],
+   "spoken": [
+    "Zincovit",
+    "Jinkovit",
+    "Zincovit tablet",
+    "झिंकॉविट",
+    "జింకోవిట్",
+    "ஜிங்கோவிட்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Limcee",
+   "generic": "Vitamin C (Ascorbic Acid)",
+   "strengths": [
+    "500 mg"
+   ],
+   "spoken": [
+    "Limcee",
+    "Limci",
+    "Limcee chewable",
+    "लिमसी",
+    "లిమ్సీ",
+    "லிம்சி"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Polybion",
+   "generic": "Vitamin B-Complex",
+   "strengths": [
+    "Standard Syrup / Tablet"
+   ],
+   "spoken": [
+    "Polybion",
+    "Polibion",
+    "Polybion syrup",
+    "पॉलिबियन",
+    "పాలిబియాన్",
+    "பாலிபியான்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "A to Z",
+   "generic": "Multivitamin + Multimineral + Antioxidants",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "A to Z",
+    "A2Z",
+    "A to Z tablet",
+    "ए टू झेड",
+    "ఎ టు జెడ్",
+    "ஏ டூ ஜெட்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "CodLivol",
+   "generic": "Cod Liver Oil + Vitamins A & D",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Codlivol",
+    "Cod livol",
+    "कोडलीव्होल",
+    "కాడ్లివోల్",
+    "காட்லிவோல்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "B-29",
+   "generic": "Methylcobalamin + Alpha Lipoic Acid + Folic Acid + Vitamins",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "B29",
+    "B twenty nine",
+    "B-29 tablet",
+    "बी २९",
+    "బి 29",
+    "பி 29"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Gemcal",
+   "generic": "Calcium Citrate Malate + Vitamin D3 + Minerals",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Gemcal",
+    "Jemcal",
+    "जेमकल",
+    "జెంకాల్",
+    "ஜெம்கல்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Osteocare",
+   "generic": "Calcium + Magnesium + Zinc + Vitamin D3",
+   "strengths": [
+    "Standard Tablet / Syrup"
+   ],
+   "spoken": [
+    "Osteocare",
+    "Osticare",
+    "ऑस्टिओकेअर",
+    "ఆస్టియోకేర్",
+    "ஆஸ்டியோகேர்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Uprise-D3 60K",
+   "generic": "Cholecalciferol (Vitamin D3)",
+   "strengths": [
+    "60,000 IU"
+   ],
+   "spoken": [
+    "Uprise D3",
+    "Uprise 60k",
+    "Uprise capsule",
+    "अप्राईज डी३",
+    "అప్రైజ్ డి3",
+    "அப்ரைக்ஸ் டி3"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Maxepa",
+   "generic": "Omega-3 Fatty Acids (Fish Oil)",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Maxepa",
+    "Max epa",
+    "मैक्सेपा",
+    "మాక్సెపా",
+    "மாக்செபா"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Surbex-Z",
+   "generic": "Vitamin B-Complex + Vitamin C + Zinc",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "Surbex Z",
+    "Surbex",
+    "सर्बेक्स झेड",
+    "సర్బెక్స్ జెడ్",
+    "சர்பெக்ஸ் ஜெட்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Becosules",
+   "generic": "B-Complex + Vitamin C",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Becosules",
+    "Becosule",
+    "Beco capsules",
+    "बेकोसूल",
+    "బెకోసూల్స్",
+    "பெகோசூல்ஸ்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "CaldKem",
+   "generic": "Calcium Carbonate + Vitamin D3",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "Caldkem",
+    "Cald kem",
+    "काल्डकेम",
+    "కాల్డ్కెమ్",
+    "கால்ம்கெம்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Nurokind-LC",
+   "generic": "Methylcobalamin + L-Carnitine + L-Tartrate",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "Nurokind LC",
+    "Nurokind",
+    "न्युरोकइंड एलसी",
+    "న్యూరోకైండ్ ఎల్సి",
+    "நியூரோகைண்ட் எல்சி"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Calcirol",
+   "generic": "Cholecalciferol (Vitamin D3)",
+   "strengths": [
+    "60,000 IU Sachet / Nano Shots"
+   ],
+   "spoken": [
+    "Calcirol sachet",
+    "Calcirol",
+    "कॅल्सीरोल",
+    "కాల్సిరోల్",
+    "கால்சிரோல்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Ferradol",
+   "generic": "Vitamins + Minerals + Malt Extract",
+   "strengths": [
+    "Standard Syrup"
+   ],
+   "spoken": [
+    "Ferradol",
+    "Feralol",
+    "फेराडोल",
+    "ఫెర్రాడోல்",
+    "பெர்ராடோல்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Gevrine",
+   "generic": "Multivitamin + Multimineral + Lysine",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Gevrine",
+    "Gevrin",
+    "गेव्रिन",
+    "గెవ్రిన్",
+    "ஜெவ்ரின்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Autrin",
+   "generic": "Ferrous Fumarate + Cyanocobalamin + Folic Acid",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Autrin",
+    "Otrin",
+    "ऑट्रिन",
+    "ఆట్రిన్",
+    "அட்ரின்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Orofer XT",
+   "generic": "Ferrous Ascorbate + Folic Acid",
+   "strengths": [
+    "100 mg + 1.5 mg"
+   ],
+   "spoken": [
+    "Orofer XT",
+    "Orofer",
+    "ओरोफर एक्सटी",
+    "ఓరోఫర్ ఎక్స్టీ",
+    "ஓரோஃபர் எக்ஸ்டி"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Dexorange",
+   "generic": "Ferric Ammonium Citrate + Folic Acid + Vitamin B12",
+   "strengths": [
+    "Standard Syrup / Capsule"
+   ],
+   "spoken": [
+    "Dexorange",
+    "Dexoranges",
+    "डेक्सोरेंज",
+    "డెక్సోరెంజ్",
+    "டெக்சோரெஞ்ச்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Fefol",
+   "generic": "Ferrous Sulphate + Folic Acid",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Fefol",
+    "Fefol z",
+    "फेफॉल",
+    "ఫెఫాల్",
+    "பெஃபால்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "HB Forte",
+   "generic": "Hematinic Capsule with Vitamins",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "HB forte",
+    "H B forte",
+    "एचबी फर्टी",
+    "హెచ్‌బి ఫోర్టే",
+    "ஹெச்பி ஃபோர்டே"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Livogen",
+   "generic": "Ferrous Fumarate + Protein hydrolysate + Folic Acid",
+   "strengths": [
+    "Standard Tablet / Capsule"
+   ],
+   "spoken": [
+    "Livogen",
+    "Livegen",
+    "लिवोजन",
+    "లివోజెన్",
+    "லிவொஜன்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Richar CR",
+   "generic": "Sodium Iron Edetate",
+   "strengths": [
+    "Controlled Release Tablet"
+   ],
+   "spoken": [
+    "Richar CR",
+    "Richar",
+    "रिचार सीआर",
+    "రిచార్ సిఆర్",
+    "ரிச்சார் சிஆர்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Autrin Z",
+   "generic": "Ferrous Fumarate + Folic Acid + Zinc",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Autrin Z",
+    "Autrin zinc",
+    "ऑट्रिन झेड",
+    "ఆట్రిన్ జెడ్",
+    "அட்ரின் ஜெட்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Surbex Gold",
+   "generic": "Multivitamin + Multimineral + Antioxidants + Ginseng",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Surbex gold",
+    "Surbex gold capsule",
+    "सर्बेक्स गोल्ड",
+    "సర్బెక్స్ గోల్డ్",
+    "சர்பெக்ஸ் கோல்டு"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Zincat M",
+   "generic": "Multivitamin + Multimineral with Zinc",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "Zincat M",
+    "Zinkat M",
+    "झिंकॅट एम",
+    "జింకాట్ ఎం",
+    "ஜிங்க்காட் எம்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Mecofast",
+   "generic": "Methylcobalamin",
+   "strengths": [
+    "1500 mcg"
+   ],
+   "spoken": [
+    "Mecofast",
+    "Mecofast OD",
+    "मेकोफास्ट",
+    "మెకోఫాస్ట్",
+    "மெகோபாஸ்ட்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Nurokind Plus",
+   "generic": "Methylcobalamin + Alpha Lipoic Acid + Pyridoxine + Folic Acid",
+   "strengths": [
+    "Standard Capsule"
+   ],
+   "spoken": [
+    "Nurokind plus",
+    "Nurokind plus RF",
+    "न्युरोकइंड प्लस",
+    "న్యూరోకైండ్ ప్లస్",
+    "நியூரோகைண்ட் பிளஸ்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Cobadex CZS",
+   "generic": "B-Complex + Vitamin C + Zinc + Biotin",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "Cobadex CZS",
+    "Cobadex",
+    "कोबॅडेक्स सीझेडएस",
+    "కోబాడెక్స్ సిజెడ్ఎస్",
+    "கோபாடெக்ஸ் சிஇசட்எஸ்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Eprazin",
+   "generic": "Vitamin E + Antioxidants",
+   "strengths": [
+    "400 mg"
+   ],
+   "spoken": [
+    "Eprazin",
+    "ईप्राझिन",
+    "ఇప్రాజిన్",
+    "இப்ராசின்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Bio-D3",
+   "generic": "Calcitriol + Calcium Carbonate + Zinc",
+   "strengths": [
+    "Standard Softgel"
+   ],
+   "spoken": [
+    "Bio D3",
+    "Biod3",
+    "बायो डी३",
+    "బయో డి3",
+    "பயோ டி3"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Shelcal XT",
+   "generic": "Calcium Carbonate + Vitamin D3 + Methylcobalamin + L-Methylfolate + Pyridoxal-5-Phosphate",
+   "strengths": [
+    "Standard Tablet"
+   ],
+   "spoken": [
+    "Shelcal XT",
+    "Shellcal xt",
+    "शेलकल एक्सटी",
+    "షెల్కాల్ ఎక్స్టీ",
+    "ஷெல்கல் எக்ஸ்டி"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Celin",
+   "generic": "Vitamin C (Ascorbic Acid)",
+   "strengths": [
+    "500 mg"
+   ],
+   "spoken": [
+    "Celin",
+    "Celin 500",
+    "सेलिन",
+    "సెలిన్",
+    "செலின்"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Primosa",
+   "generic": "Evening Primrose Oil (Gamma Linolenic Acid)",
+   "strengths": [
+    "500 mg / 1000 mg"
+   ],
+   "spoken": [
+    "Primosa",
+    "Primosa 1000",
+    "प्रिमोसा",
+    "ప్రిమోసా",
+    "பிரிமோசா"
+   ],
+   "category": "vitamins, minerals and supplements"
+  },
+  {
+   "brand": "Seroflo",
+   "generic": "Fluticasone Propionate + Salmeterol",
+   "strengths": [
+    "50/25 mcg",
+    "125/25 mcg",
+    "250/25 mcg",
+    "500/50 mcg"
+   ],
+   "spoken": [
+    "Seroflo",
+    "Sero flo",
+    "Seroflow",
+    "सेरोफ्लो",
+    "సెరోఫ్లో",
+    "செரோஃப்ளோ"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Levolin",
+   "generic": "Levalbuterol",
+   "strengths": [
+    "0.63 mg/2ml",
+    "1.25 mg/2ml",
+    "50 mcg",
+    "100 mcg"
+   ],
+   "spoken": [
+    "Levolin",
+    "Levoline",
+    "Levolin respules",
+    "लेवोलिन",
+    "లెవోలిన్",
+    "லெவோலின்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Budamate",
+   "generic": "Budesonide + Formoterol Fumarate",
+   "strengths": [
+    "100/6 mcg",
+    "200/6 mcg",
+    "400/6 mcg"
+   ],
+   "spoken": [
+    "Budamate",
+    "Buda mate",
+    "Budesamate",
+    "ब्यूडामेट",
+    "బ్యూడామేట్",
+    "பியூடமேட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Formoterol",
+   "generic": "Formoterol Fumarate",
+   "strengths": [
+    "6 mcg",
+    "12 mcg"
+   ],
+   "spoken": [
+    "Formoterol",
+    "Formotrol",
+    "Formterol",
+    "फॉर्मोटेरोल",
+    "ఫార్మోటెరోல்",
+    "பார்மோட்டெரோல்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Ipravent",
+   "generic": "Ipratropium Bromide",
+   "strengths": [
+    "20 mcg",
+    "250 mcg/2ml",
+    "500 mcg/2ml"
+   ],
+   "spoken": [
+    "Ipravent",
+    "Ipra vent",
+    "Ipra vent respules",
+    "इप्रावेंट",
+    "ఇప్రావెంట్",
+    "இப்ராவெண்ட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Airtec",
+   "generic": "Beclometasone Dipropionate",
+   "strengths": [
+    "50 mcg",
+    "100 mcg",
+    "200 mcg"
+   ],
+   "spoken": [
+    "Airtec",
+    "Air tech",
+    "Airtic",
+    "एयरटेक",
+    "ఎయిర్‌టెక్",
+    "ஏர்டெக்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Tiova",
+   "generic": "Tiotropium Bromide",
+   "strengths": [
+    "9 mcg",
+    "18 mcg"
+   ],
+   "spoken": [
+    "Tiova",
+    "Tiova rotacaps",
+    "Tiofa",
+    "टिओवा",
+    "టియోవా",
+    "டியோவா"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Formonide",
+   "generic": "Budesonide + Formoterol Fumarate",
+   "strengths": [
+    "100/6 mcg",
+    "200/6 mcg",
+    "400/6 mcg"
+   ],
+   "spoken": [
+    "Formonide",
+    "Formo nide",
+    "Formonight",
+    "फॉर्मोनाइड",
+    "ఫార్మోనైడ్",
+    "பார்மோனைடு"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Salbair",
+   "generic": "Beclometasone + Levosalbutamol",
+   "strengths": [
+    "50/50 mcg",
+    "100/50 mcg",
+    "50/100 mcg"
+   ],
+   "spoken": [
+    "Salbair",
+    "Salber",
+    "Salbare",
+    "साल्बेयर",
+    "సాల్బైర్",
+    "சால்பெயர்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Combihair",
+   "generic": "Budesonide + Formoterol",
+   "strengths": [
+    "100/6 mcg",
+    "200/6 mcg"
+   ],
+   "spoken": [
+    "Combihair",
+    "Combi air",
+    "Combihir",
+    "कॉम्बिएयर",
+    "కాంబిఎయిర్",
+    "கம்பியைர்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Maxiflo",
+   "generic": "Fluticasone Propionate + Salmeterol",
+   "strengths": [
+    "100/25 mcg",
+    "250/25 mcg",
+    "500/50 mcg"
+   ],
+   "spoken": [
+    "Maxiflo",
+    "Maxi flo",
+    "Maxiflow",
+    "मैक्सिफ्लो",
+    "మాక్సిఫ్లో",
+    "மாக்சிஃப்ளோ"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Rhinocort",
+   "generic": "Budesonide (Nasal/Inhalation)",
+   "strengths": [
+    "32 mcg/spray",
+    "64 mcg/spray"
+   ],
+   "spoken": [
+    "Rhinocort",
+    "Rino cort",
+    "Rhinocord",
+    "राइनोकॉर्ट",
+    "రైనోకార్ட்",
+    "ரைனோகார்ட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Budesal",
+   "generic": "Budesonide + Salbutamol",
+   "strengths": [
+    "0.5 mg + 2.5 mg/2ml"
+   ],
+   "spoken": [
+    "Budesal",
+    "Bude sal",
+    "Budesul",
+    "बुडसेल",
+    "బుడెసల్",
+    "புடெசல்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Duoresp",
+   "generic": "Budesonide + Formoterol Fumarate",
+   "strengths": [
+    "160/4.5 mcg",
+    "80/2.25 mcg"
+   ],
+   "spoken": [
+    "Duoresp",
+    "Duo resp",
+    "Duoresp spiromax",
+    "ड्यूरेस्प",
+    "డ్యూరెస్ప్",
+    "டுயோரெஸ்ப்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Fluticort",
+   "generic": "Fluticasone Propionate",
+   "strengths": [
+    "50 mcg",
+    "125 mcg",
+    "250 mcg"
+   ],
+   "spoken": [
+    "Fluticort",
+    "Fluti cort",
+    "Fluticord",
+    "फ्लुटिकॉर्ट",
+    "ఫ్లూటికార్ట్",
+    "ஃப்ளுடிகார்ட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Deriphyllin",
+   "generic": "Etofylline + Theophylline",
+   "strengths": [
+    "150 mg",
+    "300 mg",
+    "Retard 150/300"
+   ],
+   "spoken": [
+    "Deriphyllin",
+    "Deriphylline",
+    "Derifiline",
+    "डेरीफाइलिन",
+    "డెరిఫిల్లిన్",
+    "டெரிஃபில்லின்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Beclate",
+   "generic": "Beclometasone Dipropionate",
+   "strengths": [
+    "50 mcg",
+    "100 mcg",
+    "200 mcg",
+    "400 mcg"
+   ],
+   "spoken": [
+    "Beclate",
+    "Beclat",
+    "Beqlate",
+    "बेक्लेट",
+    "బెక్లేట్",
+    "பெக்லேட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Budecort Respules",
+   "generic": "Budesonide",
+   "strengths": [
+    "0.5 mg/2ml",
+    "1 mg/2ml"
+   ],
+   "spoken": [
+    "Budecort respules",
+    "Budecort respul",
+    "ब्यूडकॉर्ट रेस्प्यूल्स",
+    "బ్యూడకార్ట్ రెస్ఫూల్స్",
+    "பியூட்கார்ட் ரெஸ்பூல்ஸ்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Levolin Respules",
+   "generic": "Levalbuterol",
+   "strengths": [
+    "0.63 mg/2ml",
+    "1.25 mg/2ml"
+   ],
+   "spoken": [
+    "Levolin respules",
+    "Levoline respul",
+    "लेवोलिन रेस्प्यूल्स",
+    "లెవోలిన్ రెస్ఫూల్స్",
+    "லெவோலின் ரெஸ்பூல்ஸ்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Inhalair",
+   "generic": "Beclometasone Dipropionate",
+   "strengths": [
+    "50 mcg",
+    "100 mcg",
+    "200 mcg"
+   ],
+   "spoken": [
+    "Inhalair",
+    "Inhal air",
+    "Inhlair",
+    "इनहेलएयर",
+    "ఇన్‌హెల్ఎయిర్",
+    "இன்ஹெலையர்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Budenase",
+   "generic": "Budesonide (Nasal Spray)",
+   "strengths": [
+    "100 mcg/dose",
+    "32 mcg/dose"
+   ],
+   "spoken": [
+    "Budenase",
+    "Bude nase",
+    "Budenaz",
+    "बुडेनेज",
+    "బుడెనేజ్",
+    "புடெனீஸ்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Zytee (Inhalation context context gel/spay)",
+   "generic": "Choline Salicylate + Benzalkonium Chloride",
+   "strengths": [
+    "8.7% w/v + 0.01% w/v"
+   ],
+   "spoken": [
+    "Zytee",
+    "Zity",
+    "Zaytee",
+    "जाएटी",
+    "జైటీ",
+    "ஜைடீ"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Fostair",
+   "generic": "Beclometasone Dipropionate + Formoterol Fumarate",
+   "strengths": [
+    "100/6 mcg"
+   ],
+   "spoken": [
+    "Fostair",
+    "Fost air",
+    "Fostare",
+    "फोस्टएयर",
+    "ఫోస్ట్ఎయిర్",
+    "போஸ்டெயர்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Spirocort",
+   "generic": "Budesonide",
+   "strengths": [
+    "100 mcg",
+    "200 mcg",
+    "400 mcg"
+   ],
+   "spoken": [
+    "Spirocort",
+    "Spiro cort",
+    "Spirocord",
+    "स्पाइरोकॉर्ट",
+    "స్పైరోకార్ట్",
+    "ஸ்பைரோகார்ட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Salmet",
+   "generic": "Salmeterol",
+   "strengths": [
+    "25 mcg",
+    "50 mcg"
+   ],
+   "spoken": [
+    "Salmet",
+    "Sal met",
+    "Salmat",
+    "साल्मेट",
+    "సాల్మెట్",
+    "சால்மெட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Forair",
+   "generic": "Formoterol Fumarate",
+   "strengths": [
+    "6 mcg",
+    "12 mcg"
+   ],
+   "spoken": [
+    "Forair",
+    "For air",
+    "Forer",
+    "फोरएयर",
+    "ఫోర్ఎయిர்",
+    "போரெயர்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Azthalin",
+   "generic": "Salbutamol",
+   "strengths": [
+    "100 mcg"
+   ],
+   "spoken": [
+    "Azthalin",
+    "Azthaline",
+    "अजथालिन",
+    "అజ్థాలిన్",
+    "அஸ்தாலின்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Kurocort",
+   "generic": "Budesonide",
+   "strengths": [
+    "200 mcg",
+    "400 mcg"
+   ],
+   "spoken": [
+    "Kurocort",
+    "Kuro cort",
+    "कुरोकॉर्ट",
+    "కురోకార్ట్",
+    "குரோகார்ட்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Budetrol",
+   "generic": "Budesonide + Formoterol Fumarate",
+   "strengths": [
+    "100/6 mcg",
+    "200/6 mcg",
+    "400/6 mcg"
+   ],
+   "spoken": [
+    "Budetrol",
+    "Bude trol",
+    "Bude troll",
+    "बुडेट्रोल",
+    "బుడెట్రోల్",
+    "புடெட்ரோல்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Mucaine",
+   "generic": "Oxetacaine + Aluminium Hydroxide + Magnesium Hydroxide",
+   "strengths": [
+    "10 mg + 291 mg + 98 mg/5ml"
+   ],
+   "spoken": [
+    "Mucaine",
+    "Muken",
+    "Mucine",
+    "म्यूकेन",
+    "మ్యూకెయిన్",
+    "மியூகைன்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Asthalin HFA",
+   "generic": "Salbutamol",
+   "strengths": [
+    "100 mcg/dose"
+   ],
+   "spoken": [
+    "Asthalin HFA",
+    "Asthalin hifa",
+    "अस्थालिन एचएफए",
+    "అస్థాలిన్ హెచ్‌ఎఫ్‌ఎ",
+    "அஸ்தாலின் ஹெச்.எப்.ஏ"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Seroflo Rotacaps",
+   "generic": "Fluticasone Propionate + Salmeterol",
+   "strengths": [
+    "100/25 mcg",
+    "250/25 mcg",
+    "500/50 mcg"
+   ],
+   "spoken": [
+    "Seroflo rotacaps",
+    "Seroflo rota caps",
+    "सेरोफ्लो रोटाकैप्स",
+    "సెరోఫ్లో రోటాక్యాప్స్",
+    "செரோஃப்ளோ ரோடாகேப்ஸ்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  },
+  {
+   "brand": "Foracort Rotacaps",
+   "generic": "Budesonide + Formoterol Fumarate",
+   "strengths": [
+    "100/6 mcg",
+    "200/6 mcg",
+    "400/6 mcg"
+   ],
+   "spoken": [
+    "Foracort rotacaps",
+    "Foracort rota caps",
+    "फोरकोर्ट रोटाकैप्स",
+    "ఫోరాకార్ట్ రోటాక్యాప్స్",
+    "போராகார்ட் ரோடாகேப்ஸ்"
+   ],
+   "category": "asthma inhalers and nebulisation"
+  }
+ ]
+}

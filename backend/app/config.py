@@ -84,6 +84,10 @@ class Settings(BaseSettings):
     indic_text_translation_languages: str = "hi"
     # Label transcript lines doctor/patient from their content before the note.
     speaker_roles_enabled: bool = True
+    # Nightly learning (dictionary, tested tips, reports); default: next to recordings.
+    learning_dir: str = ""
+    # Hospital's choice for Gemini in the nightly cycle: off, knowledge, snippets.
+    cloud_learning: str = "off"
     # SpeechBrain ECAPA speaker model folder (embedding_model.ckpt): doctor voice profiles.
     voice_model_dir: str = ""
     diarization_provider: str = "demo"

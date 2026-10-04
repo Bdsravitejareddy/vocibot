@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Languages, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { VoiceEnrolment } from "@/components/VoiceEnrolment";
+import { LearningSettings } from "@/components/LearningSettings";
 import { getLanguageSettings, saveEnabledLanguages, type LanguageSettings } from "@/lib/languages";
 
 export default function SettingsPage() {
@@ -37,5 +38,6 @@ export default function SettingsPage() {
       <div className="settings-actions"><button className="primary-button" onClick={() => void save()} disabled={!changed || saving || selected.length === 0}>{saving ? "Saving…" : "Save languages"}</button>{changed && <button className="secondary-button" onClick={() => { setSelected(settings?.enabled ?? []); setPrimary(settings?.primary ?? null); }}>Undo changes</button>}</div>
     </section>
     <VoiceEnrolment />
+    <LearningSettings />
   </div></AppShell>;
 }
