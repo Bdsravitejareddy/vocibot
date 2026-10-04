@@ -320,6 +320,20 @@ def _for_extraction(transcript_inputs: list[TranscriptSegmentInput], recognised:
     return [item.model_copy(update={"speaker": Speaker.UNKNOWN}) for item in transcript_inputs] if recognised else transcript_inputs
 
 
+def _apply_learned_corrections(session: Session, consultation: Consultation, record: ClinicalRecord, needs_review: set[str]) -> ClinicalRecord:
+    """Tested nightly tips: misheard medicine names corrected (flagged for review)."""
+
+    from ..learning.tips import correct_record
+
+    rows = [*session.scalars(select(TranscriptSegment).where(TranscriptSegment.consultation_id == consultation.id)).all(), *session.scalars(select(TranslationSegment).where(TranslationSegment.consultation_id == consultation.id)).all()]
+    data = record.model_dump()
+    changed = correct_record(data, " ".join(row.text for row in rows))
+    if not changed:
+        return record
+    needs_review.update(changed)
+    return ClinicalRecord.model_validate(data)
+
+
 def _check_who_said_it(transcript_inputs: list[TranscriptSegmentInput], evidence: dict[str, list[str]], needs_review: set[str]) -> None:
     """A doctor's field (assessment, plan, ...) not backed by any line
     recognised as the doctor's is flagged for review rather than accepted."""
@@ -370,6 +384,7 @@ def extract_reconciled_clinical_record(
     if result is not None:
         validated_record = _with_original_language_terms(session, consultation, transcript_inputs, validated_record, evidence, needs_review)
         _check_who_said_it(transcript_inputs, evidence, needs_review)
+        validated_record = _apply_learned_corrections(session, consultation, validated_record, needs_review)
     changes = diff_clinical_record(current, validated_record, evidence, set())
     for change in changes:
         session.add(RecordUpdate(consultation_id=consultation.id, field_name=change.field_name, previous_value=change.previous_value, new_value=change.new_value, source_transcript_segment_ids=change.source_segment_ids, update_type=_ai_update_type(change.field_name, needs_review)))
@@ -403,6 +418,7 @@ def reanalyse_consultation(session: Session, consultation_id: str, *, warnings: 
     analysed, evidence, needs_review = _apply_validated_candidates(result, ClinicalRecord(), note_inputs)
     analysed = _with_original_language_terms(session, consultation, transcript_inputs, analysed, evidence, needs_review)
     _check_who_said_it(transcript_inputs, evidence, needs_review)
+    analysed = _apply_learned_corrections(session, consultation, analysed, needs_review)
     current = ClinicalRecord.model_validate(consultation.clinical_record.structured_data_json)
     doctor_edited_fields = {update.field_name for update in consultation.updates if update.update_type == RecordUpdateType.DOCTOR_EDITED.value}
     refreshed = analysed.model_dump()

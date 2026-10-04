@@ -25,6 +25,7 @@ from ..services.consultations import replace_with_reconciled_transcript
 from ..services.live_cpu import LocalPipelineExecutor
 from ..services.recordings import SessionRecorder, compress_soon, recording_path
 from ..models import Consultation, Recording
+from ..learning.scheduler import consultation_in_progress
 from ..providers.vad import SileroVoiceActivityDetector
 
 router = APIRouter(tags=["audio"])
@@ -82,6 +83,12 @@ def persist_reconciled_transcript(consultation_id: str, transcripts: list[Transc
 
 @router.websocket("/api/consultations/{consultation_id}/audio")
 async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
+    # The nightly learning cycle waits while any consultation is recording.
+    with consultation_in_progress():
+        await _audio_stream(websocket, consultation_id)
+
+
+async def _audio_stream(websocket: WebSocket, consultation_id: str) -> None:
     await websocket.accept()
     # One model and one in-flight pass per consultation: the rolling buffer
     # always transcribes the newest audio, so extra workers only add latency

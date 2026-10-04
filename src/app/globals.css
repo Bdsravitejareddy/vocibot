@@ -103,3 +103,14 @@ button, input, textarea, select { font: inherit; }
 .sentence-list li span { display: inline-block; max-width: calc(100% - 120px); font-size: 14px; line-height: 1.5; }
 .sentence-list li button { float: right; }
 .sentence-list li.done { border-color: #a8ca8b; background: #fbfff6; }
+.learning-levels { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; }
+.learning-levels legend { margin-bottom: 8px; }
+.learning-level { display: flex; gap: 10px; align-items: flex-start; }
+.learning-level span { display: grid; gap: 2px; }
+.learning-level small { color: var(--muted, #5b6560); }
+.learning-report { display: grid; gap: 10px; }
+.learning-table { border-collapse: collapse; width: 100%; max-width: 560px; font-size: 14px; }
+.learning-table th, .learning-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #dbe1d7; }
+.learning-steps { margin: 0; padding-left: 18px; font-size: 13px; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.learning-audit ul { list-style: none; padding: 0; display: grid; gap: 8px; }
+.learning-audit pre { white-space: pre-wrap; font-size: 12px; background: #f4f6f2; padding: 8px; border-radius: 8px; margin: 4px 0 0; }

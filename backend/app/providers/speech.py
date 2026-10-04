@@ -429,8 +429,14 @@ class MlxWhisperProvider:
             options["language"] = language
         elif self.allowed_languages:
             options["language"] = self._language_memory.choose(chunk, audio, self._detect_allowed)
-        if self.initial_prompt:
-            options["initial_prompt"] = self.initial_prompt
+        prompt = self.initial_prompt
+        if not chunk.live:
+            from ..learning.tips import listening_hint
+
+            hint = listening_hint()  # tested nightly tip: medicine names to listen for
+            prompt = " ".join(part for part in (prompt, hint) if part) or None
+        if prompt:
+            options["initial_prompt"] = prompt
         with GPU_LOCK:
             result = transcribe(audio, **options)
         detected_language = result.get("language") or language

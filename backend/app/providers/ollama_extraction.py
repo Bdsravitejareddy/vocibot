@@ -39,7 +39,7 @@ CLINICAL_WORDS = re.compile(
     r"breathless\w*|wheez\w*|shortness of breath|symptom\w*|illness|infection\w*|swelling|swollen|rash\w*|itch\w*|"
     r"bleed\w*|injur\w*|fractur\w*|diarr\w*|loose motions?|constipat\w*|urinat\w*|pregnan\w*|asthma|diabet\w*|bp|"
     r"blood pressure|thyroid|cholesterol|allerg\w*|medicines?|medications?|tablets?|pills?|capsules?|syrup|injections?|"
-    r"prescri\w*|antibiotic\w*|hospital\w*|x-ray|dolo|paracetamol|crocin|pulse|spo2|oxygen|saturation)\b",
+    r"prescri\w*|antibiotic\w*|hospital\w*|x-ray|dolo|paracetamol|crocin|pulse|spo2|oxygen|saturation|tingling|numbness|fasting|hba1c|insulin|mg|milligrams?)\b",
     re.IGNORECASE,
 )
 # Also everyday words ("without getting tired", "cold morning"): they count
@@ -64,6 +64,10 @@ def mentions_health(texts) -> bool:
     if letters and sum(character.isascii() for character in letters) / len(letters) < 0.8:
         return True
     clinical = {word.lower() for word in CLINICAL_WORDS.findall(joined)}
+    from ..learning.tips import is_medicine_word, medicine_corrections_on
+
+    if medicine_corrections_on() and is_medicine_word(joined):
+        clinical.add("a medicine name")
     everyday = {word.lower().rstrip("s") for word in EVERYDAY_HEALTH_WORDS.findall(joined)}
     return len(clinical) + len(everyday) / 2 >= 2
 

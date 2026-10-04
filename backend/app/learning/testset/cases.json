@@ -1,0 +1,46 @@
+[
+ {"id": "hi_fever_dolo_pan", "language": "hi", "lines": [
+   ["Rishi", "Good morning. What brings you here today?"],
+   ["Lekha", "डॉक्टर साहब, तीन दिन से बुखार है और सिर में दर्द है।"],
+   ["Rishi", "Have you taken any medicine for it?"],
+   ["Lekha", "हाँ, मैंने डोलो छह सौ पचास ली थी, दिन में दो बार।"],
+   ["Rishi", "Any stomach problems?"],
+   ["Lekha", "पेट में जलन होती है, तो पैन चालीस भी ले रही हूँ।"],
+   ["Rishi", "Your temperature is one hundred and one. This looks like a viral fever. Continue Dolo 650 and drink plenty of fluids."]],
+  "medications": [["dolo", "paracetamol"], ["pan", "pantoprazole"]], "symptoms": ["fever", "headache"]},
+ {"id": "te_cough_azithral", "language": "te", "lines": [
+   ["Aman", "Hello, please sit down. What is the problem?"],
+   ["Geeta", "డాక్టర్ గారు, ఐదు రోజులుగా దగ్గు, జ్వరం ఉంది."],
+   ["Aman", "Are you taking any tablets?"],
+   ["Geeta", "క్రోసిన్ వేసుకుంటున్నాను, కానీ తగ్గలేదు."],
+   ["Aman", "I can hear some crackles in the chest. I will start Azithral 500 once a day for three days."]],
+  "medications": [["crocin", "paracetamol"], ["azithral", "azithromycin"]], "symptoms": ["cough", "fever"]},
+ {"id": "ta_allergy_montair", "language": "ta", "lines": [
+   ["Tara", "Good evening. Tell me what is bothering you."],
+   ["Vani", "டாக்டர், ஒரு வாரமாக தும்மல், மூக்கு ஒழுகுது."],
+   ["Tara", "Do you take anything for allergy?"],
+   ["Vani", "செட்ஜின் மாத்திரை சாப்பிட்டேன்."],
+   ["Tara", "It looks like allergic rhinitis. Take Montair LC at night for ten days."]],
+  "medications": [["cetzine", "cetirizine"], ["montair", "montelukast"]], "symptoms": ["sneez", "runny"]},
+ {"id": "en_diabetes_glycomet", "language": "en", "lines": [
+   ["Rishi", "How are your sugars these days?"],
+   ["Tara", "My fasting sugar is around one eighty. I take Glycomet 500 twice a day and Thyronorm 50 in the morning."],
+   ["Rishi", "Any tingling in the feet?"],
+   ["Tara", "No, nothing like that."],
+   ["Rishi", "I will increase Glycomet to 1000 milligrams twice a day. Let us check your HbA1c next month."]],
+  "medications": [["glycomet", "metformin"], ["thyronorm", "thyroxine", "levothyroxine"]], "symptoms": ["sugar"]},
+ {"id": "te_child_calpol", "language": "te", "lines": [
+   ["Rishi", "What happened to the child?"],
+   ["Geeta", "బాబుకి రెండు రోజులుగా జ్వరం, దగ్గు ఉన్నాయి."],
+   ["Rishi", "Did you give any medicine?"],
+   ["Geeta", "కాల్పాల్ సిరప్ ఇచ్చాను, రోజుకు మూడు సార్లు."],
+   ["Rishi", "Continue Calpol syrup and also give Ascoril syrup for the cough."]],
+  "medications": [["calpol", "paracetamol"], ["ascoril"]], "symptoms": ["fever", "cough"]},
+ {"id": "hi_infection_augmentin", "language": "hi", "lines": [
+   ["Aman", "Tell me, what is the problem?"],
+   ["Lekha", "गले में बहुत दर्द है और निगलने में तकलीफ होती है, चार दिन से।"],
+   ["Aman", "Any medicines so far?"],
+   ["Lekha", "नहीं डॉक्टर, कुछ नहीं लिया।"],
+   ["Aman", "Your tonsils are swollen. Take Augmentin 625 twice daily for five days and Dolo 650 if there is fever."]],
+  "medications": [["augmentin", "amoxicillin"], ["dolo", "paracetamol"]], "symptoms": ["throat"]}
+]
