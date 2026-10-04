@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+import threading
 from typing import Any, Protocol
 
 
@@ -233,6 +234,13 @@ class FasterWhisperProvider:
         return self.transcribe(chunk, language=language)
 
 
+# One Whisper computation at a time on the GPU: the live preview and the
+# final pass running during the consultation share the models, and MLX is
+# not safe to drive from two threads at once. Re-entrant: translation can
+# call itself on halves.
+GPU_LOCK = threading.RLock()
+
+
 class MlxWhisperProvider:
     """Whisper on the Apple Silicon GPU via MLX.
 
@@ -317,7 +325,8 @@ class MlxWhisperProvider:
         _keep_every_mlx_model_loaded()
         model = ModelHolder.get_model(self.language_id_model, mx.float16)
         mel = log_mel_spectrogram(audio, n_mels=model.dims.n_mels, padding=N_SAMPLES)
-        _, probabilities = model.detect_language(pad_or_trim(mel, N_FRAMES, axis=-2).astype(mx.float16))
+        with GPU_LOCK:
+            _, probabilities = model.detect_language(pad_or_trim(mel, N_FRAMES, axis=-2).astype(mx.float16))
         return dict(probabilities)
 
     def warmup(self) -> None:
@@ -342,17 +351,18 @@ class MlxWhisperProvider:
         if not self.translation_model:
             return []
         audio = np.asarray(chunk.waveform, dtype=np.float32)
-        result = self._load()(
-            audio,
-            path_or_hf_repo=self.translation_model,
-            task="translate",
-            language=language,
-            condition_on_previous_text=False,
-            no_speech_threshold=self.no_speech_threshold,
-            logprob_threshold=self.log_prob_threshold,
-            compression_ratio_threshold=self.compression_ratio_threshold,
-            verbose=None,
-        )
+        with GPU_LOCK:
+            result = self._load()(
+                audio,
+                path_or_hf_repo=self.translation_model,
+                task="translate",
+                language=language,
+                condition_on_previous_text=False,
+                no_speech_threshold=self.no_speech_threshold,
+                logprob_threshold=self.log_prob_threshold,
+                compression_ratio_threshold=self.compression_ratio_threshold,
+                verbose=None,
+            )
         kept: list[TranscriptDraft] = []
         recent: list[str] = []
         covered = 0.0
@@ -412,7 +422,8 @@ class MlxWhisperProvider:
             options["language"] = self._language_memory.choose(chunk, audio, self._detect_allowed)
         if self.initial_prompt:
             options["initial_prompt"] = self.initial_prompt
-        result = transcribe(audio, **options)
+        with GPU_LOCK:
+            result = transcribe(audio, **options)
         detected_language = result.get("language") or language
         accepted: list[TranscriptDraft] = []
         rejected: list[dict[str, object]] = []

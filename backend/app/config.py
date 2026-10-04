@@ -20,7 +20,9 @@ class Settings(BaseSettings):
     whisper_model: str = "small"
     whisper_device: str = "auto"
     whisper_compute_type: str = "int8"
-    asr_cpu_threads: int = 6
+    # CPU models (IndicConformer, IndicTrans2, voice fingerprints) use this many
+    # threads; 0 = the performance cores (10 on an M4 Pro).
+    asr_cpu_threads: int = 0
     # Live preview re-transcribes the unsettled audio buffer every step.  A
     # segment is settled once a later one follows it or `holdback` seconds of
     # audio have passed after it; the buffer is force-settled at `max_buffer`.
@@ -82,6 +84,21 @@ class Settings(BaseSettings):
     voice_model_dir: str = ""
     diarization_provider: str = "demo"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def resolved_cpu_threads(self) -> int:
+        """asr_cpu_threads, or the performance cores (efficiency cores are slower
+        and would hold back every thread of a parallel computation)."""
+
+        if self.asr_cpu_threads > 0:
+            return self.asr_cpu_threads
+        import os
+        import subprocess
+
+        try:
+            return max(1, int(subprocess.run(["sysctl", "-n", "hw.perflevel0.physicalcpu"], capture_output=True, text=True, timeout=2).stdout.strip()))
+        except (OSError, ValueError, subprocess.SubprocessError):
+            return max(1, (os.cpu_count() or 4) - 2)
 
     @property
     def resolved_stt_provider(self) -> str:

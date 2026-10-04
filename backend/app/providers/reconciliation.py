@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, replace
+import threading
 from time import perf_counter
 
 import numpy as np
@@ -34,79 +35,144 @@ class ReconciliationResult:
     warnings: list[str] = field(default_factory=list)
 
 
+@dataclass
+class _Piece:
+    start: int
+    end: int
+    language: str | None
+    confidence: float
+    transcripts: list[TranscriptDraft]
+    translations: list[TranscriptDraft]
+    foreign: bool
+    warnings: list[str]
+
+
+class IncrementalReconciler:
+    """The authoritative final pass, piece by piece, while the consultation runs.
+
+    Each ~28 s piece (cut at a pause) gets its language detected, its
+    transcript and its English translation as soon as it is complete, so at
+    Stop only the last piece remains. A piece is cut only once the audio
+    around the cut is complete, so cuts - and results - are the same as one
+    pass over the whole recording (FinalReconciler).
+    """
+
+    def __init__(self, stt: SpeechToTextProvider, *, sample_rate: int, language: str | None = None, translate: bool = True) -> None:
+        self.stt, self.sample_rate, self.language, self.translate = stt, sample_rate, language, translate
+        self.pieces: list[_Piece] = []
+        self.next_start = 0
+        self._lock = threading.Lock()
+
+    def advance(self, waveform: np.ndarray) -> int:
+        """Process every piece that is complete in the audio so far; returns how many."""
+
+        audio = np.asarray(waveform, dtype=np.float32).reshape(-1)
+        done = 0
+        with self._lock:
+            while (cut := _next_cut(audio, self.next_start, self.sample_rate, FINAL_PIECE_SECONDS, complete=False)) is not None:
+                self.pieces.append(self._process(audio, self.next_start, cut, None))
+                self.next_start = cut
+                done += 1
+        return done
+
+    def finish(self, waveform: np.ndarray) -> ReconciliationResult:
+        started = perf_counter()
+        audio = np.asarray(waveform, dtype=np.float32).reshape(-1)
+        with self._lock:
+            for start, end in split_at_pauses(audio[self.next_start:], self.sample_rate, FINAL_PIECE_SECONDS):
+                self.pieces.append(self._process(audio, self.next_start + start, self.next_start + end, None))
+            self.next_start = len(audio)
+            if self.language is None and len(self.pieces) > 1:
+                # A piece detected with low confidence (often a short or quiet
+                # tail) takes the consultation's main language instead.
+                spans = [(piece.start, piece.end) for piece in self.pieces]
+                found = _with_dominant_language(spans, [(piece.language, piece.confidence) for piece in self.pieces])
+                for index, (piece, (code, _)) in enumerate(zip(self.pieces, found)):
+                    if code != piece.language:
+                        self.pieces[index] = self._process(audio, piece.start, piece.end, code)
+            duration_ms = int(len(audio) / self.sample_rate * 1000)
+            transcripts, translations, warnings, foreign = [], [], [], False
+            for piece in self.pieces:
+                warnings += piece.warnings
+                kept = [draft for draft in piece.transcripts if draft.end_ms is not None and draft.end_ms <= duration_ms]
+                warnings += [f"Rejected final transcript timestamp {draft.start_ms}-{draft.end_ms}ms outside 0-{duration_ms}ms" for draft in piece.transcripts if draft not in kept]
+                transcripts += kept
+                translations += piece.translations
+                foreign = foreign or piece.foreign
+        return ReconciliationResult(transcripts=transcripts, translations=translations if foreign else [], latency_ms=(perf_counter() - started) * 1000, warnings=warnings)
+
+    def _process(self, audio: np.ndarray, start: int, end: int, forced: str | None) -> _Piece:
+        stt, sample_rate = self.stt, self.sample_rate
+        language = forced or self.language
+        detect = getattr(stt, "detect_piece_language", None)
+        if language is None and detect is not None:
+            # Language first (one encoder pass), then transcription at the
+            # piece length that language's script needs.
+            language, confidence = detect(audio[start:end])
+            drafts, detected, _ = _transcribe_in_language(stt, audio, sample_rate, start, end, language)
+        elif detect is not None:
+            confidence = 1.0
+            drafts, detected, _ = _transcribe_in_language(stt, audio, sample_rate, start, end, language)
+        else:
+            drafts, detected, confidence = _transcribe_piece(stt, audio, sample_rate, start, end, language)
+        offset_ms = int(start / sample_rate * 1000)
+        piece_end_ms = int(end / sample_rate * 1000)
+        kept: list[TranscriptDraft] = []
+        warnings: list[str] = []
+        for draft in drafts:
+            if draft.start_ms is not None and draft.end_ms is not None and offset_ms <= draft.start_ms < piece_end_ms < draft.end_ms:
+                # Whisper pads a segment cut off at the end of a piece;
+                # keep the words and clamp the bound.
+                draft = replace(draft, end_ms=piece_end_ms)
+            if draft.start_ms is None or draft.end_ms is None or not 0 <= draft.start_ms <= draft.end_ms:
+                warnings.append(f"Rejected final transcript timestamp {draft.start_ms}-{draft.end_ms}ms")
+                continue
+            kept.append(draft)
+        spoken = next((draft.language_code for draft in kept if draft.language_code), detected or language)
+        translations: list[TranscriptDraft] = []
+        foreign = False
+        if spoken and spoken != "en" and self.translate and getattr(stt, "translates_text", lambda _: False)(spoken):
+            # IndicTrans2 translates the (IndicConformer) text of the piece.
+            foreign = True
+            translations = stt.translate_text(kept, spoken) if kept else []
+        elif spoken and spoken != "en" and self.translate and hasattr(stt, "translate_chunk"):
+            foreign = True
+            chunk = AudioChunk(audio=b"", sample_rate=sample_rate, timestamp_ms=offset_ms, encoding="pcm_f32le", channels=1, waveform=np.ascontiguousarray(audio[start:end]))
+            translations = stt.translate_chunk(chunk, spoken)
+        else:
+            translations = [replace(draft, language_code="en") for draft in kept]
+        return _Piece(start, end, detected or language, confidence, kept, translations, foreign, warnings)
+
+
 class FinalReconciler:
     """The authoritative pass over the complete captured waveform."""
 
     def run(self, waveform: np.ndarray, stt: SpeechToTextProvider, *, sample_rate: int, language: str | None = None, translate: bool = True) -> ReconciliationResult:
-        started = perf_counter()
-        audio = np.asarray(waveform, dtype=np.float32).reshape(-1)
-        duration_ms = int(len(audio) / sample_rate * 1000)
-        accepted: list[TranscriptDraft] = []
-        translations: list[TranscriptDraft] = []
-        warnings: list[str] = []
-        any_foreign = False
-        spans = split_at_pauses(audio, sample_rate, FINAL_PIECE_SECONDS)
-        detect = getattr(stt, "detect_piece_language", None)
-        if detect is not None:
-            # Language first (one encoder pass), then transcription at the
-            # piece length that language's script needs.
-            found = [(language, 1.0) if language else detect(audio[start:end]) for start, end in spans]
-            found = _with_dominant_language(spans, found) if language is None else found
-            pieces = [self._transcribe_in_language(stt, audio, sample_rate, start, end, code) for (start, end), (code, _) in zip(spans, found)]
-        else:
-            pieces = [self._transcribe_piece(stt, audio, sample_rate, start, end, language) for start, end in spans]
-            if language is None and len(pieces) > 1:
-                # A piece detected with low confidence (often a short or quiet
-                # tail) takes the consultation's main language instead.
-                found = _with_dominant_language(spans, [(detected, confidence) for _, detected, confidence in pieces])
-                for index, ((start, end), (code, _), (_, detected, _)) in enumerate(zip(spans, found, pieces)):
-                    if code != detected:
-                        pieces[index] = self._transcribe_piece(stt, audio, sample_rate, start, end, code)
-        for (start, end), (drafts, detected, _) in zip(spans, pieces):
-            offset_ms = int(start / sample_rate * 1000)
-            piece_end_ms = int(end / sample_rate * 1000)
-            chunk = AudioChunk(audio=b"", sample_rate=sample_rate, timestamp_ms=offset_ms, encoding="pcm_f32le", channels=1, waveform=np.ascontiguousarray(audio[start:end]))
-            piece: list[TranscriptDraft] = []
-            for draft in drafts:
-                if draft.start_ms is not None and draft.end_ms is not None and offset_ms <= draft.start_ms < piece_end_ms < draft.end_ms:
-                    # Whisper pads a segment cut off at the end of a piece;
-                    # keep the words and clamp the bound.
-                    draft = replace(draft, end_ms=piece_end_ms)
-                if draft.start_ms is None or draft.end_ms is None or not 0 <= draft.start_ms <= draft.end_ms <= duration_ms:
-                    warnings.append(f"Rejected final transcript timestamp {draft.start_ms}-{draft.end_ms}ms outside 0-{duration_ms}ms")
-                    continue
-                piece.append(draft)
-            accepted += piece
-            spoken = next((draft.language_code for draft in piece if draft.language_code), detected or language)
-            if spoken and spoken != "en" and translate and getattr(stt, "translates_text", lambda _: False)(spoken):
-                # IndicTrans2 translates the (IndicConformer) text of the piece.
-                any_foreign = True
-                translations += stt.translate_text(piece, spoken) if piece else []
-            elif spoken and spoken != "en" and translate and hasattr(stt, "translate_chunk"):
-                any_foreign = True
-                translations += stt.translate_chunk(chunk, spoken)
-            else:
-                translations += [replace(draft, language_code="en") for draft in piece]
-        return ReconciliationResult(transcripts=accepted, translations=translations if any_foreign else [], latency_ms=(perf_counter() - started) * 1000, warnings=warnings)
+        return IncrementalReconciler(stt, sample_rate=sample_rate, language=language, translate=translate).finish(waveform)
 
-
-    def _transcribe_in_language(self, stt, audio, sample_rate: int, start: int, end: int, language: str | None):
-        limit = DENSE_SCRIPT_PIECE_SECONDS.get(language or "")
-        if limit is None or end - start <= limit * sample_rate * 1.25:
-            return self._transcribe_piece(stt, audio, sample_rate, start, end, language)
-        drafts: list[TranscriptDraft] = []
-        for sub_start, sub_end in split_at_pauses(audio[start:end], sample_rate, limit):
-            sub_drafts, _, _ = self._transcribe_piece(stt, audio, sample_rate, start + sub_start, start + sub_end, language)
-            drafts += sub_drafts
-        return drafts, language, 1.0
-
+    # Kept for callers of the old helpers.
     @staticmethod
     def _transcribe_piece(stt, audio, sample_rate: int, start: int, end: int, language: str | None):
-        chunk = AudioChunk(audio=b"", sample_rate=sample_rate, timestamp_ms=int(start / sample_rate * 1000), encoding="pcm_f32le", channels=1, waveform=np.ascontiguousarray(audio[start:end]))
-        drafts = stt.transcribe_chunk(chunk, language=language)
-        detected = next((draft.language_code for draft in drafts if draft.language_code), language)
-        confidence = 1.0 if language else float(getattr(stt, "last_language_confidence", 1.0))
-        return drafts, detected, confidence
+        return _transcribe_piece(stt, audio, sample_rate, start, end, language)
+
+
+def _transcribe_in_language(stt, audio, sample_rate: int, start: int, end: int, language: str | None):
+    limit = DENSE_SCRIPT_PIECE_SECONDS.get(language or "")
+    if limit is None or end - start <= limit * sample_rate * 1.25:
+        return _transcribe_piece(stt, audio, sample_rate, start, end, language)
+    drafts: list[TranscriptDraft] = []
+    for sub_start, sub_end in split_at_pauses(audio[start:end], sample_rate, limit):
+        sub_drafts, _, _ = _transcribe_piece(stt, audio, sample_rate, start + sub_start, start + sub_end, language)
+        drafts += sub_drafts
+    return drafts, language, 1.0
+
+
+def _transcribe_piece(stt, audio, sample_rate: int, start: int, end: int, language: str | None):
+    chunk = AudioChunk(audio=b"", sample_rate=sample_rate, timestamp_ms=int(start / sample_rate * 1000), encoding="pcm_f32le", channels=1, waveform=np.ascontiguousarray(audio[start:end]))
+    drafts = stt.transcribe_chunk(chunk, language=language)
+    detected = next((draft.language_code for draft in drafts if draft.language_code), language)
+    confidence = 1.0 if language else float(getattr(stt, "last_language_confidence", 1.0))
+    return drafts, detected, confidence
 
 
 def _with_dominant_language(spans: list[tuple[int, int]], found: list[tuple[str | None, float]]) -> list[tuple[str | None, float]]:
@@ -123,27 +189,42 @@ def _with_dominant_language(spans: list[tuple[int, int]], found: list[tuple[str 
     return [(dominant, confidence) if code != dominant and confidence < UNCERTAIN_LANGUAGE else (code, confidence) for code, confidence in found]
 
 
+_WINDOW_SECONDS = 0.02  # 20 ms energy frames
+_SEARCH_SECONDS = 4.0  # look up to 4 s either side for a pause
+
+
+def _next_cut(waveform: np.ndarray, start: int, sample_rate: int, target_seconds: float, *, complete: bool) -> int | None:
+    """Where the piece starting at ``start`` ends: about ``target_seconds``
+    later, at the quietest moment nearby; None if the rest is the last piece
+    (or, while recording, if the audio around the cut is not complete yet)."""
+
+    total = len(waveform)
+    target = int(target_seconds * sample_rate)
+    window = int(_WINDOW_SECONDS * sample_rate)
+    search = int(_SEARCH_SECONDS * sample_rate)
+    if total - start <= target * 1.25:
+        return None
+    ideal = start + target
+    if not complete and total < ideal + search + window:
+        return None
+    low, high = max(start + target // 2, ideal - search), min(total - window, ideal + search)
+    region = np.abs(waveform[low:high + window]).astype(np.float32)
+    frames = len(region) // window
+    if frames <= 0:
+        return ideal
+    energy = region[: frames * window].reshape(frames, window).mean(axis=1)
+    return low + int(np.argmin(energy)) * window + window // 2
+
+
 def split_at_pauses(waveform: np.ndarray, sample_rate: int, target_seconds: float) -> list[tuple[int, int]]:
     """Cut points about every ``target_seconds``, moved to the quietest moment nearby."""
 
     total = len(waveform)
-    target = int(target_seconds * sample_rate)
-    if total <= target * 1.25:
-        return [(0, total)] if total else []
-    window = int(0.02 * sample_rate)  # 20 ms energy frames
-    search = int(4 * sample_rate)  # look up to 4 s either side for a pause
+    if total == 0:
+        return []
     spans: list[tuple[int, int]] = []
     start = 0
-    while total - start > target * 1.25:
-        ideal = start + target
-        low, high = max(start + target // 2, ideal - search), min(total - window, ideal + search)
-        region = np.abs(waveform[low:high + window]).astype(np.float32)
-        frames = len(region) // window
-        if frames <= 0:
-            cut = ideal
-        else:
-            energy = region[: frames * window].reshape(frames, window).mean(axis=1)
-            cut = low + int(np.argmin(energy)) * window + window // 2
+    while (cut := _next_cut(waveform, start, sample_rate, target_seconds, complete=True)) is not None:
         spans.append((start, cut))
         start = cut
     spans.append((start, total))

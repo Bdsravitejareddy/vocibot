@@ -241,6 +241,18 @@ def _seconds(timestamp: str) -> float | None:
     return total
 
 
+def _note_context_size(rows) -> int | None:
+    """The context size the note request will use, so labelling shares it."""
+
+    try:
+        from ..providers.ollama_extraction import OllamaClinicalExtractionProvider, context_size
+
+        inputs = [TranscriptSegmentInput(id=f"x{index}", speaker=Speaker.UNKNOWN, text=row.text, timestamp="00:00:00", sequence_number=index) for index, row in enumerate(rows)]
+        return context_size(OllamaClinicalExtractionProvider._prompt(inputs, ClinicalRecord()))
+    except Exception:
+        return None
+
+
 def _recognise_speakers(session: Session, consultation: Consultation) -> bool:
     """Label each line DOCTOR or PATIENT from its content, before the note.
 
@@ -256,7 +268,7 @@ def _recognise_speakers(session: Session, consultation: Consultation) -> bool:
     source = translated or rows
     if not source:
         return False
-    labels = SpeakerRoleLabeler().label([item.text for item in source])
+    labels = SpeakerRoleLabeler().label([item.text for item in source], num_ctx=_note_context_size(source))
     for item, label in zip(source, labels):
         item.speaker = label
     if translated:
