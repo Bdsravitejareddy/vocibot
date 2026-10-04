@@ -263,8 +263,10 @@ class MlxWhisperProvider:
         transcribe=None,
         language_id_model: str | None = None,
         translation_model: str | None = None,
+        english_check_model: str | None = None,
     ) -> None:
         self.model = model
+        self.english_check_model = english_check_model
         # The turbo model cannot identify Telugu (0/100 dataset clips) or
         # translate; the full large-v3 model does both (Telugu 93-97%).
         self.language_id_model = language_id_model or model
@@ -315,7 +317,14 @@ class MlxWhisperProvider:
         code = self._detect_allowed(audio)
         return code, self.last_language_confidence
 
-    def detect_language_probabilities(self, audio) -> dict[str, float]:
+    def english_share(self, audio, native: str) -> float:
+        """How much more English than ``native`` a short stretch sounds (0-1)."""
+
+        probabilities = self.detect_language_probabilities(audio, model=self.english_check_model or self.language_id_model)
+        english, other = probabilities.get("en", 0.0), probabilities.get(native, 0.0)
+        return english / ((english + other) or 1.0)
+
+    def detect_language_probabilities(self, audio, model: str | None = None) -> dict[str, float]:
         """Whisper's language probabilities for the first 30 s (as transcribe does)."""
 
         import mlx.core as mx  # type: ignore[import-not-found]
@@ -323,7 +332,7 @@ class MlxWhisperProvider:
         from mlx_whisper.transcribe import ModelHolder  # type: ignore[import-not-found]
 
         _keep_every_mlx_model_loaded()
-        model = ModelHolder.get_model(self.language_id_model, mx.float16)
+        model = ModelHolder.get_model(model or self.language_id_model, mx.float16)
         mel = log_mel_spectrogram(audio, n_mels=model.dims.n_mels, padding=N_SAMPLES)
         with GPU_LOCK:
             _, probabilities = model.detect_language(pad_or_trim(mel, N_FRAMES, axis=-2).astype(mx.float16))

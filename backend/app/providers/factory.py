@@ -38,6 +38,7 @@ def _build_whisper_provider(selected: Settings) -> SpeechToTextProvider:
             model=selected.mlx_whisper_model,
             language_id_model=selected.mlx_language_id_model,
             translation_model=selected.mlx_translation_model if selected.translate_to_english else None,
+            english_check_model=selected.mlx_english_check_model,
             no_speech_threshold=selected.asr_no_speech_threshold,
             log_prob_threshold=selected.asr_log_prob_threshold,
             compression_ratio_threshold=selected.asr_compression_ratio_threshold,

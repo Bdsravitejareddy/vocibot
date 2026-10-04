@@ -128,7 +128,8 @@ class IncrementalReconciler:
                 warnings.append(f"Rejected final transcript timestamp {draft.start_ms}-{draft.end_ms}ms")
                 continue
             kept.append(draft)
-        spoken = next((draft.language_code for draft in kept if draft.language_code), detected or language)
+        # The piece's language (lines inside it may be English).
+        spoken = (detected if detect is not None else None) or language or next((draft.language_code for draft in kept if draft.language_code), None)
         translations: list[TranscriptDraft] = []
         foreign = False
         if spoken and spoken != "en" and self.translate and getattr(stt, "translates_text", lambda _: False)(spoken):

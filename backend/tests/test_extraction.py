@@ -133,3 +133,7 @@ def test_health_vocabulary_decides_whether_a_note_is_attempted() -> None:
     assert not mentions_health(["Good morning everyone and a warm welcome to the annual Cloud Engineering Summit."])
     assert not mentions_health(["Can you hear me? Hello? Hello?"])
     assert not mentions_health(["flowing without stopping, without getting tired"])  # one everyday word
+
+
+def test_a_medication_must_name_a_drug() -> None:
+    assert OllamaClinicalExtractionProvider._coerce("medications", ["medicine", "medicine meds", "some tablets for stomach pain", "Dolo 650", "paracetamol 500 mg", "650"]) == ["Dolo 650", "paracetamol 500 mg", "650"]

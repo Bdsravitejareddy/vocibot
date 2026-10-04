@@ -142,3 +142,32 @@ def test_the_final_pass_translates_text_where_enabled_and_audio_elsewhere() -> N
     whisper.language = "hi"  # Hindi not enabled for text translation: Whisper from the audio
     result = FinalReconciler().run(audio, router, sample_rate=16_000)
     assert [draft.text for draft in result.translations] == ["I have a fever."] and whisper.audio_translations == 1
+
+
+def test_english_lines_in_an_indian_language_piece_get_whispers_english() -> None:
+    class Whisper(FakeWhisper):
+        def english_share(self, audio, native):
+            return 0.95 if float(np.abs(audio).mean()) > 0.3 else 0.05
+
+        def transcribe_chunk(self, chunk, language=None):
+            self.calls.append((chunk.live, language))
+            return [TranscriptDraft(text="How long have you had this?", timestamp="", start_ms=chunk.timestamp_ms, end_ms=chunk.timestamp_ms + 1000, language_code="en")]
+
+    class Indic(FakeIndic):
+        def transcribe_chunk(self, chunk, language=None):
+            return [TranscriptDraft(text="हाव लॉन्ग हेव", timestamp="00:00:00", start_ms=0, end_ms=2000, language_code="hi"),
+                    TranscriptDraft(text="तीन महीने", timestamp="00:00:02", start_ms=2000, end_ms=4000, language_code="hi"),
+                    TranscriptDraft(text="हाँ", timestamp="00:00:04", start_ms=4000, end_ms=4500, language_code="hi")]
+
+    whisper = Whisper()
+    whisper.allowed_languages = {"en", "hi"}
+    router = IndicRoutingProvider(whisper, Indic(), FakeTranslator(), {"hi"})
+    audio = np.concatenate([np.full(32_000, 0.5), np.full(32_000, 0.05), np.full(8_000, 0.5)]).astype(np.float32)
+    lines = router.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=0, waveform=audio, live=False), "hi")
+    # English line replaced; Hindi line kept; the 0.5 s line is too short to judge.
+    assert [(line.text, line.language_code) for line in lines] == [("How long have you had this?", "en"), ("तीन महीने", "hi"), ("हाँ", "hi")]
+    # Only the Hindi lines are translated; the English one is kept as it is.
+    english = router.translate_text(lines, "hi")
+    assert [line.text for line in english] == ["How long have you had this?", "EN(तीन महीने हाँ)"]
+    two_english = router.translate_text([lines[0], lines[0]], "hi")
+    assert len(two_english) == 2  # English lines are not merged (each keeps its speaker)

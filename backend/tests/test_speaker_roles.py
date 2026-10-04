@@ -60,8 +60,10 @@ def test_telugu_lines_take_the_role_of_the_english_line_they_fall_under(monkeypa
 def test_a_doctors_field_cited_only_to_the_patient_is_flagged_for_review() -> None:
     lines = [TranscriptSegmentInput(id=f"en-{index}", speaker=speaker, text="...", timestamp="00:00:00", sequence_number=index) for index, speaker in enumerate((Speaker.DOCTOR, Speaker.PATIENT, Speaker.DOCTOR))]
     needs_review: set[str] = set()
-    service._check_who_said_it(lines, {"plan": ["en-1"], "assessment": ["en-2"], "presenting_symptoms": ["en-1"], "follow_up": ["en-0", "en-1"]}, needs_review)
-    assert needs_review == {"plan"}
+    lines.append(TranscriptSegmentInput(id="en-3", speaker=Speaker.UNKNOWN, text="...", timestamp="00:00:00", sequence_number=3))
+    service._check_who_said_it(lines, {"plan": ["en-1"], "assessment": ["en-2"], "presenting_symptoms": ["en-1"], "follow_up": ["en-0", "en-1"], "vitals": ["en-1", "en-3"]}, needs_review)
+    # A plan only the patient (or an unrecognised speaker) said is flagged.
+    assert needs_review == {"plan", "vitals"}
 
 
 def test_recognised_roles_are_hidden_from_the_note_model() -> None:
