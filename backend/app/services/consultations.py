@@ -321,13 +321,15 @@ def _for_extraction(transcript_inputs: list[TranscriptSegmentInput], recognised:
 
 
 def _check_who_said_it(transcript_inputs: list[TranscriptSegmentInput], evidence: dict[str, list[str]], needs_review: set[str]) -> None:
-    """A doctor's field (assessment, plan, ...) cited only to lines recognised
-    as the patient's is flagged for review rather than accepted."""
+    """A doctor's field (assessment, plan, ...) not backed by any line
+    recognised as the doctor's is flagged for review rather than accepted."""
 
     speakers = {item.id: str(getattr(item.speaker, "value", item.speaker)) for item in transcript_inputs}
+    if not any(speaker in (Speaker.DOCTOR.value, Speaker.PATIENT.value) for speaker in speakers.values()):
+        return  # no roles recognised: nothing to check against
     for field_name, cited in evidence.items():
         said = {speakers.get(segment_id) for segment_id in cited}
-        if field_name in DOCTOR_FIELDS and said == {Speaker.PATIENT.value}:
+        if field_name in DOCTOR_FIELDS and Speaker.DOCTOR.value not in said:
             needs_review.add(field_name)
 
 

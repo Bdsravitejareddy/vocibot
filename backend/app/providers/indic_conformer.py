@@ -117,6 +117,15 @@ def _lines(words: list[tuple[str, float, float, float]]) -> list[list[tuple[str,
     return lines
 
 
+# Indian consultations mix in English (the doctor's questions, medicine and
+# test names). IndicConformer writes English speech as gibberish in the
+# Indian script ("हाव लॉन्ग हेव" for "how long have"), so each final line
+# is checked: when Whisper hears it as English this clearly (share of
+# English vs the piece's language), Whisper's English transcript replaces it.
+# On a Hindi/English consultation English lines scored 0.89-1.00, Hindi
+# lines mostly 0.01-0.12; shorter lines are not judged.
+ENGLISH_LINE_SHARE = 0.85
+ENGLISH_LINE_MIN_SECONDS = 1.0
 # Text is translated in groups of whole transcript lines up to this many
 # words: single lines are often half a sentence, very long groups lose detail.
 TRANSLATION_GROUP_WORDS = 20
@@ -139,16 +148,50 @@ class IndicRoutingProvider:
         return self.translator is not None and language in self.text_translation_languages and language in self.indic.languages and self.translator.supports(language)
 
     def translate_text(self, drafts: list[TranscriptDraft], language: str) -> list[TranscriptDraft]:
-        """English for a piece's transcript lines, in groups of whole lines."""
+        """English for a piece's transcript lines, in groups of whole lines;
+        lines already in English are kept as they are."""
 
         groups: list[list[TranscriptDraft]] = []
         for draft in drafts:
-            if groups and len(" ".join(item.text for item in groups[-1] + [draft]).split()) <= TRANSLATION_GROUP_WORDS:
+            # English lines stay one per segment (each keeps its own speaker);
+            # Indian-language lines are grouped for a better translation.
+            same_kind = groups and draft.language_code != "en" and groups[-1][0].language_code != "en"
+            if same_kind and len(" ".join(item.text for item in groups[-1] + [draft]).split()) <= TRANSLATION_GROUP_WORDS:
                 groups[-1].append(draft)
             else:
                 groups.append([draft])
-        english = self.translator.translate([" ".join(item.text for item in group) for group in groups], language)
-        return [TranscriptDraft(text=text, timestamp=group[0].timestamp, start_ms=group[0].start_ms, end_ms=group[-1].end_ms, language_code="en") for group, text in zip(groups, english) if text.strip()]
+        foreign = [group for group in groups if group[0].language_code != "en"]
+        english = dict(zip(map(id, foreign), self.translator.translate([" ".join(item.text for item in group) for group in foreign], language))) if foreign else {}
+        out = []
+        for group in groups:
+            text = " ".join(item.text for item in group) if group[0].language_code == "en" else english[id(group)]
+            if text.strip():
+                out.append(TranscriptDraft(text=text, timestamp=group[0].timestamp, start_ms=group[0].start_ms, end_ms=group[-1].end_ms, language_code="en"))
+        return out
+
+    def _english_lines(self, chunk: AudioChunk, drafts: list[TranscriptDraft], language: str) -> list[TranscriptDraft]:
+        """Lines spoken in English get Whisper's English transcript."""
+
+        allowed = self.whisper.allowed_languages
+        share = getattr(self.whisper, "english_share", None)
+        if share is None or (allowed and "en" not in allowed) or chunk.waveform is None:
+            return drafts
+        audio = np.asarray(chunk.waveform, dtype=np.float32)
+        rate = chunk.sample_rate
+        out = []
+        for draft in drafts:
+            begin = max(0, int(((draft.start_ms or 0) - chunk.timestamp_ms) / 1000 * rate) - int(0.2 * rate))
+            end = min(len(audio), int(((draft.end_ms or 0) - chunk.timestamp_ms) / 1000 * rate) + int(0.2 * rate))
+            if end - begin < ENGLISH_LINE_MIN_SECONDS * rate:
+                out.append(draft)
+                continue
+            if share(audio[begin:end], language) >= ENGLISH_LINE_SHARE:
+                line = AudioChunk(audio=b"", sample_rate=rate, timestamp_ms=chunk.timestamp_ms + int(begin / rate * 1000), waveform=np.ascontiguousarray(audio[begin:end]))
+                text = " ".join(item.text for item in self.whisper.transcribe_chunk(line, "en")).strip()
+                if text:
+                    draft = TranscriptDraft(text=text, timestamp=draft.timestamp, speaker=draft.speaker, start_ms=draft.start_ms, end_ms=draft.end_ms, language_code="en")
+            out.append(draft)
+        return out
 
     # restrict_languages() sets these on the session's speech provider.
     @property
@@ -179,7 +222,7 @@ class IndicRoutingProvider:
 
     def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
         if not chunk.live and language in self.indic.languages:
-            drafts = self.indic.transcribe_chunk(chunk, language)
+            drafts = self._english_lines(chunk, self.indic.transcribe_chunk(chunk, language), language)
             object.__setattr__(self, "last_diagnostics", self.indic.last_diagnostics)
             return drafts
         drafts = self.whisper.transcribe_chunk(chunk, language)

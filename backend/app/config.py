@@ -68,6 +68,10 @@ class Settings(BaseSettings):
     # turbo identifies Telugu 0% of the time and was not trained to translate.
     mlx_language_id_model: str = "mlx-community/whisper-large-v3-mlx"
     mlx_translation_model: str = "mlx-community/whisper-large-v3-mlx"
+    # "Is this line English?" in Indian-language consultations: as accurate as
+    # large-v3 on the clinic's code-mixed test and dataset clips, 6x faster
+    # (0.1 s per line).
+    mlx_english_check_model: str = "mlx-community/whisper-small-mlx"
     # Non-English consultations get an English translation (from the audio)
     # that the clinical note is written from.
     translate_to_english: bool = True

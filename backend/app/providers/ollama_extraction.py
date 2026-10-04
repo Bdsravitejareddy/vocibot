@@ -68,6 +68,16 @@ def mentions_health(texts) -> bool:
     return len(clinical) + len(everyday) / 2 >= 2
 
 
+GENERIC_WORDS = {"some", "a", "the", "any", "my", "his", "her", "few", "other", "these", "those", "that", "this", "and", "for", "from", "of",
+                 "medicine", "medicines", "meds", "med", "medication", "medications", "tablet", "tablets", "pill", "pills", "drug", "drugs",
+                 "capsule", "capsules", "syrup", "syrups", "injection", "injections", "treatment", "stomach", "pain", "fever", "it"}
+
+
+def _generic_medicine(item: str) -> bool:
+    """Names no drug: "medicine", "medicine meds", "some tablets for stomach pain"."""
+
+    words = re.findall(r"[a-z]+", item.lower())
+    return bool(words) and not re.search(r"\d", item) and all(word in GENERIC_WORDS for word in words)
 PLACEHOLDERS = {"none", "n/a", "na", "nil", "null", "unknown", "not mentioned", "not discussed", "not stated", "not provided", "not applicable", "no information", "-", ""}
 
 
@@ -152,7 +162,11 @@ class OllamaClinicalExtractionProvider:
         if field_name in LIST_FIELDS:
             items = value if isinstance(value, list) else re.split(r"\s*(?:[,;\n]|\band\b)\s*", value) if isinstance(value, str) else []
             cleaned = [str(item).strip(" .") for item in items if isinstance(item, (str, int, float))]
-            return [item for item in cleaned if item.lower() not in PLACEHOLDERS]
+            kept = [item for item in cleaned if item.lower() not in PLACEHOLDERS]
+            if field_name in ("medications", "allergies"):
+                # "medicine" / "some tablets" names no drug: not a medication.
+                kept = [item for item in kept if not _generic_medicine(item)]
+            return kept
         if isinstance(value, list):
             value = "; ".join(str(item) for item in value if isinstance(item, (str, int, float)))
         if isinstance(value, (int, float)):
