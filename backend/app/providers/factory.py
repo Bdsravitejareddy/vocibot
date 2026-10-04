@@ -15,13 +15,13 @@ def build_speech_provider(config: Settings | None = None) -> SpeechToTextProvide
     if selected.ai_mode == "local" and selected.indic_asr_models_dir:
         from .indic_conformer import IndicConformerProvider, IndicRoutingProvider
 
-        indic = IndicConformerProvider(selected.indic_asr_models_dir, threads=selected.asr_cpu_threads)
+        indic = IndicConformerProvider(selected.indic_asr_models_dir, threads=selected.resolved_cpu_threads)
         if indic.available():
             translator = None
             if selected.translate_to_english and selected.indic_translation_model_dir:
                 from .indic_translation import IndicTranslator
 
-                candidate = IndicTranslator(selected.indic_translation_model_dir, threads=selected.asr_cpu_threads)
+                candidate = IndicTranslator(selected.indic_translation_model_dir, threads=selected.resolved_cpu_threads)
                 translator = candidate if candidate.available() else None
             languages = {code.strip() for code in selected.indic_text_translation_languages.split(",") if code.strip()}
             return IndicRoutingProvider(provider, indic, translator, languages)  # type: ignore[return-value]
@@ -51,7 +51,7 @@ def _build_whisper_provider(selected: Settings) -> SpeechToTextProvider:
             model_size=selected.whisper_model,
             device=selected.whisper_device,
             compute_type=selected.whisper_compute_type,
-            cpu_threads=selected.asr_cpu_threads,
+            cpu_threads=selected.resolved_cpu_threads,
             num_workers=selected.asr_model_workers,
             vad_filter=selected.asr_vad_filter,
             no_speech_threshold=selected.asr_no_speech_threshold,

@@ -136,3 +136,30 @@ def test_dense_scripts_are_transcribed_in_short_pieces_so_whisper_does_not_overf
     english = DetectingSTT("en")
     FinalReconciler().run(speech_with_pauses(28), english, sample_rate=16_000)
     assert english.chunks == [(28.0, "en")]
+
+
+def test_processing_during_the_consultation_cuts_the_same_pieces_as_after_stop() -> None:
+    from app.providers.reconciliation import IncrementalReconciler
+
+    class Recorder:
+        def __init__(self) -> None:
+            self.spans = []
+
+        def transcribe_chunk(self, chunk, language=None):
+            self.spans.append((chunk.timestamp_ms, chunk.timestamp_ms + int(len(chunk.waveform) / 16)))
+            return [TranscriptDraft(text="I have a cough.", timestamp="", start_ms=chunk.timestamp_ms, end_ms=chunk.timestamp_ms + 500, language_code="en")]
+
+    rng = np.random.default_rng(3)
+    audio = (speech_with_pauses(130) * (0.5 + rng.random(130 * 16_000))).astype(np.float32)
+    after_stop = Recorder()
+    expected = FinalReconciler().run(audio, after_stop, sample_rate=16_000)
+
+    live = Recorder()
+    incremental = IncrementalReconciler(live, sample_rate=16_000)
+    done_during = 0
+    for end in range(0, len(audio), 3 * 16_000):  # audio arrives 3 s at a time
+        done_during += incremental.advance(audio[:end])
+    assert done_during >= 2  # most pieces were done before Stop
+    result = incremental.finish(audio)
+    assert live.spans == after_stop.spans
+    assert [(draft.start_ms, draft.text) for draft in result.transcripts] == [(draft.start_ms, draft.text) for draft in expected.transcripts]

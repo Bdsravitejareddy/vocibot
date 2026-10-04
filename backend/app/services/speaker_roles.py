@@ -52,14 +52,19 @@ class SpeakerRoleLabeler:
         self.base_url = (base_url or settings.ollama_base_url).rstrip("/")
         self.model = model or settings.ollama_model
 
-    def label(self, lines: list[str]) -> list[str]:
-        """DOCTOR, PATIENT or UNKNOWN for each line (all UNKNOWN on failure)."""
+    def label(self, lines: list[str], num_ctx: int | None = None) -> list[str]:
+        """DOCTOR, PATIENT or UNKNOWN for each line (all UNKNOWN on failure).
+
+        Pass the note's context size: a different one makes Ollama reload
+        the model between the two requests (labelling took 5.5 s, not 3 s).
+        """
 
         if not lines:
             return []
         unknown = ["UNKNOWN"] * len(lines)
         prompt = _prompt(lines)
-        options = {"temperature": 0, "num_predict": 12 * len(lines) + 64, "num_ctx": max(2048, min(settings.ollama_max_context, -(-(len(prompt) // 3 + 8 * len(lines) + 512) // 1024) * 1024))}
+        own = max(2048, min(settings.ollama_max_context, -(-(len(prompt) // 3 + 12 * len(lines) + 512) // 1024) * 1024))
+        options = {"temperature": 0, "num_predict": 12 * len(lines) + 64, "num_ctx": max(own, num_ctx or 0)}
         if settings.ollama_num_gpu >= 0:
             options["num_gpu"] = settings.ollama_num_gpu
         try:

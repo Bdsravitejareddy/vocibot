@@ -14,7 +14,9 @@ from ..providers.audio import audio_metrics, decode_audio_payload, save_debug_wa
 from ..providers.diarization import PyannoteDiarizationProvider
 from ..providers.factory import build_speech_provider
 from ..providers.local_pipeline import LocalAudioPipeline
-from ..providers.reconciliation import FinalReconciler
+from concurrent.futures import ThreadPoolExecutor
+
+from ..providers.reconciliation import FinalReconciler, IncrementalReconciler
 from ..providers.speech import AudioChunk, TranscriptDraft
 from ..providers.streaming import TranscriptCommitter, select_live_commits
 from ..db import SessionLocal
@@ -56,6 +58,19 @@ def build_local_pipeline() -> LocalAudioPipeline:
         timestamp_tolerance_ms=1_000,
         max_trailing_overshoot_ms=3_000,
     )
+
+
+# New audio between attempts to process completed final-pass pieces.
+ADVANCE_EVERY_SECONDS = 5
+
+
+def _advance_quietly(incremental: IncrementalReconciler, waveform: np.ndarray, consultation_id: str) -> None:
+    """A failure here only means the piece is done after Stop instead."""
+
+    try:
+        incremental.advance(waveform)
+    except Exception:
+        logger.exception("Final pass during the consultation failed for %s; it will finish after Stop", consultation_id)
 
 
 def persist_reconciled_transcript(consultation_id: str, transcripts: list[TranscriptDraft], translations: list[TranscriptDraft] | None = None) -> None:
@@ -132,6 +147,13 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
     debug_windows: list[dict[str, object]] = []
     debug_transcripts: list[dict[str, object]] = []
     received_waveforms: list[np.ndarray] = []
+    # The final pass runs piece by piece during the consultation on its own
+    # thread, so at Stop only the last piece is left.
+    incremental = IncrementalReconciler(pipeline.stt, sample_rate=settings.audio_sample_rate, language=None if language == "auto" else language) if settings.ai_mode == "local" and getattr(pipeline, "stt", None) is not None else None
+    finalizer = ThreadPoolExecutor(max_workers=1, thread_name_prefix="vocibot-final")
+    advance_job: asyncio.Future | None = None
+    received_samples = 0
+    samples_at_last_advance = 0
     final_reconciliation: dict[str, object] = {}
     capture_started_at: float | None = None
     first_text_latency_ms: float | None = None
@@ -325,13 +347,18 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                             await worker
                             if settings.ai_mode == "local" and received_waveforms:
                                 complete_waveform = np.concatenate(received_waveforms)
-                                reconciled = await pipeline_executor.run(
-                                    FinalReconciler().run,
-                                    complete_waveform,
-                                    pipeline.stt,
-                                    sample_rate=settings.audio_sample_rate,
-                                    language=None if language == "auto" else language,
-                                )
+                                if advance_job is not None:
+                                    await advance_job  # a piece being processed during the consultation
+                                if incremental is not None:
+                                    reconciled = await asyncio.get_running_loop().run_in_executor(finalizer, incremental.finish, complete_waveform)
+                                else:
+                                    reconciled = await pipeline_executor.run(
+                                        FinalReconciler().run,
+                                        complete_waveform,
+                                        pipeline.stt,
+                                        sample_rate=settings.audio_sample_rate,
+                                        language=None if language == "auto" else language,
+                                    )
                                 final_reconciliation.update({
                                     "latency_ms": reconciled.latency_ms,
                                     "warnings": reconciled.warnings,
@@ -379,6 +406,10 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
                 received_audio.extend(audio)
             decoded = decode_audio_payload(audio, encoding=encoding, sample_rate=sample_rate, channels=channels)
             received_waveforms.append(decoded.waveform)
+            received_samples += len(decoded.waveform)
+            if incremental is not None and (advance_job is None or advance_job.done()) and received_samples - samples_at_last_advance >= ADVANCE_EVERY_SECONDS * settings.audio_sample_rate:
+                samples_at_last_advance = received_samples
+                advance_job = asyncio.get_running_loop().run_in_executor(finalizer, _advance_quietly, incremental, np.concatenate(received_waveforms), consultation_id)
             if not recording_checked:
                 recording_checked = True
                 try:
@@ -394,5 +425,6 @@ async def audio_stream(websocket: WebSocket, consultation_id: str) -> None:
         if not worker.done():
             worker.cancel()
         pipeline_executor.close(wait=wait_for_executor_shutdown)
+        finalizer.shutdown(wait=False, cancel_futures=True)
         persist_debug_audio()
         finish_recording()
