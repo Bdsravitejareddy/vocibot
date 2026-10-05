@@ -85,6 +85,45 @@ def _generic_medicine(item: str) -> bool:
 PLACEHOLDERS = {"none", "n/a", "na", "nil", "null", "unknown", "not mentioned", "not discussed", "not stated", "not provided", "not applicable", "no information", "-", ""}
 
 
+# The answer's JSON structure, enforced while the model writes it: an 8B model
+# writing free JSON sometimes breaks it (a second "candidates" list that
+# replaced the first, losing the whole note).
+CANDIDATE_SCHEMA = {
+    "type": "object",
+    "properties": {"candidates": {"type": "array", "items": {
+        "type": "object",
+        "properties": {
+            "field_name": {"type": "string", "enum": ["chief_complaint", "duration", "presenting_symptoms", "history_present_illness", "relevant_negatives", "past_medical_history",
+                                                       "medications", "allergies", "vitals", "examination_findings", "assessment", "plan", "follow_up"]},
+            "value": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}, {"type": "object", "additionalProperties": {"type": "string"}}]},
+            "source_segment_ids": {"type": "array", "items": {"type": "string"}},
+            "speaker": {"type": "string", "enum": ["DOCTOR", "PATIENT", "UNKNOWN"]},
+            "status": {"type": "string", "enum": ["SUPPORTED", "NEEDS_REVIEW"]},
+        },
+        "required": ["field_name", "value", "source_segment_ids", "speaker", "status"],
+    }}},
+    "required": ["candidates"],
+}
+
+
+# "Thank you." cited as the plan: courtesy, not clinical content.
+PLEASANTRY = re.compile(r"(?:(?:ok(?:ay)?|thank(?:s| you)(?: (?:so much|very much|doctor|sir|madam))?|good (?:morning|afternoon|evening|night)|bye|goodbye|see you|take care|welcome|hello|hi)[\s.,!]*)+", re.IGNORECASE)
+
+
+def _merge_repeated_lists(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """An 8B model sometimes closes its "candidates" list early and starts a
+    second one; a plain JSON read keeps only the last list and loses the rest
+    of the note. Repeated lists are joined instead."""
+
+    merged: dict[str, Any] = {}
+    for key, value in pairs:
+        if isinstance(merged.get(key), list) and isinstance(value, list):
+            merged[key] = merged[key] + value
+        else:
+            merged[key] = value
+    return merged
+
+
 class OllamaClinicalExtractionProvider:
     def __init__(self, base_url: str | None = None, model: str | None = None) -> None:
         self.base_url = (base_url or settings.ollama_base_url).rstrip("/")
@@ -114,13 +153,13 @@ class OllamaClinicalExtractionProvider:
         if transcript and not mentions_health(segment.text for segment in transcript):
             self.last_stats = {"not_a_consultation": True}
             return ExtractionResult(proposed_record=ClinicalRecord(), candidates=[])
-        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": "json", "stream": False, "keep_alive": settings.ollama_keep_alive, "options": options}, timeout=settings.ollama_timeout_seconds)
+        response = httpx.post(f"{self.base_url}/api/generate", json={"model": self.model, "prompt": prompt, "format": CANDIDATE_SCHEMA if settings.ollama_json_schema else "json", "stream": False, "keep_alive": settings.ollama_keep_alive, "options": options}, timeout=settings.ollama_timeout_seconds)
         response.raise_for_status()
         payload: Any = response.json()
         self.last_stats = {key: payload.get(key) for key in ("total_duration", "load_duration", "prompt_eval_count", "prompt_eval_duration", "eval_count", "eval_duration")} | {"num_ctx": options["num_ctx"]}
         raw = payload.get("response", payload)
         if isinstance(raw, str):
-            raw = json.loads(raw)
+            raw = json.loads(raw, object_pairs_hook=_merge_repeated_lists)
         if isinstance(raw, dict) and "candidates" in raw:
             # Only evidence-backed candidates fill the record; the model is not
             # asked for a duplicate proposed record (8B models loop on it).
@@ -175,7 +214,7 @@ class OllamaClinicalExtractionProvider:
             value = "; ".join(str(item) for item in value if isinstance(item, (str, int, float)))
         if isinstance(value, (int, float)):
             value = str(value)
-        if not isinstance(value, str) or value.strip(" .").lower() in PLACEHOLDERS:
+        if not isinstance(value, str) or value.strip(" .").lower() in PLACEHOLDERS or PLEASANTRY.fullmatch(value.strip()):
             return None
         return value.strip()
 
