@@ -82,8 +82,11 @@ class Settings(BaseSettings):
     indic_asr_models_dir: str = ""
     # IndicTrans2 CTranslate2 model folder, and the languages whose
     # IndicConformer text it translates (others: Whisper from the audio).
+    # None by default: on the clinic's real Hindi-English consultations,
+    # translating the text lost meaning the audio carries ("सर" = head, read
+    # as "sir": "Sir, I'm very sad"); Whisper's audio translation kept it.
     indic_translation_model_dir: str = ""
-    indic_text_translation_languages: str = "hi"
+    indic_text_translation_languages: str = ""
     # Label transcript lines doctor/patient from their content before the note.
     speaker_roles_enabled: bool = True
     # Nightly learning (dictionary, tested tips, reports); default: next to recordings.
