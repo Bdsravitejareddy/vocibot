@@ -234,11 +234,53 @@ class FasterWhisperProvider:
         return self.transcribe(chunk, language=language)
 
 
-# One Whisper computation at a time on the GPU: the live preview and the
-# final pass running during the consultation share the models, and MLX is
-# not safe to drive from two threads at once. Re-entrant: translation can
-# call itself on halves.
-GPU_LOCK = threading.RLock()
+class _GpuLock:
+    """One Whisper computation at a time on the GPU: the live preview and the
+    final pass running during the consultation share the models, and MLX is
+    not safe to drive from two threads at once. Re-entrant (translation can
+    call itself on halves).
+
+    The live preview goes first: final-pass work waits while a live pass is
+    waiting, so it runs in the gaps between live passes and after Stop. A
+    thread marks itself live with ``GPU_LOCK.live(True)``."""
+
+    def __init__(self) -> None:
+        self._lock = threading.RLock()
+        self._changed = threading.Condition(threading.Lock())
+        self._live_waiting = 0
+        self._local = threading.local()
+
+    def live(self, value: bool) -> None:
+        self._local.live = value
+
+    def __enter__(self) -> "_GpuLock":
+        from ..config import settings
+
+        depth = getattr(self._local, "depth", 0)
+        if getattr(self._local, "live", False):
+            with self._changed:
+                self._live_waiting += 1
+            try:
+                self._lock.acquire()
+            finally:
+                with self._changed:
+                    self._live_waiting -= 1
+                    self._changed.notify_all()
+        else:
+            if depth == 0 and settings.live_gpu_priority:
+                with self._changed:
+                    while self._live_waiting:
+                        self._changed.wait(0.05)
+            self._lock.acquire()
+        self._local.depth = depth + 1
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self._local.depth -= 1
+        self._lock.release()
+
+
+GPU_LOCK = _GpuLock()
 
 
 class MlxWhisperProvider:
@@ -405,6 +447,7 @@ class MlxWhisperProvider:
         return kept
 
     def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
+        GPU_LOCK.live(chunk.live)  # the live preview goes first on the GPU
         import numpy as np  # type: ignore[import-not-found]
 
         transcribe = self._load()
