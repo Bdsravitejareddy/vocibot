@@ -16,6 +16,7 @@ pauses.
 
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 from pathlib import Path
 import threading
@@ -64,6 +65,14 @@ class IndicConformerProvider:
         if language in self.languages:
             self.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=0, waveform=np.zeros(16_000, dtype=np.float32)), language)
 
+    def words(self, audio: np.ndarray, language: str) -> list[tuple[str, float, float, float]]:
+        """(word, start s, end s, score) for the audio."""
+
+        session, vocab = self._load(language)
+        features = self._features(audio)[None]  # type: ignore[misc]
+        logprobs, _ = session.run(None, {"features": features, "length": np.array([features.shape[2]], dtype=np.int64)})
+        return _ctc_words(logprobs[0], vocab)
+
     def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
         if language not in self.languages:
             raise ValueError(f"No IndicConformer model for language {language!r}")
@@ -71,9 +80,7 @@ class IndicConformerProvider:
         audio = np.asarray(chunk.waveform, dtype=np.float32).reshape(-1)
         if len(audio) < 1_600:  # under 0.1 s
             return []
-        features = self._features(audio)[None]  # type: ignore[misc]
-        logprobs, _ = session.run(None, {"features": features, "length": np.array([features.shape[2]], dtype=np.int64)})
-        words = _ctc_words(logprobs[0], vocab)
+        words = self.words(audio, language)
         drafts = []
         for line in _lines(words):
             start_ms = chunk.timestamp_ms + int(line[0][1] * 1000)
@@ -126,6 +133,18 @@ def _lines(words: list[tuple[str, float, float, float]]) -> list[list[tuple[str,
 # lines mostly 0.01-0.12; shorter lines are not judged.
 ENGLISH_LINE_SHARE = 0.85
 ENGLISH_LINE_MIN_SECONDS = 1.0
+# Language per spoken stretch instead of per 28 s piece: people switch
+# between Hindi and English every few seconds, and IndicConformer writes
+# English as gibberish in Devanagari ("व्हेट इस थे प्रॉब्लम"). Each stretch of
+# speech (split at pauses) goes to Whisper's English when it sounds English
+# at least this much (English vs the piece's language), else IndicConformer.
+SPAN_ENGLISH_SHARE = 0.5
+SPAN_PAUSE_MS = 300
+SPAN_MAX_SECONDS = 10.0
+SPAN_MIN_JUDGED_SECONDS = 0.6
+# An English piece is also checked stretch by stretch when an Indian
+# language has at least this share of it (Whisper's language probabilities).
+ENGLISH_PIECE_NATIVE_SHARE = 0.1
 # Text is translated in groups of whole transcript lines up to this many
 # words: single lines are often half a sentence, very long groups lose detail.
 TRANSLATION_GROUP_WORDS = 20
@@ -168,6 +187,72 @@ class IndicRoutingProvider:
             if text.strip():
                 out.append(TranscriptDraft(text=text, timestamp=group[0].timestamp, start_ms=group[0].start_ms, end_ms=group[-1].end_ms, language_code="en"))
         return out
+
+    def _speech_spans(self, audio: np.ndarray, rate: int) -> list[tuple[int, int]]:
+        """Stretches of speech between pauses, at most SPAN_MAX_SECONDS."""
+
+        from silero_vad import get_speech_timestamps, load_silero_vad  # type: ignore[import-not-found]
+        import torch  # type: ignore[import-not-found]
+
+        if getattr(self, "_vad", None) is None:
+            object.__setattr__(self, "_vad", load_silero_vad())
+        found = get_speech_timestamps(torch.from_numpy(np.ascontiguousarray(audio)), self._vad, sampling_rate=rate, min_silence_duration_ms=SPAN_PAUSE_MS, speech_pad_ms=100,
+                                      max_speech_duration_s=SPAN_MAX_SECONDS)
+        spans = [(int(item["start"]), int(item["end"])) for item in found]
+        merged: list[tuple[int, int]] = []
+        for start, end in spans:
+            # A very short stretch cannot be judged alone: join its neighbour.
+            if merged and (end - start < SPAN_MIN_JUDGED_SECONDS * rate or merged[-1][1] - merged[-1][0] < SPAN_MIN_JUDGED_SECONDS * rate) and end - merged[-1][0] <= SPAN_MAX_SECONDS * rate:
+                merged[-1] = (merged[-1][0], end)
+            else:
+                merged.append((start, end))
+        return merged
+
+    def _by_span(self, chunk: AudioChunk, language: str) -> list[TranscriptDraft]:
+        """The final transcript of a piece, language decided per stretch of
+        speech: runs of English stretches get Whisper's English, the rest
+        IndicConformer's words (one pass over the piece, split by word
+        timings) and the line-by-line English check."""
+
+        share = getattr(self.whisper, "english_share", None)
+        allowed = self.whisper.allowed_languages
+        audio = np.asarray(chunk.waveform, dtype=np.float32).reshape(-1)
+        rate = chunk.sample_rate
+        if share is None or (allowed and "en" not in allowed):
+            return self.indic.transcribe_chunk(chunk, language)
+        spans = self._speech_spans(audio, rate)
+        english = [share(audio[start:end], language) >= SPAN_ENGLISH_SHARE for start, end in spans]
+        if not any(english):
+            return self.indic.transcribe_chunk(chunk, language)
+        if all(english):
+            return [replace(draft, language_code="en") for draft in self.whisper.transcribe_chunk(chunk, "en")]
+        # Runs of neighbouring stretches in the same language.
+        runs: list[list] = []
+        for (start, end), is_english in zip(spans, english):
+            if runs and runs[-1][2] == is_english:
+                runs[-1][1] = end
+            else:
+                runs.append([start, end, is_english])
+        words = self.indic.words(audio, language) if len(audio) >= 1_600 else []
+        drafts: list[TranscriptDraft] = []
+        for index, (start, end, is_english) in enumerate(runs):
+            if is_english:
+                piece = AudioChunk(audio=b"", sample_rate=rate, timestamp_ms=chunk.timestamp_ms + int(start / rate * 1000), waveform=np.ascontiguousarray(audio[start:end]))
+                drafts += [replace(draft, language_code="en") for draft in self.whisper.transcribe_chunk(piece, "en")]
+                continue
+            # Words of this run (by their middle; the pauses between runs belong to the earlier run).
+            begin = runs[index - 1][1] / rate if index else 0.0
+            finish = runs[index + 1][0] / rate if index + 1 < len(runs) else len(audio) / rate
+            own = [word for word in words if begin <= (word[1] + word[2]) / 2 < finish]
+            lines = []
+            for line in _lines(own):
+                start_ms = chunk.timestamp_ms + int(line[0][1] * 1000)
+                end_ms = chunk.timestamp_ms + int(line[-1][2] * 1000)
+                lines.append(TranscriptDraft(text=" ".join(word for word, _, _, _ in line), timestamp=format_relative_timestamp(start_ms), start_ms=start_ms, end_ms=end_ms, language_code=language))
+            # A short English question joined to a Hindi answer in one stretch
+            # still gets the line-by-line English check.
+            drafts += self._english_lines(chunk, lines, language)
+        return sorted(drafts, key=lambda draft: draft.start_ms or 0)
 
     def _english_lines(self, chunk: AudioChunk, drafts: list[TranscriptDraft], language: str) -> list[TranscriptDraft]:
         """Lines spoken in English get Whisper's English transcript."""
@@ -222,12 +307,36 @@ class IndicRoutingProvider:
 
     def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
         if not chunk.live and language in self.indic.languages:
-            drafts = self._english_lines(chunk, self.indic.transcribe_chunk(chunk, language), language)
+            from ..config import settings
+
+            if settings.final_language_per_span and language in {code.strip() for code in settings.final_language_per_span_languages.split(",")} and chunk.waveform is not None:
+                drafts = self._by_span(chunk, language)
+            else:
+                drafts = self._english_lines(chunk, self.indic.transcribe_chunk(chunk, language), language)
             object.__setattr__(self, "last_diagnostics", self.indic.last_diagnostics)
             return drafts
+        if not chunk.live and language == "en" and chunk.waveform is not None:
+            from ..config import settings
+
+            native = self._native_language(chunk) if settings.final_language_per_span_english_pieces else None
+            if native:
+                drafts = self._by_span(chunk, native)
+                object.__setattr__(self, "last_diagnostics", {"engine": "per_span", "language": "en", "native": native})
+                return drafts
         drafts = self.whisper.transcribe_chunk(chunk, language)
         object.__setattr__(self, "last_diagnostics", getattr(self.whisper, "last_diagnostics", {}))
         return drafts
+
+    def _native_language(self, chunk: AudioChunk) -> str | None:
+        """The Indian language most heard in an English piece, if any is
+        enabled and heard enough to matter (else the piece stays English)."""
+
+        allowed = set(self.whisper.allowed_languages or ()) & set(self.indic.languages)
+        if not allowed:
+            return None
+        probabilities = self.whisper.detect_language_probabilities(np.asarray(chunk.waveform, dtype=np.float32))
+        code = max(allowed, key=lambda item: probabilities.get(item, 0.0))
+        return code if probabilities.get(code, 0.0) >= ENGLISH_PIECE_NATIVE_SHARE else None
 
     def warmup(self) -> None:
         warm = getattr(self.whisper, "warmup", None)

@@ -87,6 +87,14 @@ class Settings(BaseSettings):
     # as "sir": "Sir, I'm very sad"); Whisper's audio translation kept it.
     indic_translation_model_dir: str = ""
     indic_text_translation_languages: str = ""
+    # Final transcript: Hindi/English decided per stretch of speech, not per piece.
+    final_language_per_span: bool = True
+    # Languages it applies to: on the Telugu reference consultation it cost
+    # words (46% -> 41%), Telugu stretches being taken for English.
+    final_language_per_span_languages: str = "hi"
+    final_language_per_span_english_pieces: bool = False
+    # Final-pass GPU work waits while the live preview needs the GPU.
+    live_gpu_priority: bool = False
     # Label transcript lines doctor/patient from their content before the note.
     speaker_roles_enabled: bool = True
     # Nightly learning (dictionary, tested tips, reports); default: next to recordings.

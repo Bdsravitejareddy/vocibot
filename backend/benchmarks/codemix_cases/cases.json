@@ -1,0 +1,40 @@
+[
+ {"id": "clinic_fever_hinglish", "lines": [
+  ["Rishi", "Good morning, what brings you here today?"],
+  ["Lekha", "डॉक्टर मुझे तीन दिन से fever है और body pain भी बहुत है"],
+  ["Rishi", "Do you have cough or cold?"],
+  ["Lekha", "हाँ थोड़ी dry cough है, रात को ज़्यादा होती है"],
+  ["Rishi", "Have you taken any medicine?"],
+  ["Lekha", "मैंने Dolo 650 लिया था, दो बार"],
+  ["Rishi", "Okay. Any allergies to medicines?"],
+  ["Lekha", "नहीं, कोई allergy नहीं है"],
+  ["Rishi", "Your temperature is one hundred and one. I will write a blood test and paracetamol."],
+  ["Lekha", "ठीक है डॉक्टर, report कब तक आएगी?"],
+  ["Rishi", "Tomorrow evening. Come back with the report."]]},
+ {"id": "clinic_headache_hinglish", "lines": [
+  ["Rishi", "Hello, please sit down. Tell me the problem."],
+  ["Lekha", "मेरा सर बहुत दुख रहा है, especially left side में"],
+  ["Rishi", "Since when?"],
+  ["Lekha", "पिछले हफ्ते से, morning में ज़्यादा होता है"],
+  ["Rishi", "Any vomiting or blurred vision?"],
+  ["Lekha", "vomiting नहीं है, पर light से problem होती है"],
+  ["Rishi", "Do you have any history of blood pressure or diabetes?"],
+  ["Lekha", "BP थोड़ा high रहता है, मैं Telma forty लेती हूँ"],
+  ["Rishi", "Okay, we will check your BP now and I will give you something for the migraine."]]},
+ {"id": "talk_banking_hinglish", "lines": [
+  ["Rishi", "So what is the problem that voice AI is trying to solve?"],
+  ["Lekha", "देखो, आजकल कोई SMS नहीं पढ़ता, OTP भी phone खुद पढ़ लेता है"],
+  ["Rishi", "Do you think SMS automation was the voice AI of ten years ago?"],
+  ["Lekha", "हाँ बिल्कुल, और अगर voice AI भी spam करेगा तो लोग calls उठाना बंद कर देंगे"],
+  ["Rishi", "Give me five use cases of banking."],
+  ["Lekha", "पहला loan repayment reminder, दूसरा credit card bill, तीसरा KYC update"],
+  ["Rishi", "But the standing instruction already solves loan repayment, right?"],
+  ["Lekha", "हाँ, पर अगर standing instruction bounce हो गया तो customer को call करना पड़ेगा"]]},
+ {"id": "talk_meeting_hinglish", "lines": [
+  ["Lekha", "चलो meeting start करते हैं, आज का agenda क्या है?"],
+  ["Rishi", "First, the quarterly numbers. Revenue is up twelve percent."],
+  ["Lekha", "अच्छा है, लेकिन marketing का budget तो overshoot हो गया"],
+  ["Rishi", "Yes, we spent more on digital ads than planned."],
+  ["Lekha", "अगले quarter में हमें cost control पर focus करना होगा"],
+  ["Rishi", "Agreed. I will share the revised plan by Friday."]]}
+]

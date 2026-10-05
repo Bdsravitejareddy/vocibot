@@ -39,3 +39,37 @@ def test_local_pipeline_executor_uses_configured_parallel_workers() -> None:
 
     assert elapsed < 0.11
     assert len(worker_ids) == 2
+
+
+def test_live_preview_gets_the_gpu_before_final_pass_work(monkeypatch) -> None:
+    import threading
+    import time
+
+    from app.config import settings
+    from app.providers.speech import _GpuLock
+
+    monkeypatch.setattr(settings, "live_gpu_priority", True)
+    lock, order = _GpuLock(), []
+    holding, release = threading.Event(), threading.Event()
+
+    def run(name: str, live: bool, hold: bool = False) -> None:
+        lock.live(live)
+        with lock:
+            if hold:
+                holding.set()
+                release.wait(2)
+            order.append(name)
+
+    first = threading.Thread(target=run, args=("final piece in progress", False, True))
+    first.start()
+    holding.wait(2)
+    waiting_live = threading.Thread(target=run, args=("live", True))
+    waiting_live.start()
+    time.sleep(0.1)
+    waiting_final = threading.Thread(target=run, args=("next final piece", False))
+    waiting_final.start()
+    time.sleep(0.1)
+    release.set()
+    for thread in (first, waiting_live, waiting_final):
+        thread.join(2)
+    assert order == ["final piece in progress", "live", "next final piece"]

@@ -144,7 +144,11 @@ def test_the_final_pass_translates_text_where_enabled_and_audio_elsewhere() -> N
     assert [draft.text for draft in result.translations] == ["I have a fever."] and whisper.audio_translations == 1
 
 
-def test_english_lines_in_an_indian_language_piece_get_whispers_english() -> None:
+def test_english_lines_in_an_indian_language_piece_get_whispers_english(monkeypatch) -> None:
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "final_language_per_span", False)
+
     class Whisper(FakeWhisper):
         def english_share(self, audio, native):
             return 0.95 if float(np.abs(audio).mean()) > 0.3 else 0.05
@@ -171,3 +175,38 @@ def test_english_lines_in_an_indian_language_piece_get_whispers_english() -> Non
     assert [line.text for line in english] == ["How long have you had this?", "EN(तीन महीने हाँ)"]
     two_english = router.translate_text([lines[0], lines[0]], "hi")
     assert len(two_english) == 2  # English lines are not merged (each keeps its speaker)
+
+
+def test_language_is_decided_per_stretch_of_speech(monkeypatch) -> None:
+    """Hindi and English switch every few seconds (session QF74KR): an English
+    stretch gets Whisper's English, Hindi words stay with IndicConformer, and
+    the Hindi words are split from one IndicConformer pass by their timings."""
+
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "final_language_per_span", True)
+    monkeypatch.setattr(settings, "final_language_per_span_languages", "hi")
+
+    class Whisper(FakeWhisper):
+        def english_share(self, audio, native):
+            return 0.9 if float(np.abs(audio).mean()) > 0.3 else 0.1
+
+        def transcribe_chunk(self, chunk, language=None):
+            self.calls.append((chunk.live, language, chunk.timestamp_ms))
+            return [TranscriptDraft(text="What is the problem?", timestamp="", start_ms=chunk.timestamp_ms, end_ms=chunk.timestamp_ms + 2000, language_code="en")]
+
+    class Indic(FakeIndic):
+        def words(self, audio, language):
+            return [("व्हेट", 0.2, 0.6, -0.1), ("इस", 0.7, 1.0, -0.1), ("मुझे", 3.2, 3.6, -0.1), ("बुखार", 3.7, 4.2, -0.1), ("है", 4.3, 4.6, -0.1)]
+
+    whisper = Whisper()
+    whisper.allowed_languages = {"en", "hi"}
+    router = IndicRoutingProvider(whisper, Indic(), None, set())
+    monkeypatch.setattr(IndicRoutingProvider, "_speech_spans", lambda self, audio, rate: [(0, 32_000), (48_000, 80_000)])
+    audio = np.concatenate([np.full(32_000, 0.5), np.zeros(16_000), np.full(32_000, 0.05)]).astype(np.float32)
+    lines = router.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=10_000, waveform=audio, live=False), "hi")
+    assert [(line.text, line.language_code) for line in lines] == [("What is the problem?", "en"), ("मुझे बुखार है", "hi")]
+    assert lines[1].start_ms == 13_200
+    assert ("en" in [call[1] for call in whisper.calls]) and len([call for call in whisper.calls if call[1] == "en"]) == 1
+    monkeypatch.setattr(settings, "final_language_per_span_languages", "")
+    assert [line.language_code for line in router.transcribe_chunk(AudioChunk(audio=b"", sample_rate=16_000, timestamp_ms=0, waveform=audio, live=False), "hi")] == ["hi"]
