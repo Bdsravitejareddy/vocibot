@@ -137,3 +137,21 @@ def test_health_vocabulary_decides_whether_a_note_is_attempted() -> None:
 
 def test_a_medication_must_name_a_drug() -> None:
     assert OllamaClinicalExtractionProvider._coerce("medications", ["medicine", "medicine meds", "some tablets for stomach pain", "Dolo 650", "paracetamol 500 mg", "650"]) == ["Dolo 650", "paracetamol 500 mg", "650"]
+
+
+def test_a_second_candidates_list_does_not_replace_the_first(monkeypatch) -> None:
+    """Test 21: the model closed its list early and started another; only the
+    last list ("Thank you." as the plan) was kept and the note came out empty."""
+
+    import httpx as real_httpx
+
+    from app.providers import ollama_extraction
+
+    answer = ('{"candidates": [{"field_name": "presenting_symptoms", "value": ["headache"], "source_segment_ids": ["s1"], "speaker": "PATIENT", "status": "SUPPORTED"},'
+              ' {"field_name": "past_medical_history", "value": "cancer patient", "source_segment_ids": ["s2"], "speaker": "PATIENT", "status": "SUPPORTED"}, "source_segment_ids: []"],'
+              ' "candidates": [{"field_name": "plan", "value": "Thank you.", "source_segment_ids": ["s3"], "speaker": "DOCTOR", "status": "SUPPORTED"}]}')
+    monkeypatch.setattr(ollama_extraction.httpx, "post", lambda *args, **kwargs: real_httpx.Response(200, json={"response": answer}, request=real_httpx.Request("POST", "http://x")))
+    lines = [TranscriptSegmentInput(id=f"t-{index}", speaker="UNKNOWN", text=text, timestamp="00:00:00", sequence_number=index)
+             for index, text in enumerate(["Do you have any other symptoms?", "Half of it is my headache.", "Yes, I was a cancer patient.", "Thank you."])]
+    result = ollama_extraction.OllamaClinicalExtractionProvider().extract(lines, ClinicalRecord())
+    assert [candidate.field_name for candidate in result.candidates] == ["presenting_symptoms", "past_medical_history"]

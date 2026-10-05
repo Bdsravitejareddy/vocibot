@@ -72,3 +72,9 @@ def test_hindi_is_matched_exactly_and_translated_contradictions_are_dropped() ->
     updated = add_terms_lost_in_translation(record, {}, needs_review, lines("నిన్న రాత్రి నుంచి జ్వరం కూడా ఎక్కువగానే ఉంది", "దగ్గు అయితే లేదు"))
     assert updated.relevant_negatives == ["no cough"]
     assert "relevant_negatives" in needs_review
+
+
+def test_hindi_everyday_head_hurts() -> None:
+    # "सर" is both "head" and "sir"; the translation said "Sir, I'm very sad".
+    assert found("थोड़ी इशूज़ हो रहे हैं सर में", "सर दुख रहा है मेरा काफ़ी") == [("headache", False)]
+    assert found("मोस्टली सर ही दुखता है वो भी") == [("headache", False)]

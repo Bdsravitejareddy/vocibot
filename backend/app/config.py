@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./vocibot.db"
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.1:8b"
+    # Constrain the note model's answer to the candidate JSON structure.
+    ollama_json_schema: bool = False  # measured: fewer facts and 4 false facts on the English benchmark
     # A cold 8B model plus a long consultation can take well over 30 s locally.
     ollama_timeout_seconds: float = 120.0
     # Upper bound for the per-consultation context (a 30-minute consultation
