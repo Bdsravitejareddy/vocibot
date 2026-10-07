@@ -1,3 +1,5 @@
+import threading
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,6 +30,31 @@ def startup() -> None:
     from .learning.scheduler import start_scheduler
 
     start_scheduler()
+    threading.Thread(target=_warm_language_models, name="warm-language-models", daemon=True).start()
+
+
+def _warm_language_models() -> None:
+    """Non-English consultations need the translation and English-check
+    models; load them in the background at start, not in the first one."""
+
+    import logging
+
+    from .config import settings
+    from .db import SessionLocal
+    from .languages import enabled_languages
+
+    try:
+        with SessionLocal() as session:
+            if settings.ai_mode != "local" or set(enabled_languages(session)) <= {"en"}:
+                return
+        from .providers.factory import build_speech_provider
+
+        provider = build_speech_provider(settings)
+        whisper = getattr(provider, "whisper", provider)
+        if hasattr(whisper, "warmup_languages"):
+            whisper.warmup_languages()
+    except Exception:
+        logging.getLogger(__name__).exception("Warming the language models failed; they load on first use instead")
 
 
 @app.get("/health")

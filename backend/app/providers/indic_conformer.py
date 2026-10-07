@@ -306,6 +306,10 @@ class IndicRoutingProvider:
             setattr(self.whisper, name, value)
 
     def transcribe_chunk(self, chunk: AudioChunk, language: str | None = None) -> list[TranscriptDraft]:
+        if not chunk.live and language == "hi" and self._hinglish() is not None:
+            drafts = self._hinglish().transcribe_chunk(chunk, language)
+            object.__setattr__(self, "last_diagnostics", {"engine": "hinglish_whisper", "language": language})
+            return drafts
         if not chunk.live and language in self.indic.languages:
             from ..config import settings
 
@@ -326,6 +330,18 @@ class IndicRoutingProvider:
         drafts = self.whisper.transcribe_chunk(chunk, language)
         object.__setattr__(self, "last_diagnostics", getattr(self.whisper, "last_diagnostics", {}))
         return drafts
+
+    def _hinglish(self):
+        from ..config import settings
+
+        if not settings.hinglish_model_dir:
+            return None
+        if getattr(self, "_hinglish_model", None) is None or self._hinglish_model.model_dir != Path(settings.hinglish_model_dir).expanduser():
+            from .hinglish import HinglishWhisper
+
+            model = HinglishWhisper(settings.hinglish_model_dir)
+            object.__setattr__(self, "_hinglish_model", model if model.available() else False)
+        return self._hinglish_model or None
 
     def _native_language(self, chunk: AudioChunk) -> str | None:
         """The Indian language most heard in an English piece, if any is

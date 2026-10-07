@@ -40,6 +40,33 @@ def script_scores(reference: str, hypothesis: str) -> dict:
             "hindi_recall": recall([w for w in ref if DEVANAGARI.search(w)], [w for w in hyp if DEVANAGARI.search(w)])}
 
 
+ROMAN = json.loads((HERE / "codemix_cases" / "roman.json").read_text(encoding="utf-8"))
+
+
+def _sounds(text: str) -> list[str]:
+    """Words by sound, so romanised Hindi spellings compare equal
+    (zyaada/zyada, theek/thik, nahin/nahi)."""
+
+    out = []
+    for word in words(text):
+        word = re.sub(r"[^a-z0-9]", "", word)
+        word = re.sub(r"(?<=[bcdgjkpst])h", "", word).replace("w", "v").replace("z", "j").replace("ee", "i").replace("oo", "u")
+        word = re.sub(r"(.)\1+", r"\1", word)
+        word = re.sub(r"n$", "", word) if len(word) > 3 else word
+        if word:
+            out.append(word)
+    return out
+
+
+def roman_accuracy(case_id: str, hypothesis: str) -> float:
+    """Word accuracy against the romanised reference (for Roman-letter output)."""
+
+    from transcription_accuracy import edit_distance
+
+    reference = _sounds(" ".join(ROMAN[case_id]))
+    return round(1 - edit_distance(reference, _sounds(hypothesis)) / max(1, len(reference)), 4)
+
+
 def fragments(drafts) -> int:
     return sum(1 for draft in drafts if len(words(draft.text)) <= 1)
 
@@ -50,6 +77,7 @@ def main() -> None:
     parser.add_argument("--out", required=True)
     parser.add_argument("--real", nargs="*", default=[])
     parser.add_argument("--skip-live", action="store_true")
+    parser.add_argument("--live-only", action="store_true")
     args = parser.parse_args()
     from app.api.audio import build_local_pipeline, restrict_languages
 
@@ -59,8 +87,10 @@ def main() -> None:
     for case in CASES:
         audio = load_audio(HERE / "codemix_cases" / f"{case['id']}.wav")
         reference = " ".join(text for _, text in case["lines"])
-        final = run_final(pipeline, audio)
-        row = {"id": case["id"], "final": {**accuracy(reference, final["text"]), **script_scores(reference, final["text"]), "fragments": fragments(final["drafts"]), "seconds": final["seconds"]}, "final_text": final["text"]}
+        row = {"id": case["id"]}
+        if not args.live_only:
+            final = run_final(pipeline, audio)
+            row |= {"final": {**accuracy(reference, final["text"]), **script_scores(reference, final["text"]), "roman_accuracy": roman_accuracy(case["id"], final["text"]), "fragments": fragments(final["drafts"]), "seconds": final["seconds"]}, "final_text": final["text"]}
         if not args.skip_live:
             live = run_live(pipeline, audio)
             row["live"] = {**accuracy(reference, live["text"]), **script_scores(reference, live["text"]), "delay_median_s": live["line_delay_median_s"], "delay_p90_s": live["line_delay_p90_s"]}
@@ -69,7 +99,7 @@ def main() -> None:
         print(json.dumps({k: v for k, v in row.items() if not k.endswith("_text")}), flush=True)
     for code in args.real:
         audio = load_audio(RECORDINGS / f"{code}.flac")
-        final = run_final(pipeline, audio)
+        final = run_final(pipeline, audio) if not args.live_only else {"translation": "", "text": "", "drafts": [], "seconds": 0}
         translation = [w for w in words(final["translation"]) if LATIN.match(w)]
         hyp = words(final["text"])
         row = {"id": code, "final": {"english_words_recovered": recall(translation, [w for w in hyp if LATIN.match(w)]), "devanagari_words": sum(1 for w in hyp if DEVANAGARI.search(w)),
@@ -82,10 +112,14 @@ def main() -> None:
         print(json.dumps({k: v for k, v in row.items() if not k.endswith("_text")}), flush=True)
     synthetic = [row for row in rows if row["id"] in {case["id"] for case in CASES}]
     mean = lambda part, key: round(sum(row[part][key] for row in synthetic) / len(synthetic), 4)  # noqa: E731
-    summary = {"label": args.label, "final_word_accuracy": mean("final", "word_accuracy"), "final_english_recall": mean("final", "english_recall"), "final_hindi_recall": mean("final", "hindi_recall"),
-               "final_fragments": sum(row["final"]["fragments"] for row in synthetic)}
+    summary = {"label": args.label}
+    if not args.live_only:
+        summary |= {"final_word_accuracy": mean("final", "word_accuracy"), "final_english_recall": mean("final", "english_recall"), "final_hindi_recall": mean("final", "hindi_recall"),
+                    "final_fragments": sum(row["final"]["fragments"] for row in synthetic)}
     if not args.skip_live:
-        summary |= {"live_word_accuracy": mean("live", "word_accuracy"), "live_delay_p90_s": max(row["live"]["delay_p90_s"] or 0 for row in synthetic)}
+        summary |= {"live_word_accuracy": mean("live", "word_accuracy"), "live_english_recall": mean("live", "english_recall"), "live_hindi_recall": mean("live", "hindi_recall"),
+                    "live_delay_median_s": round(sorted(row["live"]["delay_median_s"] or 0 for row in synthetic)[len(synthetic) // 2], 2),
+                    "live_delay_p90_s": max(row["live"]["delay_p90_s"] or 0 for row in synthetic)}
     print("SUMMARY " + json.dumps(summary), flush=True)
     Path(args.out).write_text(json.dumps({"summary": summary, "rows": rows}, ensure_ascii=False, indent=1), encoding="utf-8")
 
