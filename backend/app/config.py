@@ -94,9 +94,11 @@ class Settings(BaseSettings):
     # Length of the final pass's pieces (0: FINAL_PIECE_SECONDS). Pieces are
     # processed during the consultation, so this bounds the audio left at Stop.
     final_piece_seconds: float = 14.0
-    # Languages it applies to: on the Telugu reference consultation it cost
-    # words (46% -> 41%), Telugu stretches being taken for English.
-    final_language_per_span_languages: str = "hi"
+    # Languages it applies to. Telugu needs a stricter English threshold: at
+    # 0.5 Telugu stretches were taken for English (reference 46% -> 42%).
+    final_language_per_span_languages: str = "hi,te"
+    # Per-language English threshold for a stretch, e.g. "te:0.8" (else 0.5).
+    span_english_share: str = "te:0.95"
     final_language_per_span_english_pieces: bool = False
     # Hindi final transcript in Roman letters (Hinglish) by a Whisper trained
     # on Indian mixed speech: folder of Oriserve/Whisper-Hindi2Hinglish-Apex.
