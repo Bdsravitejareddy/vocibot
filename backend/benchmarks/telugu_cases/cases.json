@@ -1,0 +1,28 @@
+[
+ {"id": "te_fever_pure", "lines": [
+  ["Geeta", "నమస్కారం డాక్టర్ గారు. నాకు మూడు రోజులుగా జ్వరం వస్తోంది."],
+  ["Geeta", "రాత్రి పూట చలి కూడా ఎక్కువగా ఉంటోంది, ఒళ్ళు నొప్పులు కూడా ఉన్నాయి."],
+  ["Geeta", "దగ్గు లేదు కానీ గొంతు కొంచెం నొప్పిగా ఉంది."],
+  ["Geeta", "అన్నం తినాలనిపించడం లేదు, చాలా నీరసంగా ఉంది."]]},
+ {"id": "te_stomach_pure", "lines": [
+  ["Geeta", "డాక్టర్ గారు, నిన్నటి నుంచి కడుపులో నొప్పిగా ఉంది."],
+  ["Geeta", "రెండు సార్లు వాంతులు అయ్యాయి, విరేచనాలు కూడా అవుతున్నాయి."],
+  ["Geeta", "బయట హోటల్ లో భోజనం చేశాను, అప్పటి నుంచే ఇలా ఉంది."],
+  ["Geeta", "నీళ్ళు తాగితే కూడా వికారంగా అనిపిస్తోంది."]]},
+ {"id": "te_diabetes_mixed", "lines": [
+  ["Rishi", "Good morning. How is your sugar these days?"],
+  ["Geeta", "డాక్టర్ గారు, నా sugar ఈ మధ్య ఎక్కువగా ఉంటోంది, fasting లో రెండు వందలు వస్తోంది."],
+  ["Rishi", "Are you taking your tablets regularly?"],
+  ["Geeta", "అవును, Glycomet రోజుకు రెండు సార్లు వేసుకుంటున్నాను."],
+  ["Rishi", "Any burning in the feet?"],
+  ["Geeta", "అవును, రాత్రి పూట కాళ్ళు మంటగా ఉంటాయి."],
+  ["Rishi", "We will check HbA1c and increase the dose."]]},
+ {"id": "te_cough_mixed", "lines": [
+  ["Rishi", "Tell me, what is the problem?"],
+  ["Geeta", "వారం రోజులుగా దగ్గు ఉంది, రాత్రి పూట ఎక్కువ అవుతోంది."],
+  ["Rishi", "Is there any phlegm or fever?"],
+  ["Geeta", "కఫం వస్తోంది, కొంచెం fever కూడా ఉంది. Dolo 650 వేసుకున్నాను."],
+  ["Rishi", "Any breathing difficulty?"],
+  ["Geeta", "మెట్లు ఎక్కేటప్పుడు ఆయాసంగా ఉంటోంది."],
+  ["Rishi", "I will write a chest x-ray and an antibiotic."]]}
+]

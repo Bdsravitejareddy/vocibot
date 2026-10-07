@@ -150,6 +150,18 @@ ENGLISH_PIECE_NATIVE_SHARE = 0.1
 TRANSLATION_GROUP_WORDS = 20
 
 
+def _span_english_share(language: str) -> float:
+    """SPAN_ENGLISH_SHARE, or a per-language value from settings ("te:0.8")."""
+
+    from ..config import settings
+
+    for part in settings.span_english_share.split(","):
+        code, _, value = part.partition(":")
+        if code.strip() == language and value.strip():
+            return float(value)
+    return SPAN_ENGLISH_SHARE
+
+
 class IndicRoutingProvider:
     """Whisper for detection, English and the live preview; IndicConformer for
     the final transcript of languages it has a model for; IndicTrans2 (when
@@ -221,7 +233,8 @@ class IndicRoutingProvider:
         if share is None or (allowed and "en" not in allowed):
             return self.indic.transcribe_chunk(chunk, language)
         spans = self._speech_spans(audio, rate)
-        english = [share(audio[start:end], language) >= SPAN_ENGLISH_SHARE for start, end in spans]
+        threshold = _span_english_share(language)
+        english = [share(audio[start:end], language) >= threshold for start, end in spans]
         if not any(english):
             return self.indic.transcribe_chunk(chunk, language)
         if all(english):
