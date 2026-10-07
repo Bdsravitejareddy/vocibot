@@ -116,3 +116,11 @@ def test_pyannote_adapter_maps_configured_speaker_labels() -> None:
     turns = provider.diarize(b"audio", 16_000)
     assert turns[0].speaker == "DOCTOR"
     assert turns[0].start_ms == 100
+
+
+def test_hinglish_lines_made_on_silence_are_dropped() -> None:
+    from app.providers.hinglish import _noise, _repetitive
+
+    assert _noise("nan") and _noise("I. I. A. a. I. a.") and _noise("  ")
+    assert not _noise("Haan. Dolo 6 50.") and not _noise("Mujhe thodi issues ho rahe hain")
+    assert _repetitive("I am scared. " * 12) and not _repetitive("So, I am scared that at that time if somebody disturbs me")
