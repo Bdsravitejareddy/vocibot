@@ -91,6 +91,9 @@ class Settings(BaseSettings):
     indic_text_translation_languages: str = ""
     # Final transcript: Hindi/English decided per stretch of speech, not per piece.
     final_language_per_span: bool = True
+    # Length of the final pass's pieces (0: FINAL_PIECE_SECONDS). Pieces are
+    # processed during the consultation, so this bounds the audio left at Stop.
+    final_piece_seconds: float = 14.0
     # Languages it applies to: on the Telugu reference consultation it cost
     # words (46% -> 41%), Telugu stretches being taken for English.
     final_language_per_span_languages: str = "hi"
