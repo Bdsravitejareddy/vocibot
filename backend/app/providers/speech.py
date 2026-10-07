@@ -387,6 +387,19 @@ class MlxWhisperProvider:
         if self.allowed_languages and len(self.allowed_languages) > 1 and self.language_id_model != self.model:
             self.detect_language_probabilities(np.zeros(16_000, dtype=np.float32))
 
+    def warmup_languages(self) -> None:
+        """Load the models only non-English consultations use (translation,
+        the per-line English check), so the first one does not wait ~10 s."""
+
+        import numpy as np  # type: ignore[import-not-found]
+
+        silence = np.zeros(16_000, dtype=np.float32)
+        if self.translation_model:
+            with GPU_LOCK:
+                self._load()(silence, path_or_hf_repo=self.translation_model, task="translate", language="hi", temperature=0.0, verbose=None)
+        if self.english_check_model:
+            self.detect_language_probabilities(silence, model=self.english_check_model)
+
     def translate_chunk(self, chunk: AudioChunk, language: str, *, _depth: int = 0) -> list[TranscriptDraft]:
         """English translation of non-English speech, straight from the audio.
 

@@ -30,7 +30,9 @@ class Settings(BaseSettings):
     # audio have passed after it; the buffer is force-settled at `max_buffer`.
     asr_live_step_seconds: float = 0.35
     asr_live_holdback_seconds: float = 1.2
-    asr_live_max_buffer_seconds: float = 8.0
+    # Measured on Hinglish + session QF74KR: 8 s -> 4 s cut the slowest 10% of
+    # live lines from 3.3 s to 2.3 s (QF74KR 5.0 s -> 2.2 s), same accuracy.
+    asr_live_max_buffer_seconds: float = 4.0
     # Includes the English translation of non-English consultations.
     asr_finalization_timeout_seconds: float = 180.0
     # Each live worker owns its model.  Do not invoke one native CTranslate2
@@ -93,6 +95,9 @@ class Settings(BaseSettings):
     # words (46% -> 41%), Telugu stretches being taken for English.
     final_language_per_span_languages: str = "hi"
     final_language_per_span_english_pieces: bool = False
+    # Hindi final transcript in Roman letters (Hinglish) by a Whisper trained
+    # on Indian mixed speech: folder of Oriserve/Whisper-Hindi2Hinglish-Apex.
+    hinglish_model_dir: str = ""
     # Final-pass GPU work waits while the live preview needs the GPU.
     live_gpu_priority: bool = False
     # Label transcript lines doctor/patient from their content before the note.
