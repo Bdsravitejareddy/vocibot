@@ -75,6 +75,7 @@ _ENGLISH: set[str] | None = None
 class MedicineDictionary:
     def __init__(self, entries: list[dict]) -> None:
         self.entries = [entry for entry in entries if isinstance(entry, dict) and entry.get("brand")]
+        self._generics = None
         self._names: dict[str, dict] = {}
         self._sounds: dict[str, list[tuple[str, dict]]] = {}
         for entry in self.entries:
@@ -103,6 +104,13 @@ class MedicineDictionary:
         added = [entry for entry in entries if isinstance(entry, dict) and entry.get("brand") and entry["brand"].lower() not in known]
         self.__init__(self.entries + added)
         return len(added)
+
+    def generic_words(self) -> set[str]:
+        """Words of generic names ("paracetamol", "metformin"): never a misheard brand."""
+
+        if getattr(self, "_generics", None) is None:
+            self._generics = {_latin(word) for entry in self.entries for word in re.split(r"[\s+(),/]+", str(entry.get("generic", ""))) if len(word) >= 4}
+        return self._generics
 
     def brand_words(self) -> set[str]:
         """Lower-case brand names (first word), e.g. {"dolo", "crocin"}."""
@@ -142,6 +150,28 @@ class MedicineDictionary:
         return best if score >= threshold else None
 
 
+    def match_with_strength(self, word: str, strength: str, threshold: float = 0.6) -> dict | None:
+        """A brand sold in ``strength`` whose name is close to ``word``."""
+
+        global _ENGLISH
+        key = _latin(word)
+        if len(key) < 4 or not word.isascii():
+            return None
+        if _ENGLISH is None:
+            _ENGLISH = _english_words()
+        if key in _ENGLISH or key in self.generic_words():
+            return None
+        best, score = None, 0.0
+        for entry in self.entries:
+            if not any(re.fullmatch(rf"{strength}\s*(?:mg)?", str(item).strip().lower()) or str(item).strip().lower().startswith(f"{strength} ") for item in entry.get("strengths") or []) and strength not in entry["brand"]:
+                continue
+            for name in [entry["brand"].split()[0], *(spoken.split()[0] for spoken in entry.get("spoken") or [] if spoken and spoken.isascii())]:
+                ratio = SequenceMatcher(None, key, _latin(name)).ratio()
+                if ratio > score:
+                    best, score = entry, ratio
+        return best if score >= threshold else None
+
+
 # "$650", "650", "Rs 650", "$6.50": a strength without a medicine (speech
 # recognition writes "six fifty" as money).
 BARE_STRENGTH = re.compile(r"^\s*(?:(?:[$₹]|rs\.?\s*)\s*(\d{1,2})\.(\d{2})|(?:[$₹]|rs\.?\s*)?\s*(\d{2,4}))(?:\s*mg)?\s*$", re.IGNORECASE)
@@ -157,6 +187,12 @@ def correct_medicine_text(text: str, dictionary: MedicineDictionary) -> tuple[st
     def replace(match: re.Match) -> str:
         word = match.group(0)
         entry = dictionary.match(word.rstrip("."))
+        if entry is None:
+            # "Dalod 650": a strength the brand is sold in, right after the
+            # word, lets a looser spelling count.
+            strength = re.match(r"\s*(\d{2,4})\b", text[match.end():])
+            if strength:
+                entry = dictionary.match_with_strength(word.rstrip("."), strength.group(1))
         if entry is None:
             return word
         brand_first = entry["brand"].split()[0]
