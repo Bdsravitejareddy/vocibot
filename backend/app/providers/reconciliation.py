@@ -47,6 +47,12 @@ class _Piece:
     warnings: list[str]
 
 
+def _piece_seconds() -> float:
+    from ..config import settings
+
+    return settings.final_piece_seconds or FINAL_PIECE_SECONDS
+
+
 class IncrementalReconciler:
     """The authoritative final pass, piece by piece, while the consultation runs.
 
@@ -69,7 +75,7 @@ class IncrementalReconciler:
         audio = np.asarray(waveform, dtype=np.float32).reshape(-1)
         done = 0
         with self._lock:
-            while (cut := _next_cut(audio, self.next_start, self.sample_rate, FINAL_PIECE_SECONDS, complete=False)) is not None:
+            while (cut := _next_cut(audio, self.next_start, self.sample_rate, _piece_seconds(), complete=False)) is not None:
                 self.pieces.append(self._process(audio, self.next_start, cut, None))
                 self.next_start = cut
                 done += 1
@@ -79,7 +85,7 @@ class IncrementalReconciler:
         started = perf_counter()
         audio = np.asarray(waveform, dtype=np.float32).reshape(-1)
         with self._lock:
-            for start, end in split_at_pauses(audio[self.next_start:], self.sample_rate, FINAL_PIECE_SECONDS):
+            for start, end in split_at_pauses(audio[self.next_start:], self.sample_rate, _piece_seconds()):
                 self.pieces.append(self._process(audio, self.next_start + start, self.next_start + end, None))
             self.next_start = len(audio)
             if self.language is None and len(self.pieces) > 1:

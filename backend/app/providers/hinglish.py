@@ -22,6 +22,14 @@ from .speech import GPU_LOCK, AudioChunk, TranscriptDraft, format_relative_times
 MAX_COMPRESSION_RATIO = 2.4
 
 
+def _noise(text: str) -> bool:
+    """Text made on silence: "nan", or a run of single letters ("I. I. A. a.")."""
+
+    tokens = [token.strip(".,!?") for token in text.split()]
+    tokens = [token for token in tokens if token]
+    return not tokens or text.strip().lower() == "nan" or (len(tokens) >= 3 and sum(len(token) <= 1 for token in tokens) / len(tokens) >= 0.6)
+
+
 def _repetitive(text: str) -> bool:
     data = text.encode("utf-8")
     return len(data) > 40 and len(data) / len(zlib.compress(data)) > MAX_COMPRESSION_RATIO
@@ -58,10 +66,11 @@ class HinglishWhisper:
                           generate_kwargs={"task": "transcribe", "no_repeat_ngram_size": 6})
         drafts = []
         for part in result.get("chunks") or [{"text": result.get("text", ""), "timestamp": (0.0, len(audio) / chunk.sample_rate)}]:
-            text = str(part.get("text", "")).strip()
+            text = part.get("text")
+            text = text.strip() if isinstance(text, str) else ""
             start, end = part.get("timestamp") or (0.0, None)
             end = end if end is not None else len(audio) / chunk.sample_rate
-            if not text or _repetitive(text):
+            if not text or _noise(text) or _repetitive(text):
                 continue
             start_ms, end_ms = chunk.timestamp_ms + int(float(start or 0) * 1000), chunk.timestamp_ms + int(float(end) * 1000)
             drafts.append(TranscriptDraft(text=text, timestamp=format_relative_timestamp(start_ms), start_ms=start_ms, end_ms=end_ms, language_code=language or "hi"))

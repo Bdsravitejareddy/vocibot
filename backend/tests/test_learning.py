@@ -29,6 +29,10 @@ def test_misheard_brands_are_matched_by_sound_but_english_words_are_not(dictiona
     assert dictionary.match("Glycomat")["brand"] == "Glycomet"
     assert dictionary.match("coral") is None and dictionary.match("water") is None
     text, changes = correct_medicine_text("Take Azithril and Kalpal after food", dictionary)
+    assert correct_medicine_text("Dalod 650 twice", dictionary)[0] == "Dolo 650 twice"  # strength sold as Dolo 650
+    assert correct_medicine_text("Dalod twice", dictionary)[0] == "Dalod twice"  # too far without the strength
+    assert correct_medicine_text("Model 650", dictionary)[0] == "Model 650"  # English word
+    assert correct_medicine_text("Paracetamol 650", dictionary)[0] == "Paracetamol 650"  # a generic stays generic
     assert text == "Take Azithral and Calpol after food" and len(changes) == 2
 
 
