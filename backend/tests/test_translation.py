@@ -39,7 +39,10 @@ class MixedSTT:
         return [TranscriptDraft(text="I have a fever.", timestamp="", start_ms=chunk.timestamp_ms, end_ms=chunk.timestamp_ms + 2_000, language_code="en")]
 
 
-def test_mixed_language_consultations_are_handled_piece_by_piece() -> None:
+def test_mixed_language_consultations_are_handled_piece_by_piece(monkeypatch) -> None:
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "final_piece_seconds", 28.0)  # written for 28 s pieces
     stt = MixedSTT()
     result = FinalReconciler().run(speech_with_pauses(55), stt, sample_rate=16_000)
 
@@ -109,7 +112,10 @@ def test_pieces_cover_the_whole_recording() -> None:
     assert spans[0][0] == 0 and spans[-1][1] == len(audio) and all(a < b for a, b in spans)
 
 
-def test_dense_scripts_are_transcribed_in_short_pieces_so_whisper_does_not_overflow() -> None:
+def test_dense_scripts_are_transcribed_in_short_pieces_so_whisper_does_not_overflow(monkeypatch) -> None:
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "final_piece_seconds", 28.0)  # written for 28 s pieces
     """28 s of Telugu overflowed Whisper's 224-token window: it stopped
     mid-letter and skipped the rest (a 15 s gap)."""
 
