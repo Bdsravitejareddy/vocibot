@@ -1,8 +1,8 @@
 {
-  "name": "vocibot",
+  "name": "gaya",
   "version": "0.1.0",
   "description": "Local-first clinical documentation prototype",
-  "author": "VociBot",
+  "author": "Gaya",
   "private": true,
   "main": "desktop/main.cjs",
   "scripts": {

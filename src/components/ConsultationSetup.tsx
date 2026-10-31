@@ -29,7 +29,7 @@ export function ConsultationSetup({ onStart, runtime }: { onStart: (input: { pat
   const providerStatus = (name: string) => runtime?.providers[name]?.status === "ready" ? "Ready" : runtime?.providers[name]?.status === "disabled" ? "Disabled" : runtime?.providers[name]?.error ?? "Unavailable";
 
   return <section className="setup-card consultation-setup-card" data-testid="consultation-intake-card">
-    <div className="eyebrow">New consultation</div><h1>Start with the patient in front of you.</h1><p className="lead">Capture the conversation naturally. VociBot will keep the note grounded in what was actually said.</p>
+    <div className="eyebrow">New consultation</div><h1>Start with the patient in front of you.</h1><p className="lead">Capture the conversation naturally. Gaya will keep the note grounded in what was actually said.</p>
     <form onSubmit={submit} className="setup-form">
       <label>Patient ID<input aria-label="Patient ID" value={patientId} onChange={(event) => setPatientId(event.target.value)} placeholder="e.g. PT-10482" /></label>
       <label>Patient name <span className="optional">optional</span><input aria-label="Patient name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Name for this visit" /></label>

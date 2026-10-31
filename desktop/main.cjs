@@ -12,7 +12,7 @@ async function createWindow() {
 app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => callback(permission === "media" && webContents.getURL().startsWith("http://127.0.0.1:3000")));
   try { await createWindow(); }
-  catch (error) { await dialog.showMessageBox({ type: "error", title: "VociBot could not start", message: String(error) }); app.quit(); }
+  catch (error) { await dialog.showMessageBox({ type: "error", title: "Gaya could not start", message: String(error) }); app.quit(); }
 });
 app.on("window-all-closed", () => app.quit());
 app.on("before-quit", (event) => {
