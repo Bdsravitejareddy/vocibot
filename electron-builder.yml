@@ -1,5 +1,5 @@
-appId: health.vocibot.desktop
-productName: VociBot
+appId: health.gaya.desktop
+productName: Gaya
 asar: true
 files:
   - desktop/**/*

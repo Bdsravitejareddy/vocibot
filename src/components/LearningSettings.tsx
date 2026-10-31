@@ -5,9 +5,9 @@ import { Play, Sparkles } from "lucide-react";
 import { getAudit, getLearning, runLearning, saveLearning, type AuditEntry, type CloudLevel, type LearningStatus, type Numbers } from "@/lib/learning";
 
 const LEVELS: Array<{ value: CloudLevel; label: string; detail: string }> = [
-  { value: "off", label: "Off", detail: "Nothing leaves this computer. VociBot still learns from its own test set each night." },
+  { value: "off", label: "Off", detail: "Nothing leaves this computer. Gaya still learns from its own test set each night." },
   { value: "knowledge", label: "Knowledge only", detail: "Gemini is asked general questions (common Indian medicine brands and how they are said). No patient data is sent." },
-  { value: "snippets", label: "De-identified snippets", detail: "Also sends a few words around a medicine VociBot could not recognise, with names, ages, phone numbers, dates and other numbers removed." },
+  { value: "snippets", label: "De-identified snippets", detail: "Also sends a few words around a medicine Gaya could not recognise, with names, ages, phone numbers, dates and other numbers removed." },
 ];
 
 const ROWS: Array<{ label: string; value: (numbers: Numbers) => string }> = [
@@ -39,7 +39,7 @@ export function LearningSettings() {
   }
   const report = status?.last_report;
   return <section className="settings-card learning-card" data-testid="learning-settings">
-    <div className="voice-heading"><div><h2><Sparkles size={17} /> Nightly learning</h2><p>At 11 pm (never during clinic hours, and never while a consultation is recording) VociBot tries to improve its tips, such as recognising misheard medicine names. Each change is tested on a fixed set of practice consultations, and switched on only if results improve and nothing gets worse. Every changed note field is still marked for the doctor to review.</p></div></div>
+    <div className="voice-heading"><div><h2><Sparkles size={17} /> Nightly learning</h2><p>At 11 pm (never during clinic hours, and never while a consultation is recording) Gaya tries to improve its tips, such as recognising misheard medicine names. Each change is tested on a fixed set of practice consultations, and switched on only if results improve and nothing gets worse. Every changed note field is still marked for the doctor to review.</p></div></div>
     {error && <div className="warning-banner" role="alert">{error}</div>}
     {message && <div className="notice-banner" role="status">{message}</div>}
     {status && <>

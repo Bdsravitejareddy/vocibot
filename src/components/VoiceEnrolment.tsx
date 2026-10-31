@@ -52,7 +52,7 @@ export function VoiceEnrolment() {
       setActive(index);
     } catch {
       recorder.current = null;
-      setError("The microphone is not available. Allow VociBot to use it and try again.");
+      setError("The microphone is not available. Allow Gaya to use it and try again.");
     }
   }
 
@@ -77,7 +77,7 @@ export function VoiceEnrolment() {
   }
 
   return <section className="settings-card voice-card" data-testid="voice-enrolment">
-    <div className="voice-heading"><div><h2><UserRound size={17} /> Doctor voice</h2><p>Record the doctor reading a few sentences once. After each consultation VociBot compares every line with this voice: lines in the doctor&apos;s voice are marked Doctor, anyone else (the patient, a relative, an attendant) Patient. Only a voice fingerprint is kept, not the recordings.</p></div></div>
+    <div className="voice-heading"><div><h2><UserRound size={17} /> Doctor voice</h2><p>Record the doctor reading a few sentences once. After each consultation Gaya compares every line with this voice: lines in the doctor&apos;s voice are marked Doctor, anyone else (the patient, a relative, an attendant) Patient. Only a voice fingerprint is kept, not the recordings.</p></div></div>
     {error && <div className="warning-banner" role="alert">{error}</div>}
     {message && <div className="notice-banner" role="status">{message}</div>}
     {available === false && <p className="muted">The voice model is not installed on this computer, so doctor and patient are recognised from what is said only.</p>}

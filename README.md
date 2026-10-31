@@ -1,6 +1,6 @@
-# VociBot
+# Gaya
 
-VociBot is a local-first clinical documentation assistant MVP. It captures a consultation transcript, extracts only evidence-grounded clinical facts, keeps a source-linked audit trail, and requires explicit doctor approval before saving the final record.
+Gaya is a local-first clinical documentation assistant MVP. It captures a consultation transcript, extracts only evidence-grounded clinical facts, keeps a source-linked audit trail, and requires explicit doctor approval before saving the final record.
 
 ## Run locally (offline-capable)
 
@@ -100,7 +100,7 @@ npm install
 npm run desktop:pack
 ```
 
-The app starts only its own loopback API and standalone web child processes, stores SQLite data in the app's user-data directory, and disables Hugging Face downloads/telemetry during packaged inference. Open `dist/mac-arm64/VociBot.app`. Ollama is a separate local service; if it is unavailable, transcript review and manual note entry remain available without invented clinical facts.
+The app starts only its own loopback API and standalone web child processes, stores SQLite data in the app's user-data directory, and disables Hugging Face downloads/telemetry during packaged inference. Open `dist/mac-arm64/Gaya.app`. Ollama is a separate local service; if it is unavailable, transcript review and manual note entry remain available without invented clinical facts.
 
 For development, start the local API and frontend using the commands above, then run `npm run desktop:dev`.
 
