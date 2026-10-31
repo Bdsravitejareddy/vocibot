@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     ai_mode: str = "demo"
     database_url: str = "sqlite:///./vocibot.db"
+    # Comma-separated browser origins allowed to call the API (e.g. the deployed frontend).
+    cors_origins: str = "http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:3001,http://localhost:3001"
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.1:8b"
     # Constrain the note model's answer to the candidate JSON structure.
