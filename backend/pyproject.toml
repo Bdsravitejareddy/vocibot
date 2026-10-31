@@ -13,11 +13,13 @@ dependencies = [
   "pydantic-settings>=2.6,<3",
   "sqlalchemy>=2.0,<3",
   "httpx>=0.27,<1",
+  "numpy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
 ]
 
 [project.optional-dependencies]
 test = ["pytest>=8.3,<9"]
-local = ["numpy>=2.0,<3", "faster-whisper>=1.1,<2", "mlx-whisper>=0.4,<1; sys_platform == 'darwin' and platform_machine == 'arm64'", "silero-vad>=5.1,<6", "whisperx>=3.3,<4", "pyannote.audio>=3.3,<4"]
+local = ["faster-whisper>=1.1,<2", "mlx-whisper>=0.4,<1; sys_platform == 'darwin' and platform_machine == 'arm64'", "silero-vad>=5.1,<6", "whisperx>=3.3,<4", "pyannote.audio>=3.3,<4"]
 # IndicConformer (exported ONNX) and IndicTrans2 (CTranslate2, bundled with faster-whisper).
 indic-asr = ["onnxruntime>=1.18", "sentencepiece>=0.2", "indic-nlp-library>=0.92", "sacremoses>=0.1", "regex"]
 desktop = ["pyinstaller>=6.10,<7"]

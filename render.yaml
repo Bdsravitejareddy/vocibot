@@ -1,0 +1,20 @@
+# Render blueprint for the Gaya API (prototype). The database lives on Neon;
+# set DATABASE_URL and CORS_ORIGINS in the Render dashboard, not in this file.
+services:
+  - type: web
+    name: gaya-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/runtime-status
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.2
+      - key: AI_MODE
+        value: demo
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
